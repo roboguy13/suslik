@@ -166,6 +166,7 @@ object Preprocessor extends SepLogicUtils {
 
           val defunctionalizer = new Defunctionalizer(pred)
 
+          // TODO: Ensure there are no free variables remaining in any of the 'predValues'
           (SApp(newPredName, newArgs, tag, card), Some(defunctionalizer.defunctionalizeDef(newPredName, predValues)))
         }
 
