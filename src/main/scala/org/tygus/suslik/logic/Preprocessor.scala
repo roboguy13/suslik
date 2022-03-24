@@ -26,8 +26,10 @@ object Preprocessor extends SepLogicUtils {
     (List(goal.spec), predMap, funMap, goal.body)
   }
 
+
+
   /**
-    * Add a missing cardinality constraint to a predicate clause 
+    * Add a missing cardinality constraint to a predicate clause
     */
   private def addCardConstraints(clause: InductiveClause): InductiveClause = {
     val InductiveClause(sel, Assertion(phi, sigma)) = clause
@@ -50,11 +52,11 @@ object Preprocessor extends SepLogicUtils {
     val ltCards = if (ptsCount > 0) {
       for (cv <- cardVars) yield BinaryExpr(OpLt, cv, selfCardVar)
     } else Set.empty
-    
+
     // All cardinalities are non-negative
     // val posConstraints = for (cv <- cardVars) yield BinaryExpr(OpLeq, IntConst(0), cv)
 
-    
+
     val newPhi = PFormula(phi.conjuncts ++ ltCards)
 
     InductiveClause(sel, Assertion(newPhi, sigma))

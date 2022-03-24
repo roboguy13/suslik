@@ -1,11 +1,10 @@
-package org.tygus.suslik.preprocess
+package org.tygus.suslik.defunctionalize
 
 import org.tygus.suslik.language._
 import org.tygus.suslik.language.Expressions._
 import org.tygus.suslik.logic._
 import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic.PFormula._
-// import org.tygus.suslik.logic.Heaplet._
 import org.tygus.suslik.logic.SFormula._
 
 import scala.collection.mutable.Stack
@@ -49,24 +48,24 @@ class Defunctionalizer (pred : InductivePredicate) {
     InductivePredicate(newName, newParams.toList.reverse, newClauses)
   }
 
-  def defunctionalizeClause(clause : InductiveClause, funMap : Map[String, PredicateValue]) : InductiveClause = {
+  private def defunctionalizeClause(clause : InductiveClause, funMap : Map[String, PredicateValue]) : InductiveClause = {
     InductiveClause(clause.selector, defunctionalizeAssertion(clause.asn, funMap))
   }
 
-  def defunctionalizeAssertion(asn : Assertion, funMap : Map[String, PredicateValue]) : Assertion = {
+  private def defunctionalizeAssertion(asn : Assertion, funMap : Map[String, PredicateValue]) : Assertion = {
     Assertion(defunctionalizePFormula(asn.phi, funMap), asn.sigma)
   }
 
-  def defunctionalizePFormula(phi : PFormula, funMap : Map[String, PredicateValue]) : PFormula = {
+  private def defunctionalizePFormula(phi : PFormula, funMap : Map[String, PredicateValue]) : PFormula = {
     PFormula(phi.conjuncts.map((e : Expr) => defunctionalizeExpr(e, funMap)))
   }
 
-  def defunctionalizeSFormula(sigma : SFormula, funMap : Map[String, PredicateValue]) : SFormula = {
+  private def defunctionalizeSFormula(sigma : SFormula, funMap : Map[String, PredicateValue]) : SFormula = {
     SFormula(sigma.chunks.flatMap((chunk : Heaplet) => defunctionalizeHeaplet(chunk, funMap)))
   }
 
   // Spatial part
-  def defunctionalizeHeaplet(chunk : Heaplet, funMap : Map[String, PredicateValue]) : List[Heaplet] = {
+  private def defunctionalizeHeaplet(chunk : Heaplet, funMap : Map[String, PredicateValue]) : List[Heaplet] = {
     chunk match {
       case SApp(predIdent, args, tag, card) =>
         funMap get predIdent match {
@@ -80,7 +79,7 @@ class Defunctionalizer (pred : InductivePredicate) {
   }
 
   // Pure part
-  def defunctionalizeExpr(e : Expr, funMap : Map[String, PredicateValue]) : Expr = {
+  private def defunctionalizeExpr(e : Expr, funMap : Map[String, PredicateValue]) : Expr = {
     // TODO: Add applications to the syntax of the pure part and finish this
     throw new Exception("defunctionalizeExpr: Defunctionalization for pure parts of predicates not yet implemented")
   }

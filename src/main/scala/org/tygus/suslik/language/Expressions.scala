@@ -331,6 +331,10 @@ object Expressions {
           val acc2 = collector(acc1)(cond)
           val acc3 = collector(acc2)(l)
           collector(acc3)(r)
+        case pa@PredicateAbstraction(args, body) =>  // TODO: Is this correct?
+          val acc1 = if (p(pa)) acc + pa.asInstanceOf[R] else acc
+          collector(acc1)(body)
+
         case c@Unknown(_,params,_) =>
           val acc1 = if (p(c)) acc + c.asInstanceOf[R] else acc
           params.foldLeft(acc1)((a,e) => collector(a)(e))
@@ -608,6 +612,13 @@ object Expressions {
     override def subst(sigma: Subst): IfThenElse = IfThenElse(cond.subst(sigma), left.subst(sigma), right.subst(sigma))
     override def substUnknown(sigma: UnknownSubst): Expr = IfThenElse(cond.substUnknown(sigma), left.substUnknown(sigma), right.substUnknown(sigma))
     def getType(gamma: Gamma): Option[SSLType] = left.getType(gamma)
+  }
+
+  case class PredicateAbstraction(args: List[Ident], body: Expr) extends Expr {
+    def subst(sigma: Subst): PredicateAbstraction = this // TODO: Is this correct?
+
+    override def pp: String = s"pred(${args.mkString(", ")} => ${body.pp}"
+    def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
   }
 
   /**
