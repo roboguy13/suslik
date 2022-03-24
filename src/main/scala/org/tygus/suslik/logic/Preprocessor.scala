@@ -7,6 +7,7 @@ import org.tygus.suslik.logic.Specifications.Assertion
 import org.tygus.suslik.synthesis.SynConfig
 import org.tygus.suslik.defunctionalize.Defunctionalizer
 import org.tygus.suslik.defunctionalize.SPredicateValue
+import org.tygus.suslik.language.PredType
 
 import scala.collection.immutable.Set
 import scala.collection.mutable.ListBuffer
@@ -39,9 +40,16 @@ object Preprocessor extends SepLogicUtils {
     val funMap = funs.map(fs => fs.name -> fs).toMap
 
     // Enable predicate instrumentation
-    val newPreds = preds.map(p => p.copy(clauses = p.clauses.map(addCardConstraints)))
+    val newPreds = preds.filter(noAbstractArgs).map(p => p.copy(clauses = p.clauses.map(addCardConstraints)))
     val predMap = newPreds.map(ps => ps.name -> ps).toMap
     (List(goal.spec), predMap, funMap, goal.body)
+  }
+
+  private def noAbstractArgs(p: InductivePredicate) = {
+    p.params.forall {
+      case (_, PredType) => false
+      case _ => true
+    }
   }
 
   /**
