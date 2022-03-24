@@ -53,7 +53,7 @@ class Defunctionalizer (pred: InductivePredicate) {
   }
 
   private def defunctionalizeAssertion(asn: Assertion, funMap: Map[String, PredicateValue]): Assertion = {
-    Assertion(defunctionalizePFormula(asn.phi, funMap), defunctionalizeSFormula(asn.sigma, funMap))
+    Assertion(asn.phi, defunctionalizeSFormula(asn.sigma, funMap))
   }
 
   private def defunctionalizePFormula(phi: PFormula, funMap: Map[String, PredicateValue]): PFormula = {

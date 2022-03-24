@@ -19,7 +19,7 @@ object Preprocessor extends SepLogicUtils {
     * TODO: type checking
     */
   def preprocessProgram(prog: Program, params: SynConfig): (Seq[FunSpec], PredicateEnv, FunctionEnv, Statement) = {
-    val Program(preds0, funs0, goal) = prog
+    val Program(preds0, funs0, goal0) = prog
 
     val gen = new FreshIdentGen(preds0.map((p: InductivePredicate) => p.name).to[ListBuffer])
     val predMap0 = preds0.map(ps => ps.name -> ps).toMap
@@ -36,6 +36,9 @@ object Preprocessor extends SepLogicUtils {
         preds ++= generatedPreds
         newFun
       })
+
+    val (goal, generatedPreds) = defun.defunctionalizeGoalContainer(goal0)
+    preds ++= generatedPreds
 
     val funMap = funs.map(fs => fs.name -> fs).toMap
 
@@ -133,6 +136,11 @@ object Preprocessor extends SepLogicUtils {
     // Defunctionalization on the side of the predicate abstractions
     // TODO: Should defunctionalization happen in this file?
   private class DefunctionalizeFunSpec(gen: FreshIdentGen, predEnv: PredicateEnv) {
+    def defunctionalizeGoalContainer(goal: GoalContainer): (GoalContainer, List[InductivePredicate]) = {
+      val (spec, preds) = defunctionalizeFun(goal.spec)
+      (GoalContainer(spec, goal.body), preds)
+    }
+
     def defunctionalizeFun(fun: FunSpec): (FunSpec, List[InductivePredicate]) = {
       val newPreds = new ListBuffer[InductivePredicate]()
 
@@ -161,21 +169,25 @@ object Preprocessor extends SepLogicUtils {
       heaplet match {
         case SApp(predIdent, args, tag, card) => {
           val predValues = collectSpatialPredAbstractions(args).map(new SPredicateValue(_))
-          val newArgs = withoutSpatialPredAbstractions(args)
+          if (predValues.isEmpty) {
+            (heaplet, None)
+          } else {
+            val newArgs = withoutSpatialPredAbstractions(args)
 
-          val newPredName = gen.genFresh(predIdent)
+            val newPredName = gen.genFresh(predIdent)
 
-          val pred = predEnv.get(predIdent) match {
-              case None => // TODO: Improve error message
-                throw new Exception(s"Cannot find predicate ${predIdent}")
+            val pred = predEnv.get(predIdent) match {
+                case None => // TODO: Improve error message
+                  throw new Exception(s"Cannot find predicate ${predIdent}")
 
-              case Some(p) => p
-            }
+                case Some(p) => p
+              }
 
-          val defunctionalizer = new Defunctionalizer(pred)
+            val defunctionalizer = new Defunctionalizer(pred)
 
-          // TODO: Ensure there are no free variables remaining in any of the 'predValues'
-          (SApp(newPredName, newArgs, tag, card), Some(defunctionalizer.defunctionalizeDef(newPredName, predValues)))
+            // TODO: Ensure there are no free variables remaining in any of the 'predValues'
+            (SApp(newPredName, newArgs, tag, card), Some(defunctionalizer.defunctionalizeDef(newPredName, predValues)))
+          }
         }
 
 
