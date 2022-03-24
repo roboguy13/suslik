@@ -4,6 +4,8 @@ import org.tygus.suslik.language._
 import org.tygus.suslik.language.Expressions._
 import org.tygus.suslik.logic._
 import org.tygus.suslik.logic.Specifications._
+import org.tygus.suslik.logic.PFormula._
+
 import scala.collection.mutable.Stack
 
 class Defunctionalizer (pred : InductivePredicate) {
@@ -36,21 +38,27 @@ class Defunctionalizer (pred : InductivePredicate) {
     val newClauses = pred.clauses.map((c : InductiveClause) => defunctionalizeClause(c, funMapImm))
 
       // TODO: Use fresh name
-    return InductivePredicate(pred.name, newParams.toList.reverse, newClauses)
+    InductivePredicate(pred.name, newParams.toList.reverse, newClauses)
   }
 
-  def defunctionalizeClause(clause0 : InductiveClause, funMap : Map[String, Expr => Expr]) : InductiveClause =
+  def defunctionalizeClause(clause : InductiveClause, funMap : Map[String, Expr => Expr]) : InductiveClause =
   {
-    var clause = clause0.copy()
-
-    return clause
+    InductiveClause(clause.selector, defunctionalizeAssertion(clause.asn, funMap))
   }
 
-  def defunctionalizeAssertion(asn0 : Assertion, funMap : Map[String, Expr => Expr]) : Assertion =
+  def defunctionalizeAssertion(asn : Assertion, funMap : Map[String, Expr => Expr]) : Assertion =
   {
-    var asn = asn0.copy()
+    Assertion(defunctionalizePFormula(asn.phi, funMap), asn.sigma)
+  }
 
-    return asn
+  def defunctionalizePFormula(phi : PFormula, funMap : Map[String, Expr => Expr]) : PFormula =
+  {
+    PFormula(phi.conjuncts.map((e : Expr) => defunctionalizeExpr(e, funMap)))
+  }
+
+  def defunctionalizeExpr(e : Expr, funMap : Map[String, Expr => Expr]) : Expr =
+  {
+    e
   }
 }
 
