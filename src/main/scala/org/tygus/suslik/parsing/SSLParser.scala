@@ -38,6 +38,7 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
       | "loc" ^^^ LocType
       | "set" ^^^ IntSetType
       | "interval" ^^^ IntervalType
+      | "pred" ^^^ PredType
       | "void" ^^^ VoidType)
 
   def formal: Parser[(Var, SSLType)] = typeParser ~ ident ^^ { case a ~ b => (Var(b), a) }

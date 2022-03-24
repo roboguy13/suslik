@@ -18,6 +18,11 @@ abstract class SSLType extends PrettyPrinting {
   def isSubtypeOf(other: SSLType): Boolean = supertype(Some(other)).contains(other)
 }
 
+case object PredType extends SSLType {
+  override def pp: String = "pred"
+
+}
+
 case object BoolType extends SSLType {
   override def pp: String = "bool"
 

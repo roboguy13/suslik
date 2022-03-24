@@ -13,7 +13,7 @@ class SSLLexical extends StdLexical {
   reserved += ("null")
 
   // Types
-  reserved += ("int", "bool", "loc", "set", "void", "interval")
+  reserved += ("int", "bool", "pred", "loc", "set", "void", "interval")
 
   delimiters += ("(", ")", "=", ";", "**", "*", ":->", "=i", "<=i", "++", "--", "..",
       "{", "}", "/\\", "&&", "\\/", "||", "\n", "\r", "=>", "?", ":",
