@@ -2,10 +2,14 @@ package org.tygus.suslik.logic
 
 import org.tygus.suslik.language.Expressions._
 import org.tygus.suslik.language.Statements.Statement
+import org.tygus.suslik.language.Ident
 import org.tygus.suslik.logic.Specifications.Assertion
 import org.tygus.suslik.synthesis.SynConfig
+import org.tygus.suslik.defunctionalize.Defunctionalizer
+import org.tygus.suslik.defunctionalize.SPredicateValue
 
 import scala.collection.immutable.Set
+import scala.collection.mutable.ListBuffer
 
 object Preprocessor extends SepLogicUtils {
 
@@ -14,19 +18,31 @@ object Preprocessor extends SepLogicUtils {
     * TODO: type checking
     */
   def preprocessProgram(prog: Program, params: SynConfig): (Seq[FunSpec], PredicateEnv, FunctionEnv, Statement) = {
-    val Program(preds, funs, goal) = prog
-    val funMap = funs.map(fs => fs.name -> fs).toMap
+    val Program(preds0, funs0, goal) = prog
+
+    val gen = new FreshIdentGen(preds0.map((p: InductivePredicate) => p.name).to[ListBuffer])
+    val predMap0 = preds0.map(ps => ps.name -> ps).toMap
+
+    val defun = new DefunctionalizeFunSpec(gen, predMap0)
 
     // [Cardinality] Instrument predicates with missing cardinality constraints
     // val newPreds = preds
+
+    val preds = preds0.to[ListBuffer]
+
+    val funs = funs0.map(fun => {
+        val (newFun, generatedPreds) = defun.defunctionalizeFun(fun)
+        preds ++= generatedPreds
+        newFun
+      })
+
+    val funMap = funs.map(fs => fs.name -> fs).toMap
 
     // Enable predicate instrumentation
     val newPreds = preds.map(p => p.copy(clauses = p.clauses.map(addCardConstraints)))
     val predMap = newPreds.map(ps => ps.name -> ps).toMap
     (List(goal.spec), predMap, funMap, goal.body)
   }
-
-
 
   /**
     * Add a missing cardinality constraint to a predicate clause
@@ -106,5 +122,81 @@ object Preprocessor extends SepLogicUtils {
     InductiveClause(sel, Assertion(newPhi, sigma))
   }
 
+    // Defunctionalization on the side of the predicate abstractions
+    // TODO: Should defunctionalization happen in this file?
+  private class DefunctionalizeFunSpec(gen: FreshIdentGen, predEnv: PredicateEnv) {
+    def defunctionalizeFun(fun: FunSpec): (FunSpec, List[InductivePredicate]) = {
+      val newPreds = new ListBuffer[InductivePredicate]()
+
+      val (defunPre, prePreds) = defunctionalizeAssertion(fun.pre)
+      val (defunPost, postPreds) = defunctionalizeAssertion(fun.post)
+
+      newPreds ++= prePreds
+      newPreds ++= postPreds
+
+      (FunSpec(fun.name, fun.rType, fun.params, defunPre, defunPost, fun.var_decl), newPreds.result())
+    }
+
+    private def defunctionalizeAssertion(asn: Assertion): (Assertion, List[InductivePredicate]) = {
+      val (newSigma, newPreds) = defunctionalizeSFormula(asn.sigma)
+
+      (Assertion(asn.phi, newSigma), newPreds)
+    }
+
+    private def defunctionalizeSFormula(sigma: SFormula): (SFormula, List[InductivePredicate]) = {
+      val (newChunks, newPreds) = sigma.chunks.map(defunctionalizeHeaplet).unzip
+
+      (SFormula(newChunks), newPreds.flatten)
+    }
+
+    private def defunctionalizeHeaplet(heaplet: Heaplet): (Heaplet, Option[InductivePredicate]) = {
+      heaplet match {
+        case SApp(predIdent, args, tag, card) => {
+          val predValues = collectSpatialPredAbstractions(args).map(new SPredicateValue(_))
+          val newArgs = withoutSpatialPredAbstractions(args)
+
+          val newPredName = gen.genFresh(predIdent)
+
+          val pred = predEnv.get(predIdent) match {
+              case None => // TODO: Improve error message
+                throw new Exception(s"Cannot find predicate ${predIdent}")
+
+              case Some(p) => p
+            }
+
+          val defunctionalizer = new Defunctionalizer(pred)
+
+          (SApp(newPredName, newArgs, tag, card), Some(defunctionalizer.defunctionalizeDef(newPredName, predValues)))
+        }
+
+
+        case _ => (heaplet, None)
+      }
+    }
+
+    private def collectSpatialPredAbstractions(args: Seq[Expr]): Seq[SpatialPredicateAbstraction] = {
+      args.collect { case x: SpatialPredicateAbstraction => x }
+    }
+
+    private def withoutSpatialPredAbstractions(args: Seq[Expr]): Seq[Expr] = {
+      args.filter { case x: SpatialPredicateAbstraction => false; case _ => true }
+    }
+
+  }
+
+  private class FreshIdentGen(existingIdents: ListBuffer[Ident]) {
+    def genFresh(baseIdent: Ident): Ident = genFreshWith(baseIdent, 0)
+
+    def genFreshWith(baseIdent: Ident, n: Int): Ident = {
+      val newName = baseIdent + n.toString
+
+      if (existingIdents.contains(newName)) {
+        genFreshWith(baseIdent, n + 1)
+      } else {
+        existingIdents += newName
+        newName
+      }
+    }
+  }
 
 }

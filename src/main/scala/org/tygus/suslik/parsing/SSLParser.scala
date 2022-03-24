@@ -115,9 +115,14 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
       case a ~ Some(op ~ b) => OverloadedBinaryExpr(op, a, b)
     }
 
-  def predAbstraction: Parser[PredicateAbstraction] =
+  def purePredAbstraction: Parser[PurePredicateAbstraction] =
     ("pred" ~> ("(" ~> rep1sep(ident, ",") <~ ")") <~ "=>") ~ expr ^^ {
-      case args ~ body => PredicateAbstraction(args, body)
+      case args ~ body => PurePredicateAbstraction(args, body)
+    }
+
+  def spatialPredAbstraction: Parser[SpatialPredicateAbstraction] =
+    ("pred" ~> ("(" ~> rep1sep(ident, ",") <~ ")") <~ "=>") ~ sigma ^^ {
+      case args ~ body => SpatialPredicateAbstraction(args, body)
     }
 
   def expr: Parser[Expr] =

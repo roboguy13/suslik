@@ -10,7 +10,7 @@ import org.tygus.suslik.logic.SFormula._
 import scala.collection.mutable.Stack
 import scala.collection.immutable.SortedSet
 
-class Defunctionalizer (pred : InductivePredicate) {
+class Defunctionalizer (pred: InductivePredicate) {
 
   // NOTE:
   //   - In the list of functions: Ensure that no free variables exist in the
@@ -20,7 +20,7 @@ class Defunctionalizer (pred : InductivePredicate) {
   //
   //   - 'newName' should be a fresh name w.r.t. the names of the other
   //   inductive predicates
-  def defunctionalizedDef(newName : Ident, fs : List[PredicateValue]) : InductivePredicate = {
+  def defunctionalizeDef(newName: Ident, fs: Seq[PredicateValue]): InductivePredicate = {
     var params = pred.params
 
     val funMap = scala.collection.mutable.Map[String, PredicateValue]()
@@ -43,43 +43,43 @@ class Defunctionalizer (pred : InductivePredicate) {
 
     val funMapImm = funMap.toMap
 
-    val newClauses = pred.clauses.map((c : InductiveClause) => defunctionalizeClause(c, funMapImm))
+    val newClauses = pred.clauses.map((c: InductiveClause) => defunctionalizeClause(c, funMapImm))
 
     InductivePredicate(newName, newParams.toList.reverse, newClauses)
   }
 
-  private def defunctionalizeClause(clause : InductiveClause, funMap : Map[String, PredicateValue]) : InductiveClause = {
+  private def defunctionalizeClause(clause: InductiveClause, funMap: Map[String, PredicateValue]): InductiveClause = {
     InductiveClause(clause.selector, defunctionalizeAssertion(clause.asn, funMap))
   }
 
-  private def defunctionalizeAssertion(asn : Assertion, funMap : Map[String, PredicateValue]) : Assertion = {
-    Assertion(defunctionalizePFormula(asn.phi, funMap), asn.sigma)
+  private def defunctionalizeAssertion(asn: Assertion, funMap: Map[String, PredicateValue]): Assertion = {
+    Assertion(defunctionalizePFormula(asn.phi, funMap), defunctionalizeSFormula(asn.sigma, funMap))
   }
 
-  private def defunctionalizePFormula(phi : PFormula, funMap : Map[String, PredicateValue]) : PFormula = {
+  private def defunctionalizePFormula(phi: PFormula, funMap: Map[String, PredicateValue]): PFormula = {
     PFormula(phi.conjuncts.map((e : Expr) => defunctionalizeExpr(e, funMap)))
   }
 
-  private def defunctionalizeSFormula(sigma : SFormula, funMap : Map[String, PredicateValue]) : SFormula = {
-    SFormula(sigma.chunks.flatMap((chunk : Heaplet) => defunctionalizeHeaplet(chunk, funMap)))
+  private def defunctionalizeSFormula(sigma: SFormula, funMap: Map[String, PredicateValue]): SFormula = {
+    SFormula(sigma.chunks.flatMap((chunk: Heaplet) => defunctionalizeHeaplet(chunk, funMap)))
   }
 
   // Spatial part
-  private def defunctionalizeHeaplet(chunk : Heaplet, funMap : Map[String, PredicateValue]) : List[Heaplet] = {
+  private def defunctionalizeHeaplet(chunk: Heaplet, funMap: Map[String, PredicateValue]): Seq[Heaplet] = {
     chunk match {
       case SApp(predIdent, args, tag, card) =>
         funMap get predIdent match {
-          case None => List(chunk)
-          case Some(SPredicateValue(fun)) => fun(args)
-          case Some(PPredicateValue(_)) => List(chunk) // TODO: Generate an error here
+          case None => Seq(chunk)
+          case Some(sp @ SPredicateValue(_)) => sp.apply(args)
+          case Some(PPredicateValue(_)) => Seq(chunk) // TODO: Generate an error here
         }
 
-      case _ => List(chunk)
+      case _ => Seq(chunk)
     }
   }
 
   // Pure part
-  private def defunctionalizeExpr(e : Expr, funMap : Map[String, PredicateValue]) : Expr = {
+  private def defunctionalizeExpr(e: Expr, funMap: Map[String, PredicateValue]): Expr = {
     // TODO: Add applications to the syntax of the pure part and finish this
     throw new Exception("defunctionalizeExpr: Defunctionalization for pure parts of predicates not yet implemented")
   }
@@ -89,9 +89,36 @@ class Defunctionalizer (pred : InductivePredicate) {
 sealed abstract class PredicateValue {
 }
 
-case class SPredicateValue(fun : Seq[Expr] => List[Heaplet]) extends PredicateValue {
+
+case class SPredicateValue(abstr: SpatialPredicateAbstraction) extends PredicateValue {
+  def apply(args: Seq[Expr]): List[Heaplet] = {
+    val st = (abstr.args, args).zipped map((x: Ident, y: Expr) => (Var(x) , y))
+
+    abstr.body.subst(st.toMap).chunks
+  }
+
+  // private def applyInHeaplet(args: Seq[Expr], heaplet: Heaplet): Heaplet = {
+  //   // heaplet match {
+  //   //   case PointsTo(_, _, _) => heaplet
+  //   //   case Block(_, _) => heaplet
+  //   //   case SApp(fName, args, tag, card) =>
+  //   //     if (fName == abstr.name) {
+  //   //     } else {
+  //   //     }
+  //   //     heaplet
+  //   // }
+  // }
 }
 
-case class PPredicateValue(fun : Seq[Expr] => SortedSet[Expr]) extends PredicateValue {
+case class PPredicateValue(abstr: PurePredicateAbstraction) extends PredicateValue {
+  def apply(args: Seq[Expr]): SortedSet[Expr] = {
+    SortedSet[Expr]() // TODO: Finish
+  }
 }
+
+// case class SPredicateValue(fun: Seq[Expr] => List[Heaplet]) extends PredicateValue {
+// }
+
+// case class PPredicateValue(fun: Seq[Expr] => SortedSet[Expr]) extends PredicateValue {
+// }
 

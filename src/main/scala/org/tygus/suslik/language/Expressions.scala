@@ -2,6 +2,8 @@ package org.tygus.suslik.language
 
 import org.tygus.suslik.logic.{Gamma, PureLogicUtils}
 import org.tygus.suslik.synthesis.SynthesisException
+import org.tygus.suslik.logic.Specifications._
+import org.tygus.suslik.logic.SFormula
 
 /**
   * @author Ilya Sergey
@@ -331,7 +333,7 @@ object Expressions {
           val acc2 = collector(acc1)(cond)
           val acc3 = collector(acc2)(l)
           collector(acc3)(r)
-        case pa@PredicateAbstraction(args, body) =>  // TODO: Is this correct?
+        case pa@PurePredicateAbstraction(args, body) =>  // TODO: Is this correct?
           val acc1 = if (p(pa)) acc + pa.asInstanceOf[R] else acc
           collector(acc1)(body)
 
@@ -614,8 +616,15 @@ object Expressions {
     def getType(gamma: Gamma): Option[SSLType] = left.getType(gamma)
   }
 
-  case class PredicateAbstraction(args: List[Ident], body: Expr) extends Expr {
-    def subst(sigma: Subst): PredicateAbstraction = this // TODO: Is this correct?
+  case class PurePredicateAbstraction(args: List[Ident], body: Expr) extends Expr {
+    def subst(sigma: Subst): PurePredicateAbstraction = this // TODO: Is this correct?
+
+    override def pp: String = s"pred(${args.mkString(", ")} => ${body.pp}"
+    def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
+  }
+
+  case class SpatialPredicateAbstraction(args: List[Ident], body: SFormula) extends Expr {
+    def subst(sigma: Subst): SpatialPredicateAbstraction = this // TODO: Is this correct?
 
     override def pp: String = s"pred(${args.mkString(", ")} => ${body.pp}"
     def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
