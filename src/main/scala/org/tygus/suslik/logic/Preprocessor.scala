@@ -5,7 +5,7 @@ import org.tygus.suslik.language.Statements.Statement
 import org.tygus.suslik.language.Ident
 import org.tygus.suslik.logic.Specifications.Assertion
 import org.tygus.suslik.synthesis.SynConfig
-import org.tygus.suslik.defunctionalize.Defunctionalizer
+import org.tygus.suslik.defunctionalize.{DefunctionalizeInductive,DefunctionalizeGoalContainer,DefunctionalizeFunSpec,FreshIdentGen}
 import org.tygus.suslik.defunctionalize.{PredicateValue,PPredicateValue,SPredicateValue}
 import org.tygus.suslik.language.PredType
 
@@ -24,20 +24,23 @@ object Preprocessor extends SepLogicUtils {
     val gen = new FreshIdentGen()
     val predMap0 = preds0.map(ps => ps.name -> ps).toMap
 
-    val defun = new DefunctionalizeFunSpec(gen, predMap0)
-
     // [Cardinality] Instrument predicates with missing cardinality constraints
     // val newPreds = preds
 
     val preds = preds0.to[ListBuffer]
 
     val funs = funs0.map(fun => {
-        val (newFun, generatedPreds) = defun.defunctionalizeFun(fun)
-        preds ++= generatedPreds
+        val defunFunSpec = new DefunctionalizeFunSpec(fun, gen, predMap0)
+        val newFun = defunFunSpec.defunctionalize()
+
+        preds ++= defunFunSpec.getGeneratedPreds()
         newFun
       })
 
-    val (goal, generatedPreds) = defun.defunctionalizeGoalContainer(goal0)
+    val defun = new DefunctionalizeGoalContainer(goal0, gen, predMap0)
+
+    val (goal, generatedPreds) = defun.defunctionalize()
+
     preds ++= generatedPreds
 
     val funMap = funs.map(fs => fs.name -> fs).toMap
@@ -133,101 +136,5 @@ object Preprocessor extends SepLogicUtils {
     InductiveClause(sel, Assertion(newPhi, sigma))
   }
 
-    // Defunctionalization on the side of the predicate abstractions
-    // TODO: Should defunctionalization happen in this file?
-  private class DefunctionalizeFunSpec(gen: FreshIdentGen, predEnv: PredicateEnv) {
-    def defunctionalizeGoalContainer(goal: GoalContainer): (GoalContainer, List[InductivePredicate]) = {
-      val (spec, preds) = defunctionalizeFun(goal.spec)
-      (GoalContainer(spec, goal.body), preds)
-    }
-
-    def defunctionalizeFun(fun: FunSpec): (FunSpec, List[InductivePredicate]) = {
-      val newPreds = new ListBuffer[InductivePredicate]()
-
-      val (defunPre, prePreds) = defunctionalizeAssertion(fun.pre)
-      val (defunPost, postPreds) = defunctionalizeAssertion(fun.post)
-
-      newPreds ++= prePreds
-      newPreds ++= postPreds
-
-      (FunSpec(fun.name, fun.rType, fun.params, defunPre, defunPost, fun.var_decl), newPreds.result())
-    }
-
-    private def defunctionalizeAssertion(asn: Assertion): (Assertion, List[InductivePredicate]) = {
-      val (newSigma, newPreds) = defunctionalizeSFormula(asn.sigma)
-
-      (Assertion(asn.phi, newSigma), newPreds)
-    }
-
-    private def defunctionalizeSFormula(sigma: SFormula): (SFormula, List[InductivePredicate]) = {
-      val (newChunks, newPreds) = sigma.chunks.map(defunctionalizeHeaplet).unzip
-
-      (SFormula(newChunks), newPreds.flatten)
-    }
-
-    private def defunctionalizeHeaplet(heaplet: Heaplet): (Heaplet, Option[InductivePredicate]) = {
-      heaplet match {
-        case SApp(predIdent, args, tag, card) => {
-          val predValues = collectPredValues(args)
-
-          if (predValues.isEmpty) {
-            (heaplet, None)
-          } else {
-            val newArgs = withoutPredAbstractions(args)
-
-            val newPredName = gen.genFresh(predIdent)
-
-            val pred = predEnv.get(predIdent) match {
-                case None => // TODO: Improve error message
-                  throw new Exception(s"Cannot find predicate ${predIdent}")
-
-                case Some(p) => p
-              }
-
-            val defunctionalizer = new Defunctionalizer(newPredName, pred, predValues)
-
-            // TODO: Ensure there are no free variables remaining in any of the 'predValues'
-            (SApp(newPredName, newArgs, tag, card), Some(defunctionalizer.defunctionalizeDef()))
-          }
-        }
-
-
-        case _ => (heaplet, None)
-      }
-    }
-
-    private def collectPredValues(args: Seq[Expr]): Seq[PredicateValue] = {
-      args.collect {
-        case x: PurePredicateAbstraction => PPredicateValue(x)
-        case x: SpatialPredicateAbstraction => SPredicateValue(x)
-      }
-    }
-
-    private def withoutPredAbstractions(args: Seq[Expr]): Seq[Expr] = {
-      args.filter {
-        case _: PurePredicateAbstraction => false
-        case _: SpatialPredicateAbstraction => false
-        case _ => true
-      }
-    }
-
-  }
-
-  private class FreshIdentGen() {
-    val existingIdents: ListBuffer[Ident] = ListBuffer[Ident]()
-
-    def genFresh(baseIdent: Ident): Ident = genFreshWith(baseIdent, 0)
-
-    def genFreshWith(baseIdent: Ident, n: Int): Ident = {
-      val newName = baseIdent + "$" + n.toString
-
-      if (existingIdents.contains(newName)) {
-        genFreshWith(baseIdent, n + 1)
-      } else {
-        existingIdents += newName
-        newName
-      }
-    }
-  }
 
 }

@@ -12,6 +12,10 @@ import org.tygus.suslik.util.SynStats
   * @author Ilya Sergey
   */
 
+trait HasAssertions[+A] {
+  def visitAssertions(f: Assertion => Assertion): A
+}
+
 /**
   * A top-level declaration in a program
   */
@@ -29,7 +33,11 @@ sealed abstract class TopLevelDeclaration extends PrettyPrinting with PureLogicU
   */
 case class FunSpec(name: Ident, rType: SSLType, params: Formals,
                    pre: Assertion, post: Assertion,
-                   var_decl: Formals = Nil) extends TopLevelDeclaration {
+                   var_decl: Formals = Nil) extends TopLevelDeclaration with HasAssertions[FunSpec] {
+
+   def visitAssertions(f: Assertion => Assertion): FunSpec = {
+     FunSpec(name, rType, params, f(pre), f(post), var_decl)
+   }
 
   def resolveOverloading(env: Environment): FunSpec = {
     val gamma0 = params.toMap // initial environment: derived from the formals
@@ -93,7 +101,14 @@ case class FunSpec(name: Ident, rType: SSLType, params: Formals,
 /**
   * A selector is of the form (phi, sigma)
   */
-case class InductiveClause(selector: Expr, asn: Assertion) extends PrettyPrinting with PureLogicUtils {
+case class InductiveClause(selector: Expr, asn: Assertion) extends PrettyPrinting with PureLogicUtils
+  with HasAssertions[InductiveClause] {
+
+
+  def visitAssertions(f: Assertion => Assertion) = {
+    InductiveClause(selector, f(asn))
+  }
+
   override def pp: String =
     s"${selector.pp} => ${asn.pp}"
 
@@ -148,7 +163,12 @@ case class InductiveClause(selector: Expr, asn: Assertion) extends PrettyPrintin
   *
   */
 case class InductivePredicate(name: Ident, params: Formals, clauses: Seq[InductiveClause])
-    extends TopLevelDeclaration with PureLogicUtils {
+    extends TopLevelDeclaration with PureLogicUtils
+    with HasAssertions[InductivePredicate] {
+
+  def visitAssertions(f: Assertion => Assertion): InductivePredicate = {
+    InductivePredicate(name, params, clauses.map(_.visitAssertions(f)))
+  }
 
   def resolve(gamma: Gamma, env:Environment):Option[Gamma] = {
     val init_gamma : Option[Gamma] = Some(gamma)
@@ -196,7 +216,11 @@ case class InductivePredicate(name: Ident, params: Formals, clauses: Seq[Inducti
 }
 
 
-case class GoalContainer(spec: FunSpec, body: Statement)
+case class GoalContainer(spec: FunSpec, body: Statement) extends HasAssertions[GoalContainer] {
+  def visitAssertions(f: Assertion => Assertion): GoalContainer = {
+    GoalContainer(spec.visitAssertions(f), body)
+  }
+}
 
 /**
   * Program: for now just a sequence of declarations
