@@ -28,3 +28,9 @@ predicate sll(loc x, int len, int lo, int hi) {
 predicate account(loc x, int id, int bal) {
 |  true  =>  { [x, 2] ** x :-> id ** (x + 1) :-> bal }
 }
+
+predicate constrained_list(loc x, set s, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** p(v) ** constrained_list(nxt, s1, p) }
+}
+

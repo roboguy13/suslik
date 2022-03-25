@@ -10,7 +10,7 @@ import org.tygus.suslik.logic.SFormula._
 import scala.collection.mutable.Stack
 import scala.collection.immutable.SortedSet
 
-class Defunctionalizer (pred: InductivePredicate) {
+class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
 
   // NOTE:
   //   - In the list of functions: Ensure that no free variables exist in the
@@ -20,7 +20,7 @@ class Defunctionalizer (pred: InductivePredicate) {
   //
   //   - 'newName' should be a fresh name w.r.t. the names of the other
   //   inductive predicates
-  def defunctionalizeDef(newName: Ident, fs: Seq[PredicateValue]): InductivePredicate = {
+  def defunctionalizeDef(fs: Seq[PredicateValue]): InductivePredicate = {
     var params = pred.params
 
     val funMap = scala.collection.mutable.Map[String, PredicateValue]()
@@ -68,15 +68,36 @@ class Defunctionalizer (pred: InductivePredicate) {
   private def defunctionalizeHeaplet(chunk: Heaplet, funMap: Map[String, PredicateValue]): Seq[Heaplet] = {
     chunk match {
       case SApp(predIdent, args, tag, card) =>
-        funMap get predIdent match {
-          case None => Seq(chunk)
-          case Some(sp @ SPredicateValue(_)) => sp.apply(args)
-          case Some(PPredicateValue(_)) => Seq(chunk) // TODO: Generate an error here
+        if (predIdent == pred.name) {
+          // Recursive call
+
+          // NOTE: We do not currently support changing predicate abstractions
+          // in recursive calls
+
+          Seq(SApp(newName, withoutPredAbstractions(pred.params, args), tag, card))
+
+        } else {
+          funMap get predIdent match {
+            case None => Seq(chunk)
+            case Some(sp @ SPredicateValue(_)) => sp.apply(args)
+            case Some(PPredicateValue(_)) => Seq(chunk) // TODO: Generate an error here
+          }
         }
 
       case _ => Seq(chunk)
     }
   }
+
+
+    private def withoutPredAbstractions(params: Formals, args: Seq[Expr]): Seq[Expr] = {
+      (params.toSeq, args).zipped.filter((param, _) =>
+          param match {
+            case (_, PredType) => false
+            case _ => true
+          }
+        )._2
+    }
+
 
   // Pure part
   private def defunctionalizeExpr(e: Expr, funMap: Map[String, PredicateValue]): Expr = {
