@@ -80,7 +80,8 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
           funMap get predIdent match {
             case None => Seq(chunk)
             case Some(sp @ SPredicateValue(_)) => sp.apply(args)
-            case Some(PPredicateValue(_)) => Seq(chunk) // TODO: Generate an error here
+            case Some(PPredicateValue(_)) => // Seq(chunk) // TODO: Generate an error here
+              throw new Exception("Pure predicate used as a spatial predicate: " + newName)
           }
         }
 
@@ -94,8 +95,10 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
     e match {
       case PApp(predIdent, args) =>
         funMap get predIdent match {
-          case None => SortedSet[Expr](e)
-          case Some(SPredicateValue(_)) => SortedSet[Expr](e) // TODO: Generate an error here
+          case None =>
+            throw new Exception(s"Invalid pure predicate application: ${e}")
+          case Some(SPredicateValue(_)) => // SortedSet[Expr](e) // TODO: Generate an error here
+            throw new Exception(s"Spatial predicate used as a pure predicate: ${newName}")
           case Some(p @ PPredicateValue(_)) => p.apply(args)
         }
       case _ => SortedSet[Expr](e)
