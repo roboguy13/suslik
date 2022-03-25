@@ -21,7 +21,6 @@ object Preprocessor extends SepLogicUtils {
   def preprocessProgram(prog: Program, params: SynConfig): (Seq[FunSpec], PredicateEnv, FunctionEnv, Statement) = {
     val Program(preds0, funs0, goal0) = prog
 
-    // val gen = new FreshIdentGen(preds0.map((p: InductivePredicate) => p.name).to[ListBuffer])
     val gen = new FreshIdentGen()
     val predMap0 = preds0.map(ps => ps.name -> ps).toMap
 

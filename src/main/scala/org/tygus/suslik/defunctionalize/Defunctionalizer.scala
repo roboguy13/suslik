@@ -2,6 +2,7 @@ package org.tygus.suslik.defunctionalize
 
 import org.tygus.suslik.language._
 import org.tygus.suslik.language.Expressions._
+import org.tygus.suslik.language.Expressions.PredicateAbstraction
 import org.tygus.suslik.logic._
 import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic.PFormula._
@@ -23,29 +24,41 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
   def defunctionalizeDef(fs: Seq[PredicateValue]): InductivePredicate = {
     var params = pred.params
 
-    val funMap = scala.collection.mutable.Map[String, PredicateValue]()
+    // val funMap = scala.collection.mutable.Map[String, PredicateValue]()
 
-    val fStack = scala.collection.mutable.Stack[PredicateValue]()
-    fStack.pushAll(fs.reverse)
+    // val fStack = scala.collection.mutable.Stack[PredicateValue]()
+    // fStack.pushAll(fs.reverse)
 
-    val newParams = scala.collection.mutable.Stack[(Var, SSLType)]()
+    // val newParams = scala.collection.mutable.Stack[(Var, SSLType)]()
 
-    for (param <- params) {
-      param match {
-        case (Var(s), PredType) => {
-          val f = fStack.pop()
-          funMap += (s -> f)
-        }
+    // for (param <- params) {
+    //   param match {
+    //     case (Var(s), PredType) => {
+    //       val f = fStack.pop()
+    //       funMap += (s -> f)
+    //     }
 
-        case (_, _) => newParams.push(param)
-      }
-    }
+    //     case (_, _) => newParams.push(param)
+    //   }
+    // }
 
-    val funMapImm = funMap.toMap
+    val funMap : Map[String, PredicateValue] = params.filter(
+      {
+        case (_, PredType) => true
+        case _ => false
+      }).map(_._1).zip(fs).map({
+        case (Var(n), f) => (n, f)
+      }).toMap
 
-    val newClauses = pred.clauses.map((c: InductiveClause) => defunctionalizeClause(c, funMapImm))
+    val newParams = params.filter(
+      {
+        case (_, PredType) => false
+        case _ => true
+      })
 
-    InductivePredicate(newName, newParams.toList.reverse, newClauses)
+    val newClauses = pred.clauses.map((c: InductiveClause) => defunctionalizeClause(c, funMap))
+
+    InductivePredicate(newName, newParams, newClauses)
   }
 
   private def defunctionalizeClause(clause: InductiveClause, funMap: Map[String, PredicateValue]): InductiveClause = {
