@@ -7,6 +7,7 @@ import org.tygus.suslik.logic._
 import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic.PFormula._
 import org.tygus.suslik.logic.SFormula._
+import org.tygus.suslik.defunctionalize.{PredicateValue, SPredicateValue, PPredicateValue}
 
 import scala.collection.mutable.Stack
 import scala.collection.mutable.ListBuffer
@@ -121,35 +122,6 @@ class DefunctionalizeInductive (newName: Ident, pred: InductivePredicate, fs: Se
 
 }
 
-sealed abstract class PredicateValue(abstr: PredicateAbstraction) {
-  protected def assertNoFreeVars() = {
-    val freeVars = abstr.vars.diff(abstr.args.map(Var(_)).toSet)
-
-    if (!freeVars.isEmpty) {
-      throw new Exception("Free variables in predicate abstraction (closures not yet supported)")
-    }
-  }
-}
-
-case class SPredicateValue(abstr: SpatialPredicateAbstraction) extends PredicateValue(abstr) {
-  def apply(args: Seq[Expr]): List[Heaplet] = {
-    val st = (abstr.args, args).zipped map((x: Ident, y: Expr) => (Var(x) , y))
-
-    assertNoFreeVars()
-
-    abstr.body.subst(st.toMap).chunks
-  }
-}
-
-case class PPredicateValue(abstr: PurePredicateAbstraction) extends PredicateValue(abstr) {
-  def apply(args: Seq[Expr]): SortedSet[Expr] = {
-    val st = (abstr.args, args).zipped map((x: Ident, y: Expr) => (Var(x) , y))
-
-    assertNoFreeVars()
-
-    abstr.body.subst(st.toMap).conjuncts.iterator.to[SortedSet]
-  }
-}
 // Defunctionalization on the side of the predicate abstractions
 class DefunctionalizeGoalContainer(goal: GoalContainer, gen: FreshIdentGen, predEnv: PredicateEnv) {
   def defunctionalize(): (GoalContainer, List[InductivePredicate]) = {
