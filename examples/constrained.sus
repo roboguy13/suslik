@@ -1,6 +1,6 @@
 
 void constrained(loc x)
-  { x :-> y ** lseg(y, s) }
+  { x :-> y ** constrained_list(y, s, pred(q, z) => z == q) }
   { x :-> y ** constrained_list(y, s, pred(q, z) => z == (q+1)) }
 {
   ??

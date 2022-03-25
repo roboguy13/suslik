@@ -21,7 +21,8 @@ object Preprocessor extends SepLogicUtils {
   def preprocessProgram(prog: Program, params: SynConfig): (Seq[FunSpec], PredicateEnv, FunctionEnv, Statement) = {
     val Program(preds0, funs0, goal0) = prog
 
-    val gen = new FreshIdentGen(preds0.map((p: InductivePredicate) => p.name).to[ListBuffer])
+    // val gen = new FreshIdentGen(preds0.map((p: InductivePredicate) => p.name).to[ListBuffer])
+    val gen = new FreshIdentGen()
     val predMap0 = preds0.map(ps => ps.name -> ps).toMap
 
     val defun = new DefunctionalizeFunSpec(gen, predMap0)
@@ -213,11 +214,13 @@ object Preprocessor extends SepLogicUtils {
 
   }
 
-  private class FreshIdentGen(existingIdents: ListBuffer[Ident]) {
+  private class FreshIdentGen() {
+    val existingIdents: ListBuffer[Ident] = ListBuffer[Ident]()
+
     def genFresh(baseIdent: Ident): Ident = genFreshWith(baseIdent, 0)
 
     def genFreshWith(baseIdent: Ident, n: Int): Ident = {
-      val newName = baseIdent + n.toString
+      val newName = baseIdent + "$" + n.toString
 
       if (existingIdents.contains(newName)) {
         genFreshWith(baseIdent, n + 1)
