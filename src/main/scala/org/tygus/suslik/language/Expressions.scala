@@ -616,15 +616,17 @@ object Expressions {
     def getType(gamma: Gamma): Option[SSLType] = left.getType(gamma)
   }
 
+  abstract class PredicateAbstraction(val args: List[Ident]) extends Expr {
+  }
 
-  case class PurePredicateAbstraction(args: List[Ident], body: Expr) extends Expr {
+  case class PurePredicateAbstraction(override val args: List[Ident], body: Expr) extends PredicateAbstraction(args) {
     def subst(sigma: Subst): PurePredicateAbstraction = this // TODO: Is this correct?
 
     override def pp: String = s"pred(${args.mkString(", ")} => ${body.pp}"
     def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
   }
 
-  case class SpatialPredicateAbstraction(args: List[Ident], body: SFormula) extends Expr {
+  case class SpatialPredicateAbstraction(override val args: List[Ident], body: SFormula) extends PredicateAbstraction(args) {
     def subst(sigma: Subst): SpatialPredicateAbstraction = this // TODO: Is this correct?
 
     override def pp: String = s"pred(${args.mkString(", ")} => ${body.pp}"

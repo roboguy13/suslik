@@ -80,7 +80,7 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
           funMap get predIdent match {
             case None => Seq(chunk)
             case Some(sp @ SPredicateValue(_)) => sp.apply(args)
-            case Some(PPredicateValue(_)) => // Seq(chunk) // TODO: Generate an error here
+            case Some(PPredicateValue(_)) =>
               throw new Exception("Pure predicate used as a spatial predicate: " + newName)
           }
         }
@@ -97,7 +97,7 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
         funMap get predIdent match {
           case None =>
             throw new Exception(s"Invalid pure predicate application: ${e}")
-          case Some(SPredicateValue(_)) => // SortedSet[Expr](e) // TODO: Generate an error here
+          case Some(SPredicateValue(_)) =>
             throw new Exception(s"Spatial predicate used as a pure predicate: ${newName}")
           case Some(p @ PPredicateValue(_)) => p.apply(args)
         }
@@ -117,41 +117,33 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
 
 }
 
-sealed abstract class PredicateValue {
+sealed abstract class PredicateValue(abstr: PredicateAbstraction) {
+  protected def handleFreeVars() = {
+    val freeVars = abstr.vars.diff(abstr.args.map(Var(_)).toSet)
+
+    if (!freeVars.isEmpty) {
+      throw new Exception("Free variables in predicate abstraction (closures not yet supported)")
+    }
+  }
 }
 
-
-case class SPredicateValue(abstr: SpatialPredicateAbstraction) extends PredicateValue {
+case class SPredicateValue(abstr: SpatialPredicateAbstraction) extends PredicateValue(abstr) {
   def apply(args: Seq[Expr]): List[Heaplet] = {
     val st = (abstr.args, args).zipped map((x: Ident, y: Expr) => (Var(x) , y))
 
+    handleFreeVars()
+
     abstr.body.subst(st.toMap).chunks
   }
-
-  // private def applyInHeaplet(args: Seq[Expr], heaplet: Heaplet): Heaplet = {
-  //   // heaplet match {
-  //   //   case PointsTo(_, _, _) => heaplet
-  //   //   case Block(_, _) => heaplet
-  //   //   case SApp(fName, args, tag, card) =>
-  //   //     if (fName == abstr.name) {
-  //   //     } else {
-  //   //     }
-  //   //     heaplet
-  //   // }
-  // }
 }
 
-case class PPredicateValue(abstr: PurePredicateAbstraction) extends PredicateValue {
+case class PPredicateValue(abstr: PurePredicateAbstraction) extends PredicateValue(abstr) {
   def apply(args: Seq[Expr]): SortedSet[Expr] = {
     val st = (abstr.args, args).zipped map((x: Ident, y: Expr) => (Var(x) , y))
+
+    handleFreeVars()
 
     abstr.body.subst(st.toMap).conjuncts.iterator.to[SortedSet]
   }
 }
-
-// case class SPredicateValue(fun: Seq[Expr] => List[Heaplet]) extends PredicateValue {
-// }
-
-// case class PPredicateValue(fun: Seq[Expr] => SortedSet[Expr]) extends PredicateValue {
-// }
 
