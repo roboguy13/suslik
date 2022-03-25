@@ -11,7 +11,16 @@ import org.tygus.suslik.logic.SFormula._
 import scala.collection.mutable.Stack
 import scala.collection.immutable.SortedSet
 
-class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
+class Defunctionalizer (newName: Ident, pred: InductivePredicate, fs: Seq[PredicateValue]) {
+
+  val funMap : Map[String, PredicateValue] = pred.params.filter(
+    {
+      case (_, PredType) => true
+      case _ => false
+    }).map(_._1).zip(fs).map({
+      case (Var(n), f) => (n, f)
+    }).toMap
+
 
   // NOTE:
   //   - In the list of functions: Ensure that no free variables exist in the
@@ -21,64 +30,36 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
   //
   //   - 'newName' should be a fresh name w.r.t. the names of the other
   //   inductive predicates
-  def defunctionalizeDef(fs: Seq[PredicateValue]): InductivePredicate = {
-    var params = pred.params
-
-    // val funMap = scala.collection.mutable.Map[String, PredicateValue]()
-
-    // val fStack = scala.collection.mutable.Stack[PredicateValue]()
-    // fStack.pushAll(fs.reverse)
-
-    // val newParams = scala.collection.mutable.Stack[(Var, SSLType)]()
-
-    // for (param <- params) {
-    //   param match {
-    //     case (Var(s), PredType) => {
-    //       val f = fStack.pop()
-    //       funMap += (s -> f)
-    //     }
-
-    //     case (_, _) => newParams.push(param)
-    //   }
-    // }
-
-    val funMap : Map[String, PredicateValue] = params.filter(
-      {
-        case (_, PredType) => true
-        case _ => false
-      }).map(_._1).zip(fs).map({
-        case (Var(n), f) => (n, f)
-      }).toMap
-
-    val newParams = params.filter(
+  def defunctionalizeDef(): InductivePredicate = {
+    val newParams = pred.params.filter(
       {
         case (_, PredType) => false
         case _ => true
       })
 
-    val newClauses = pred.clauses.map((c: InductiveClause) => defunctionalizeClause(c, funMap))
+    val newClauses = pred.clauses.map((c: InductiveClause) => defunctionalizeClause(c))
 
     InductivePredicate(newName, newParams, newClauses)
   }
 
-  private def defunctionalizeClause(clause: InductiveClause, funMap: Map[String, PredicateValue]): InductiveClause = {
-    InductiveClause(clause.selector, defunctionalizeAssertion(clause.asn, funMap))
+  private def defunctionalizeClause(clause: InductiveClause): InductiveClause = {
+    InductiveClause(clause.selector, defunctionalizeAssertion(clause.asn))
   }
 
-  private def defunctionalizeAssertion(asn: Assertion, funMap: Map[String, PredicateValue]): Assertion = {
-    Assertion(defunctionalizePFormula(asn.phi, funMap), defunctionalizeSFormula(asn.sigma, funMap))
+  private def defunctionalizeAssertion(asn: Assertion): Assertion = {
+    Assertion(defunctionalizePFormula(asn.phi), defunctionalizeSFormula(asn.sigma))
   }
 
-  private def defunctionalizePFormula(phi: PFormula, funMap: Map[String, PredicateValue]): PFormula = {
-    PFormula(phi.conjuncts.flatMap((e : Expr) => defunctionalizeExpr(e, funMap)))
+  private def defunctionalizePFormula(phi: PFormula): PFormula = {
+    PFormula(phi.conjuncts.flatMap((e : Expr) => defunctionalizeExpr(e)))
   }
 
-  private def defunctionalizeSFormula(sigma: SFormula, funMap: Map[String, PredicateValue]): SFormula = {
-    SFormula(sigma.chunks.flatMap((chunk: Heaplet) => defunctionalizeHeaplet(chunk, funMap)))
+  private def defunctionalizeSFormula(sigma: SFormula): SFormula = {
+    SFormula(sigma.chunks.flatMap((chunk: Heaplet) => defunctionalizeHeaplet(chunk)))
   }
 
   // Spatial part
-  private def defunctionalizeHeaplet(chunk: Heaplet, funMap: Map[String, PredicateValue]): Seq[Heaplet] = {
+  private def defunctionalizeHeaplet(chunk: Heaplet): Seq[Heaplet] = {
     chunk match {
       case SApp(predIdent, args, tag, card) =>
         if (predIdent == pred.name) {
@@ -104,7 +85,7 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
 
 
   // Pure part
-  private def defunctionalizeExpr(e: Expr, funMap: Map[String, PredicateValue]): SortedSet[Expr] = {
+  private def defunctionalizeExpr(e: Expr): SortedSet[Expr] = {
     e match {
       case PApp(predIdent, args) =>
         funMap get predIdent match {
