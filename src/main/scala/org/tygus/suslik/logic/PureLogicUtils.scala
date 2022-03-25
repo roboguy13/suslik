@@ -44,6 +44,7 @@ trait PureLogicUtils {
     case _:Var => e
     case IfThenElse(e1,e2,e3) => IfThenElse(propagate_not(e1),propagate_not(e2), propagate_not(e3))
     case SetLiteral(args) => SetLiteral(args.map(propagate_not))
+    case PApp(f, args) => PApp(f, args.map(propagate_not))
     case e => throw SynthesisException(s"Not supported: ${e.pp} (${e.getClass.getName})")
   }
 
@@ -67,6 +68,7 @@ trait PureLogicUtils {
     case _:Var => e
     case IfThenElse(e1,e2,e3) => IfThenElse(desugar(e1),desugar(e2), desugar(e3))
     case SetLiteral(args) => SetLiteral(args.map(desugar))
+    case PApp(f, args) => PApp(f, args.map(desugar))
     case e => throw SynthesisException(s"Not supported: ${e.pp} (${e.getClass.getName})")
   }
 

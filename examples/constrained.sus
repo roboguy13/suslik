@@ -1,7 +1,7 @@
 
 void constrained(loc x, set s)
   { x :-> y ** lseg(y, s) }
-  { x :-> y ** constrained_list(y, {0}, pred(w) => w :-> 0) }
+  { x :-> y ** constrained_list(y, s, pred(w) => 3 <= w) }
 {
   ??
 }

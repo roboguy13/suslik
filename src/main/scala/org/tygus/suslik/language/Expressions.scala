@@ -616,6 +616,7 @@ object Expressions {
     def getType(gamma: Gamma): Option[SSLType] = left.getType(gamma)
   }
 
+
   case class PurePredicateAbstraction(args: List[Ident], body: Expr) extends Expr {
     def subst(sigma: Subst): PurePredicateAbstraction = this // TODO: Is this correct?
 
@@ -628,6 +629,13 @@ object Expressions {
 
     override def pp: String = s"pred(${args.mkString(", ")} => ${body.pp}"
     def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
+  }
+
+  case class PApp(fName: Ident, args: List[Expr]) extends Expr {
+    def subst(sigma: Subst): PApp = this // TODO: Is this correct?
+
+    override def pp: String = s"${fName}(${args.mkString(", ")})"
+    def getType(gamma: Gamma): Option[SSLType] = None // TODO: Consider some type inference
   }
 
   /**

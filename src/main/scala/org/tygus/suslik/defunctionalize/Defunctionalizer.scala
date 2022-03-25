@@ -53,11 +53,11 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
   }
 
   private def defunctionalizeAssertion(asn: Assertion, funMap: Map[String, PredicateValue]): Assertion = {
-    Assertion(asn.phi, defunctionalizeSFormula(asn.sigma, funMap))
+    Assertion(defunctionalizePFormula(asn.phi, funMap), defunctionalizeSFormula(asn.sigma, funMap))
   }
 
   private def defunctionalizePFormula(phi: PFormula, funMap: Map[String, PredicateValue]): PFormula = {
-    PFormula(phi.conjuncts.map((e : Expr) => defunctionalizeExpr(e, funMap)))
+    PFormula(phi.conjuncts.flatMap((e : Expr) => defunctionalizeExpr(e, funMap)))
   }
 
   private def defunctionalizeSFormula(sigma: SFormula, funMap: Map[String, PredicateValue]): SFormula = {
@@ -89,21 +89,28 @@ class Defunctionalizer (newName: Ident, pred: InductivePredicate) {
   }
 
 
-    private def withoutPredAbstractions(params: Formals, args: Seq[Expr]): Seq[Expr] = {
-      (params.toSeq, args).zipped.filter((param, _) =>
-          param match {
-            case (_, PredType) => false
-            case _ => true
-          }
-        )._2
-    }
-
-
   // Pure part
-  private def defunctionalizeExpr(e: Expr, funMap: Map[String, PredicateValue]): Expr = {
-    // TODO: Add applications to the syntax of the pure part and finish this
-    throw new Exception("defunctionalizeExpr: Defunctionalization for pure parts of predicates not yet implemented")
+  private def defunctionalizeExpr(e: Expr, funMap: Map[String, PredicateValue]): SortedSet[Expr] = {
+    e match {
+      case PApp(predIdent, args) =>
+        funMap get predIdent match {
+          case None => SortedSet[Expr](e)
+          case Some(SPredicateValue(_)) => SortedSet[Expr](e) // TODO: Generate an error here
+          case Some(p @ PPredicateValue(_)) => p.apply(args)
+        }
+      case _ => SortedSet[Expr](e)
+    }
   }
+
+  private def withoutPredAbstractions(params: Formals, args: Seq[Expr]): Seq[Expr] = {
+    (params.toSeq, args).zipped.filter((param, _) =>
+        param match {
+          case (_, PredType) => false
+          case _ => true
+        }
+      )._2
+  }
+
 
 }
 
@@ -133,7 +140,9 @@ case class SPredicateValue(abstr: SpatialPredicateAbstraction) extends Predicate
 
 case class PPredicateValue(abstr: PurePredicateAbstraction) extends PredicateValue {
   def apply(args: Seq[Expr]): SortedSet[Expr] = {
-    SortedSet[Expr]() // TODO: Finish
+    val st = (abstr.args, args).zipped map((x: Ident, y: Expr) => (Var(x) , y))
+
+    abstr.body.subst(st.toMap).conjuncts.iterator.to[SortedSet]
   }
 }
 

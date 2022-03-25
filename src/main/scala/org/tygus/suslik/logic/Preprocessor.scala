@@ -6,7 +6,7 @@ import org.tygus.suslik.language.Ident
 import org.tygus.suslik.logic.Specifications.Assertion
 import org.tygus.suslik.synthesis.SynConfig
 import org.tygus.suslik.defunctionalize.Defunctionalizer
-import org.tygus.suslik.defunctionalize.SPredicateValue
+import org.tygus.suslik.defunctionalize.{PredicateValue,PPredicateValue,SPredicateValue}
 import org.tygus.suslik.language.PredType
 
 import scala.collection.immutable.Set
@@ -168,11 +168,12 @@ object Preprocessor extends SepLogicUtils {
     private def defunctionalizeHeaplet(heaplet: Heaplet): (Heaplet, Option[InductivePredicate]) = {
       heaplet match {
         case SApp(predIdent, args, tag, card) => {
-          val predValues = collectSpatialPredAbstractions(args).map(new SPredicateValue(_))
+          val predValues = collectPredValues(args)
+
           if (predValues.isEmpty) {
             (heaplet, None)
           } else {
-            val newArgs = withoutSpatialPredAbstractions(args)
+            val newArgs = withoutPredAbstractions(args)
 
             val newPredName = gen.genFresh(predIdent)
 
@@ -195,12 +196,19 @@ object Preprocessor extends SepLogicUtils {
       }
     }
 
-    private def collectSpatialPredAbstractions(args: Seq[Expr]): Seq[SpatialPredicateAbstraction] = {
-      args.collect { case x: SpatialPredicateAbstraction => x }
+    private def collectPredValues(args: Seq[Expr]): Seq[PredicateValue] = {
+      args.collect {
+        case x: PurePredicateAbstraction => PPredicateValue(x)
+        case x: SpatialPredicateAbstraction => SPredicateValue(x)
+      }
     }
 
-    private def withoutSpatialPredAbstractions(args: Seq[Expr]): Seq[Expr] = {
-      args.filter { case x: SpatialPredicateAbstraction => false; case _ => true }
+    private def withoutPredAbstractions(args: Seq[Expr]): Seq[Expr] = {
+      args.filter {
+        case _: PurePredicateAbstraction => false
+        case _: SpatialPredicateAbstraction => false
+        case _ => true
+      }
     }
 
   }

@@ -101,6 +101,7 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
   def atom: Parser[Expr] = (
     unOpParser ~ atom ^^ { case op ~ a => UnaryExpr(op, a) }
       | "(" ~> expr <~ ")"
+      | pureApp
       | intLiteral | boolLiteral | setLiteral | locLiteral | intervalLiteral
       | varParser
     )
@@ -123,6 +124,11 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
   def spatialPredAbstraction: Parser[SpatialPredicateAbstraction] =
     ("pred" ~> ("(" ~> rep1sep(ident, ",") <~ ")") <~ "=>") ~ sigma ^^ {
       case args ~ body => SpatialPredicateAbstraction(args, body)
+    }
+
+  def pureApp: Parser[PApp] =
+    ident ~ ("(" ~> rep1sep(ident, ",") <~ ")") ^^ {
+      case fName ~ args => PApp(fName, args.map(Var))
     }
 
   def expr: Parser[Expr] =
