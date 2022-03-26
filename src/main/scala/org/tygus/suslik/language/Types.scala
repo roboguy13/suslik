@@ -18,6 +18,14 @@ abstract class SSLType extends PrettyPrinting {
   def isSubtypeOf(other: SSLType): Boolean = supertype(Some(other)).contains(other)
 }
 
+// For internal use in lambda lifting
+case object AnyType extends SSLType {
+  override def pp: String = "<any>"
+
+  override def supertype(target: Option[SSLType]): Option[SSLType] = target
+  override def subtype(target: Option[SSLType]): Option[SSLType] = target
+}
+
 case object PredType extends SSLType {
   override def pp: String = "pred"
 

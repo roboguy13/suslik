@@ -21,7 +21,7 @@ object Preprocessor extends SepLogicUtils {
   def preprocessProgram(prog: Program, params: SynConfig): (Seq[FunSpec], PredicateEnv, FunctionEnv, Statement) = {
     val Program(preds0, funs0, goal0) = prog
 
-    val gen = new FreshIdentGen()
+    val defuncGen = new FreshIdentGen("$")
     val predMap0 = preds0.map(ps => ps.name -> ps).toMap
 
     // [Cardinality] Instrument predicates with missing cardinality constraints
@@ -30,16 +30,16 @@ object Preprocessor extends SepLogicUtils {
     val preds = preds0.to[ListBuffer]
 
     val funs = funs0.map(fun => {
-        val defunFunSpec = new DefunctionalizeFunSpec(fun, gen, predMap0)
-        val newFun = defunFunSpec.defunctionalize()
+        val defunFunSpec = new DefunctionalizeFunSpec(fun, defuncGen, predMap0)
+        val newFun = defunFunSpec.transform()
 
         preds ++= defunFunSpec.getGeneratedPreds()
         newFun
       })
 
-    val defun = new DefunctionalizeGoalContainer(goal0, gen, predMap0)
+    val defun = new DefunctionalizeGoalContainer(goal0, defuncGen, predMap0)
 
-    val (goal, generatedPreds) = defun.defunctionalize()
+    val (goal, generatedPreds) = defun.transform()
 
     preds ++= generatedPreds
 

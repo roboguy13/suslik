@@ -7,38 +7,26 @@ import org.tygus.suslik.logic._
 import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic.PFormula._
 import org.tygus.suslik.logic.SFormula._
-import org.tygus.suslik.defunctionalize.{PredicateValue, SPredicateValue, PPredicateValue}
 
-import scala.collection.mutable.Stack
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.SortedSet
 
-  // This abstracts over the traversal pattern used by both the part of
-  // defunctionalization that traverses the inductive predicate as well
-  // as the part that traverses expressions which use the inductive predicate and
-  // might contain abstractions.
-abstract class Defunctionalizer[A <: HasAssertions[A]] {
 
-  def defunctionalize(): A = {
-    setup().visitAssertions(asn => defunctionalizeAssertion(asn))
-  }
+  // TODO: Consider avoiding constructing this twice (once in
+  // DefunctionalizeInductive and once in LambdaLiftInductive). On the other hand, this is
+  // very unlikely to be a significant source of inefficiency.
+class PredicateValueMap(pred: InductivePredicate, fs: Seq[PredicateValue]) {
+  private val funMap : Map[String, PredicateValue] = pred.params.filter(
+    {
+      case (_, PredType) => true
+      case _ => false
+    }).map(_._1).zip(fs).map({
+      case (Var(n), f) => (n, f)
+    }).toMap
 
-  protected def setup(): A
 
-  protected def defunctionalizeExpr(e: Expr): SortedSet[Expr]
-  protected def defunctionalizeHeaplet(h: Heaplet): Seq[Heaplet]
-
-  private def defunctionalizeAssertion(asn: Assertion): Assertion = {
-    Assertion(defunctionalizePFormula(asn.phi), defunctionalizeSFormula(asn.sigma))
-  }
-
-  private def defunctionalizePFormula(phi: PFormula): PFormula = {
-    PFormula(phi.conjuncts.flatMap((e : Expr) => defunctionalizeExpr(e)))
-  }
-
-  private def defunctionalizeSFormula(sigma: SFormula): SFormula = {
-    SFormula(sigma.chunks.flatMap((chunk: Heaplet) => defunctionalizeHeaplet(chunk)))
-  }
+   def get(key: String): Option[PredicateValue] = funMap.get(key)
+   def iterator: Iterator[(String, PredicateValue)] = funMap.iterator
 }
 
   // NOTE:
@@ -49,16 +37,10 @@ abstract class Defunctionalizer[A <: HasAssertions[A]] {
   //
   //   - 'newName' should be a fresh name w.r.t. the names of the other
   //   inductive predicates
-class DefunctionalizeInductive (newName: Ident, pred: InductivePredicate, fs: Seq[PredicateValue])
-  extends Defunctionalizer[InductivePredicate] {
+case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs: Seq[PredicateValue])
+  extends TransformAssertions[InductivePredicate] {
 
-  val funMap : Map[String, PredicateValue] = pred.params.filter(
-    {
-      case (_, PredType) => true
-      case _ => false
-    }).map(_._1).zip(fs).map({
-      case (Var(n), f) => (n, f)
-    }).toMap
+  val funMap = new PredicateValueMap(pred, fs)
 
   def setup(): InductivePredicate = {
     val newParams = pred.params.filter(
@@ -70,7 +52,7 @@ class DefunctionalizeInductive (newName: Ident, pred: InductivePredicate, fs: Se
   }
 
   // Spatial part
-  protected def defunctionalizeHeaplet(chunk: Heaplet): Seq[Heaplet] = {
+  protected def transformHeaplet(chunk: Heaplet): Seq[Heaplet] = {
     chunk match {
       case SApp(predIdent, args, tag, card) =>
         if (predIdent == pred.name) {
@@ -86,7 +68,7 @@ class DefunctionalizeInductive (newName: Ident, pred: InductivePredicate, fs: Se
             case None => Seq(chunk)
             case Some(sp @ SPredicateValue(_)) => sp.apply(args)
             case Some(PPredicateValue(_)) =>
-              throw new Exception("Pure predicate used as a spatial predicate: " + newName)
+              throw new Exception("Pure predicate used as a spatial predicate: " + predIdent)
           }
         }
 
@@ -96,14 +78,14 @@ class DefunctionalizeInductive (newName: Ident, pred: InductivePredicate, fs: Se
 
 
   // Pure part
-  protected def defunctionalizeExpr(e: Expr): SortedSet[Expr] = {
+  protected def transformExpr(e: Expr): SortedSet[Expr] = {
     e match {
       case PApp(predIdent, args) =>
         funMap get predIdent match {
           case None =>
             throw new Exception(s"Invalid pure predicate application: ${e}")
           case Some(SPredicateValue(_)) =>
-            throw new Exception(s"Spatial predicate used as a pure predicate: ${newName}")
+            throw new Exception(s"Spatial predicate used as a pure predicate: ${predIdent}")
           case Some(p @ PPredicateValue(_)) => p.apply(args)
         }
       case _ => SortedSet[Expr](e)
@@ -123,27 +105,27 @@ class DefunctionalizeInductive (newName: Ident, pred: InductivePredicate, fs: Se
 }
 
 // Defunctionalization on the side of the predicate abstractions
-class DefunctionalizeGoalContainer(goal: GoalContainer, gen: FreshIdentGen, predEnv: PredicateEnv) {
-  def defunctionalize(): (GoalContainer, List[InductivePredicate]) = {
+case class DefunctionalizeGoalContainer(goal: GoalContainer, gen: FreshIdentGen, predEnv: PredicateEnv) {
+  def transform(): (GoalContainer, List[InductivePredicate]) = {
 
     val defun = new DefunctionalizeFunSpec(goal.spec, gen, predEnv)
 
-    val newSpec = defun.defunctionalize()
+    val newSpec = defun.transform()
 
     (GoalContainer(newSpec, goal.body), defun.getGeneratedPreds)
   }
 
 }
 
-class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: PredicateEnv)
-  extends Defunctionalizer[FunSpec] {
+case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: PredicateEnv)
+  extends TransformAssertions[FunSpec] {
   private val generatedPreds = new ListBuffer[InductivePredicate]()
 
   def getGeneratedPreds(): List[InductivePredicate] = generatedPreds.result()
 
   protected def setup(): FunSpec = fun
 
-  protected def defunctionalizeHeaplet(heaplet: Heaplet): Seq[Heaplet] = {
+  protected def transformHeaplet(heaplet: Heaplet): Seq[Heaplet] = {
     Seq[Heaplet](heaplet match {
       case SApp(predIdent, args, tag, card) => {
         val predValues = collectPredValues(args)
@@ -165,7 +147,7 @@ class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Predicat
           val defunctionalizer = new DefunctionalizeInductive(newPredName, pred, predValues)
 
           // TODO: Ensure there are no free variables remaining in any of the 'predValues'
-          generatedPreds += defunctionalizer.defunctionalize()
+          generatedPreds += defunctionalizer.transform()
           SApp(newPredName, newArgs, tag, card)
         }
       }
@@ -174,10 +156,16 @@ class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Predicat
     })
   }
 
-  protected def defunctionalizeExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
+  protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
 
   private def collectPredValues(args: Seq[Expr]): Seq[PredicateValue] = {
     args.collect {
+      case x: PredicateAbstraction => toPredValue(x)
+    }
+  }
+
+  private def toPredValue(e: PredicateAbstraction): PredicateValue = {
+    e match {
       case x: PurePredicateAbstraction => PPredicateValue(x)
       case x: SpatialPredicateAbstraction => SPredicateValue(x)
     }
@@ -188,24 +176,6 @@ class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Predicat
       case _: PurePredicateAbstraction => false
       case _: SpatialPredicateAbstraction => false
       case _ => true
-    }
-  }
-}
-
-
-class FreshIdentGen() {
-  val existingIdents: ListBuffer[Ident] = ListBuffer[Ident]()
-
-  def genFresh(baseIdent: Ident): Ident = genFreshWith(baseIdent, 0)
-
-  def genFreshWith(baseIdent: Ident, n: Int): Ident = {
-    val newName = baseIdent + "$" + n.toString
-
-    if (existingIdents.contains(newName)) {
-      genFreshWith(baseIdent, n + 1)
-    } else {
-      existingIdents += newName
-      newName
     }
   }
 }
