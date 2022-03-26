@@ -22,8 +22,14 @@ abstract class SSLType extends PrettyPrinting {
 case object AnyType extends SSLType {
   override def pp: String = "<any>"
 
-  override def supertype(target: Option[SSLType]): Option[SSLType] = target
-  override def subtype(target: Option[SSLType]): Option[SSLType] = target
+  override def supertype(target: Option[SSLType]): Option[SSLType] = target match {
+    case Some(PredType) => None
+    case _ => Some(this)
+  }
+  override def subtype(target: Option[SSLType]): Option[SSLType] = target match {
+    case Some(PredType) => None
+    case _ => target
+  }
 }
 
 case object PredType extends SSLType {

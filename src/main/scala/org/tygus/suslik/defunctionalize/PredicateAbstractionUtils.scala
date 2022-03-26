@@ -32,6 +32,7 @@ object PredicateAbstractionUtils {
   def withoutPredAbstractions(params: Formals, args: Seq[Expr]): Seq[Expr] = {
     (params.toSeq, args).zipped.filter((param, _) =>
         param match {
+          case (_, AnyType) => true
           case (_, PredType) => false
           case _ => true
         }
