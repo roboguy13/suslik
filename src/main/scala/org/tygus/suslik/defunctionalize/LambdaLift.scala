@@ -113,7 +113,8 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
         if (predValues.isEmpty) {
           heaplet
         } else {
-          SApp(predIdent, updateCallArgs(args.map(updatePredicateArg)), tag, card)
+          // SApp(predIdent, updateCallArgs(args.map(updatePredicateArg)), tag, card)
+          SApp(predIdent, updateCallArgs(args), tag, card)
         }
       }
 
