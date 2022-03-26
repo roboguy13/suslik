@@ -67,3 +67,18 @@ predicate constrained_coproducts(loc x, set s, pred p, pred q) {
   }
 }
 
+predicate split_le(loc x, set s, int sep) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i {v} ++ s1 &&
+    left  == (sep <= x ? x : 0) &&
+    right == (sep <= x ? 0 : x)
+      ;
+    [x, 3] **
+    x :-> left **
+    (x+1) :-> right **
+    (x+2) :-> nxt **
+    split_le(nxt, s1, sep)
+  }
+}
+
