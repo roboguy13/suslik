@@ -117,17 +117,17 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
     }
 
   def purePredAbstraction: Parser[PurePredicateAbstraction] =
-    ("pred" ~> ("[" ~> rep1sep(ident, ",") <~ "]") <~ "=>") ~ expr ^^ {
+    ("pred" ~> ("(" ~> rep1sep(ident, ",") <~ ")") <~ "=>") ~ expr ^^ {
       case args ~ body => PurePredicateAbstraction(args, body)
     }
 
   def spatialPredAbstraction: Parser[SpatialPredicateAbstraction] =
-    ("pred" ~> ("[" ~> rep1sep(ident, ",") <~ "]") <~ "=>") ~ sigma ^^ {
+    ("pred" ~> ("(" ~> rep1sep(ident, ",") <~ ")") <~ "=>") ~ sigma ^^ {
       case args ~ body => SpatialPredicateAbstraction(args, body)
     }
 
   def pureApp: Parser[PApp] =
-    ident ~ ("[" ~> rep1sep(ident, ",") <~ "]") ^^ {
+    ident ~ ("(" ~> rep1sep(ident, ",") <~ ")") ^^ {
       case fName ~ args => PApp(fName, args.map(Var))
     }
 

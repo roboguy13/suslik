@@ -41,12 +41,12 @@ predicate test_list(loc x, set s) {
 
 predicate constrained_list(loc x, set s, pred p) {
 |  x == null        => { s =i {} ; emp }
-|  not (x == null)  => { s =i {v} ++ s1 && p[v, r] ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
 }
 
 predicate constrained_list2(loc x, set s, pred p) {
 |  x == null        => { s =i {} ; emp }
-|  not (x == null)  => { s =i {v} ++ s1 && p[v] ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** constrained_list2(nxt, s1, p) }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v) ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** constrained_list2(nxt, s1, p) }
 }
 
 predicate lower_bounded(loc x, set s, int lb) {
@@ -57,7 +57,7 @@ predicate lower_bounded(loc x, set s, int lb) {
 predicate constrained_coproducts(loc x, set s1, set s2, pred p, pred q) {
 | x == null => { s =i {} ; emp }
 | not (x == null) => {
-    s =i {v} ++ s1 && p[v, left] && q[v, right]
+    s =i {v} ++ s1 && p(v, left) && q(v, right)
       ;
     [x, 3] **
     x :-> left **
