@@ -46,6 +46,6 @@ predicate constrained_list(loc x, set s, pred p) {
 
 predicate constrained_list2(loc x, set s, pred p) {
 |  x == null        => { s =i {} ; emp }
-|  not (x == null)  => { s =i {v} ++ s1 && p(v) ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v) ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** constrained_list2(nxt, s1, p) }
 }
 

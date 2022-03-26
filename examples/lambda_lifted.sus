@@ -1,7 +1,7 @@
 
 void lambda_lifted(loc x, int lowerBound)
-  { x :-> y ** constrained_list(y, s, pred(q) => true) }
-  { x :-> y ** constrained_list(y, sR, pred(q) => lowerBound <= q) }
+  { x :-> y ** constrained_list2(y, s, pred(q) => true) }
+  { x :-> y ** constrained_list2(y, sR, pred(q) => lowerBound <= q) }
 {
   ??
 }
