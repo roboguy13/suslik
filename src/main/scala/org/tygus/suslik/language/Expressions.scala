@@ -627,7 +627,7 @@ object Expressions {
 
   case class PurePredicateAbstraction(override val params: List[Ident], body: Expr) extends PredicateAbstraction(params) {
 
-    override def pp: String = s"pred(${params.mkString(", ")} => ${body.pp}"
+    override def pp: String = s"pred[${params.mkString(", ")}] => ${body.pp}"
     def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
 
       // TODO: Is this correct?
@@ -639,7 +639,7 @@ object Expressions {
 
   case class SpatialPredicateAbstraction(override val params: List[Ident], body: SFormula) extends PredicateAbstraction(params) {
 
-    override def pp: String = s"pred(${params.mkString(", ")} => ${body.pp}"
+    override def pp: String = s"pred[${params.mkString(", ")}] => ${body.pp}"
     def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
 
       // TODO: Is this correct?

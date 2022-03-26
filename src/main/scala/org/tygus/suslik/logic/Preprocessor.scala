@@ -31,15 +31,6 @@ object Preprocessor extends SepLogicUtils {
 
     val funs = funs0 // TODO: Figure this out
 
-    // val funs = funs0.map(fun => {
-    //     val defunFunSpec = new DefunctionalizeFunSpec(fun, defuncGen, predMap0)
-    //     val newFun = defunFunSpec.transform()
-    //     preds ++= defunFunSpec.getGeneratedPreds()
-    //     newFun
-    //   })
-
-    // val defun = new DefunctionalizeGoalContainer(goal0, defuncGen, predMap0)
-
     val elimAbs = new GoalContainerEliminateAbstractions()
 
     val (goal, generatedPreds) = elimAbs.transform(goal0, predMap0)
