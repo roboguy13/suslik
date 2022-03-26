@@ -11,12 +11,21 @@ import org.tygus.suslik.logic.SFormula._
 
 import scala.collection.immutable.SortedSet
 
+abstract class LambdaLift[A <: HasAssertions[A]] extends TransformAssertions[A] {
+  protected val additionalParams: Formals
+
+  // Include the "closure arguments"
+  protected def updateArgs(args: Seq[Expr]): Seq[Expr] = {
+     args ++ additionalParams.map(_._1)
+  }
+}
+
 // The side of lambda lifting that handles inductive predicate definitions.
 // In particular, update the parameters to include the "closure arguments."
 // Do this for recursive calls and for applications of predicate abstraction
 // arguments.
 class LambdaLiftInductive(pred: InductivePredicate, fs: Seq[PredicateValue])
-  extends TransformAssertions[InductivePredicate] {
+  extends LambdaLift[InductivePredicate] {
 
   private val funMap = new PredicateValueMap(pred, fs)
 
@@ -28,7 +37,7 @@ class LambdaLiftInductive(pred: InductivePredicate, fs: Seq[PredicateValue])
       case (n, i) => new FreeVar(i, n, gen.genFresh(n))
   }
 
-  val additionalParams: Formals = freeVars.map((x: FreeVar) => (new Var(x.newName), AnyType)).toList
+  protected val additionalParams = freeVars.map((x: FreeVar) => (new Var(x.newName), AnyType)).toList
 
   protected def setup(): InductivePredicate = {
     InductivePredicate(pred.name, pred.params ++ additionalParams, pred.clauses)
@@ -46,9 +55,11 @@ class LambdaLiftInductive(pred: InductivePredicate, fs: Seq[PredicateValue])
               throw new Exception(s"Invalid pure predicate application: ${e}")
 
             case Some(PPredicateValue(_)) =>
-                throw new Exception("Pure predicate used as a spatial predicate: " + predIdent)
+              throw new Exception("Pure predicate used as a spatial predicate: " + predIdent)
           }
         }
+
+        case _ => e
       }
     )
   }
@@ -78,18 +89,29 @@ class LambdaLiftInductive(pred: InductivePredicate, fs: Seq[PredicateValue])
       }
     )
   }
-
-  // Include the "closure arguments"
-  private def updateArgs(args: Seq[Expr]): Seq[Expr] = {
-     args ++ additionalParams.map(_._1)
-  }
 }
 
-class LambdaLiftFunSpec(fun: FunSpec, additionalParams: Formals) extends TransformAssertions[FunSpec] {
+class LambdaLiftFunSpec(fun: FunSpec, theAdditionalParams: Formals) extends LambdaLift[FunSpec] {
+  import PredicateAbstractionUtils._
+
+  protected val additionalParams = theAdditionalParams
+
   protected def setup(): FunSpec = fun
 
   protected def transformHeaplet(heaplet: Heaplet): Seq[Heaplet] = {
-    Seq[Heaplet]() // TODO: Implement
+    Seq[Heaplet](heaplet match {
+      case SApp(predIdent, args, tag, card) => {
+        val predValues = collectPredValues(args)
+
+        if (predValues.isEmpty) {
+          heaplet
+        } else {
+          heaplet
+        }
+      }
+
+      case _ => heaplet
+    })
   }
 
   protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)

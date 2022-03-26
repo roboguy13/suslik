@@ -40,6 +40,8 @@ class PredicateValueMap(pred: InductivePredicate, fs: Seq[PredicateValue]) {
 case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs: Seq[PredicateValue])
   extends TransformAssertions[InductivePredicate] {
 
+  import PredicateAbstractionUtils._
+
   val funMap = new PredicateValueMap(pred, fs)
 
   def setup(): InductivePredicate = {
@@ -91,17 +93,6 @@ case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs
       case _ => SortedSet[Expr](e)
     }
   }
-
-  private def withoutPredAbstractions(params: Formals, args: Seq[Expr]): Seq[Expr] = {
-    (params.toSeq, args).zipped.filter((param, _) =>
-        param match {
-          case (_, PredType) => false
-          case _ => true
-        }
-      )._2
-  }
-
-
 }
 
 // Defunctionalization on the side of the predicate abstractions
@@ -119,6 +110,9 @@ case class DefunctionalizeGoalContainer(goal: GoalContainer, gen: FreshIdentGen,
 
 case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: PredicateEnv)
   extends TransformAssertions[FunSpec] {
+
+  import PredicateAbstractionUtils._
+
   private val generatedPreds = new ListBuffer[InductivePredicate]()
 
   def getGeneratedPreds(): List[InductivePredicate] = generatedPreds.result()
@@ -157,26 +151,5 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
   }
 
   protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
-
-  private def collectPredValues(args: Seq[Expr]): Seq[PredicateValue] = {
-    args.collect {
-      case x: PredicateAbstraction => toPredValue(x)
-    }
-  }
-
-  private def toPredValue(e: PredicateAbstraction): PredicateValue = {
-    e match {
-      case x: PurePredicateAbstraction => PPredicateValue(x)
-      case x: SpatialPredicateAbstraction => SPredicateValue(x)
-    }
-  }
-
-  private def withoutPredAbstractions(args: Seq[Expr]): Seq[Expr] = {
-    args.filter {
-      case _: PurePredicateAbstraction => false
-      case _: SpatialPredicateAbstraction => false
-      case _ => true
-    }
-  }
 }
 
