@@ -5,7 +5,8 @@ import org.tygus.suslik.language.Statements.Statement
 import org.tygus.suslik.language.Ident
 import org.tygus.suslik.logic.Specifications.Assertion
 import org.tygus.suslik.synthesis.SynConfig
-import org.tygus.suslik.defunctionalize.{DefunctionalizeInductive,DefunctionalizeGoalContainer,DefunctionalizeFunSpec,FreshIdentGen}
+// import org.tygus.suslik.defunctionalize.{DefunctionalizeInductive,DefunctionalizeGoalContainer,DefunctionalizeFunSpec,FreshIdentGen}
+import org.tygus.suslik.defunctionalize.GoalContainerEliminateAbstractions
 import org.tygus.suslik.defunctionalize.{PredicateValue,PPredicateValue,SPredicateValue}
 import org.tygus.suslik.language.PredType
 
@@ -21,7 +22,6 @@ object Preprocessor extends SepLogicUtils {
   def preprocessProgram(prog: Program, params: SynConfig): (Seq[FunSpec], PredicateEnv, FunctionEnv, Statement) = {
     val Program(preds0, funs0, goal0) = prog
 
-    val defuncGen = new FreshIdentGen("$")
     val predMap0 = preds0.map(ps => ps.name -> ps).toMap
 
     // [Cardinality] Instrument predicates with missing cardinality constraints
@@ -29,17 +29,20 @@ object Preprocessor extends SepLogicUtils {
 
     val preds = preds0.to[ListBuffer]
 
-    val funs = funs0.map(fun => {
-        val defunFunSpec = new DefunctionalizeFunSpec(fun, defuncGen, predMap0)
-        val newFun = defunFunSpec.transform()
+    val funs = funs0 // TODO: Figure this out
 
-        preds ++= defunFunSpec.getGeneratedPreds()
-        newFun
-      })
+    // val funs = funs0.map(fun => {
+    //     val defunFunSpec = new DefunctionalizeFunSpec(fun, defuncGen, predMap0)
+    //     val newFun = defunFunSpec.transform()
+    //     preds ++= defunFunSpec.getGeneratedPreds()
+    //     newFun
+    //   })
 
-    val defun = new DefunctionalizeGoalContainer(goal0, defuncGen, predMap0)
+    // val defun = new DefunctionalizeGoalContainer(goal0, defuncGen, predMap0)
 
-    val (goal, generatedPreds) = defun.transform()
+    val elimAbs = new GoalContainerEliminateAbstractions()
+
+    val (goal, generatedPreds) = elimAbs.transform(goal0, predMap0)
 
     preds ++= generatedPreds
 

@@ -617,20 +617,36 @@ object Expressions {
   }
 
   abstract class PredicateAbstraction(val params: List[Ident]) extends Expr {
+      // Only includes free variables
+    override def vars: Set[Var] =
+      collect(_.isInstanceOf[Var]).map((e: Expr) => e match {
+        case Var(n) => n
+      }).diff(params.toSet).map((n: Ident) => new Var(n)).toSet
+
   }
 
   case class PurePredicateAbstraction(override val params: List[Ident], body: Expr) extends PredicateAbstraction(params) {
-    def subst(sigma: Subst): PurePredicateAbstraction = this // TODO: Is this correct?
 
     override def pp: String = s"pred(${params.mkString(", ")} => ${body.pp}"
     def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
+
+      // TODO: Is this correct?
+    def subst(sigma: Subst): PredicateAbstraction = {
+      val newSigma = sigma.filter{ case (n, _) => !params.contains(n) }
+      PurePredicateAbstraction(params, body.subst(newSigma))
+    }
   }
 
   case class SpatialPredicateAbstraction(override val params: List[Ident], body: SFormula) extends PredicateAbstraction(params) {
-    def subst(sigma: Subst): SpatialPredicateAbstraction = this // TODO: Is this correct?
 
     override def pp: String = s"pred(${params.mkString(", ")} => ${body.pp}"
     def getType(gamma: Gamma): Option[SSLType] = Some(PredType)
+
+      // TODO: Is this correct?
+    def subst(sigma: Subst): PredicateAbstraction = {
+      val newSigma = sigma.filter{ case (n, _) => !params.contains(n) }
+      SpatialPredicateAbstraction(params, body.subst(newSigma))
+    }
   }
 
   case class PApp(fName: Ident, args: List[Expr]) extends Expr {

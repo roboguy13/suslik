@@ -12,32 +12,22 @@ import org.tygus.suslik.logic.SFormula._
 import scala.collection.immutable.SortedSet
 
 abstract class LambdaLift[A <: HasAssertions[A]] extends TransformAssertions[A] {
-  protected val additionalParams: Formals
-
-  // Include the "closure arguments"
-  protected def updateArgs(args: Seq[Expr]): Seq[Expr] = {
-     args ++ additionalParams.map(_._1)
-  }
+  // protected val freeVars: Seq[FreeVar]
 }
+
 
 // The side of lambda lifting that handles inductive predicate definitions.
 // In particular, update the parameters to include the "closure arguments."
 // Do this for recursive calls and for applications of predicate abstraction
 // arguments.
-class LambdaLiftInductive(pred: InductivePredicate, fs: Seq[PredicateValue])
+class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], fs: Seq[PredicateValue])
   extends LambdaLift[InductivePredicate] {
 
   private val funMap = new PredicateValueMap(pred, fs)
 
   private val gen = new FreshIdentGen("%")
 
-  private val freeVarNames: Set[Ident] = fs.flatMap(_.fvNames).toSet
-
-  private val freeVars = freeVarNames.zip(0 to freeVarNames.size-1).map {
-      case (n, i) => new FreeVar(i, n, gen.genFresh(n))
-  }
-
-  protected val additionalParams = freeVars.map((x: FreeVar) => (new Var(x.newName), AnyType)).toList
+  private val additionalParams: Formals = freeVarMap.toList.map{ case (origVar, Var(newVar)) => (new Var(newVar), AnyType) }
 
   protected def setup(): InductivePredicate = {
     InductivePredicate(pred.name, pred.params ++ additionalParams, pred.clauses)
@@ -47,15 +37,15 @@ class LambdaLiftInductive(pred: InductivePredicate, fs: Seq[PredicateValue])
     SortedSet[Expr](e match {
         case PApp(predIdent, args) => {
           funMap get predIdent match {
-            case Some(SPredicateValue(_)) =>
+            case Some(PPredicateValue(_)) =>
               // This is an application of a "lambda" parameter
               PApp(predIdent, updateArgs(args.toSeq).toList)
 
             case None =>
               throw new Exception(s"Invalid pure predicate application: ${e}")
 
-            case Some(PPredicateValue(_)) =>
-              throw new Exception("Pure predicate used as a spatial predicate: " + predIdent)
+            case Some(SPredicateValue(_)) =>
+              throw new Exception("Spatial predicate used as a pure predicate: " + predIdent)
           }
         }
 
@@ -89,12 +79,29 @@ class LambdaLiftInductive(pred: InductivePredicate, fs: Seq[PredicateValue])
       }
     )
   }
+
+  // Include the "closure arguments"
+  private def updateArgs(args: Seq[Expr]): Seq[Expr] = {
+    args ++ additionalParams.map(_._1)
+  }
+
 }
 
-class LambdaLiftFunSpec(fun: FunSpec, theAdditionalParams: Formals) extends LambdaLift[FunSpec] {
+class LambdaLiftGoalContainer(goal: GoalContainer) {
+  def transform(): (GoalContainer, Map[Var, Expr]) = {
+    val lambdaLiftFunSpec = new LambdaLiftFunSpec(goal.spec)
+
+    val newSpec = lambdaLiftFunSpec.transform()
+
+    (new GoalContainer(newSpec, goal.body), lambdaLiftFunSpec.freeVarMap)
+  }
+}
+
+class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
   import PredicateAbstractionUtils._
 
-  protected val additionalParams = theAdditionalParams
+  private val collectFVs = new CollectFreeVars[FunSpec]()
+  val freeVarMap: Map[Var, Expr] = collectFVs.getFreeVarMap(fun)
 
   protected def setup(): FunSpec = fun
 
@@ -106,7 +113,7 @@ class LambdaLiftFunSpec(fun: FunSpec, theAdditionalParams: Formals) extends Lamb
         if (predValues.isEmpty) {
           heaplet
         } else {
-          heaplet
+          SApp(predIdent, updateCallArgs(args.map(updatePredicateArg)), tag, card)
         }
       }
 
@@ -115,6 +122,55 @@ class LambdaLiftFunSpec(fun: FunSpec, theAdditionalParams: Formals) extends Lamb
   }
 
   protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
+
+  // Update the body of the predicate abstracts to refer to the closure argument
+  // names rather than the original names of the variables being closed over
+  private def updatePredicateArg(e: Expr): Expr = {
+    e match {
+      case pa: PredicateAbstraction =>
+        pa.subst(freeVarMap)
+
+      case _ => e
+    }
+  }
+
+  // Include the "closure arguments"
+  private def updateCallArgs(args: Seq[Expr]): Seq[Expr] = {
+    args ++ freeVarMap.toSeq.map((x : (Var, Expr)) => x match { case (oldVar, newVar) => oldVar })
+  }
+
+  private class CollectFreeVars[A <: HasAssertions[A]] {
+    private val freeVarSet: scala.collection.mutable.Set[Var] = scala.collection.mutable.Set[Var]()
+
+    private val gen = new FreshIdentGen("%")
+
+    // private val freeVarNames: Set[Ident] = Set[Ident]()
+
+    // private val freeVars: Seq[FreeVar] = Seq[FreeVar]()
+
+    def getFreeVarMap(x: A): Map[Var, Expr] = {
+      freeVarSet.map((origV: Var) => {
+        val newName = gen.genFresh(origV.name)
+        (origV, Var(newName))
+      }).toMap
+    }
+
+    def visit(asn: Assertion): Assertion = {
+      freeVarSet ++= asn.sigma.collect(_.isInstanceOf[PredicateAbstraction]).flatMap((x: PredicateAbstraction) => x.vars).toSet
+      asn
+    }
+
+    // protected def setup(): A = ???
+    // protected def transformExpr(e: Expr): SortedSet[Expressions.Expr] = ???
+    // protected def transformHeaplet(h: Heaplet): Seq[Heaplet] = ???
+
+    // private val freeVars: Seq[FreeVar] = freeVarNames.zip(0 to freeVarNames.size-1).map {
+    //     case (n, i) => new FreeVar(i, n, gen.genFresh(n))
+    // }.toSeq
+
+    // val freeVarMap: Map[Var, Expr] = freeVars.map((x: FreeVar) => (Var(x.origName), Var(x.newName))).toMap
+
+  }
 }
 
 class FreeVar(val occurrence: Int, val origName: Ident, val newName: Ident) {
