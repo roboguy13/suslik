@@ -174,6 +174,7 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
   }
 }
 
+// TODO: Calculate newName from origName and occurrence
 class FreeVar(val occurrence: Int, val origName: Ident, val newName: Ident) {
 }
 
