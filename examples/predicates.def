@@ -71,8 +71,8 @@ predicate split_le(loc x, set s, int sep) {
 | x == null => { s =i {} ; emp }
 | not (x == null) => {
     s =i {v} ++ s1 &&
-    left  == (sep <= x ? x : 0) &&
-    right == (sep <= x ? 0 : x)
+    left  == (x <= sep ? x : 0) &&
+    right == (x <= sep ? 0 : x)
       ;
     [x, 3] **
     x :-> left **

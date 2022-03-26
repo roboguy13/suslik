@@ -1,7 +1,9 @@
 
 void separate(loc x, int separator)
   { x :-> y ** lseg(y, s) }
-  { x :-> y ** split_le(x, s, separator) }
+  { x :-> y **
+    constrained_coproducts(y, s, pred(w, l) => l == (w <= separator ? w : 0)
+                               , pred(w, r) => r == (w <= separator ? 0 : w)) }
 {
   ??
 }
