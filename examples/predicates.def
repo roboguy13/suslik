@@ -54,7 +54,7 @@ predicate lower_bounded(loc x, set s, int lb) {
 |  not (x == null)  => { s =i {v} ++ s1 && lb <= v ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** lower_bounded(nxt, s1, lb) }
 }
 
-predicate constrained_coproducts(loc x, set s1, set s2, pred p, pred q) {
+predicate constrained_coproducts(loc x, set s, pred p, pred q) {
 | x == null => { s =i {} ; emp }
 | not (x == null) => {
     s =i {v} ++ s1 && p(v, left) && q(v, right)
