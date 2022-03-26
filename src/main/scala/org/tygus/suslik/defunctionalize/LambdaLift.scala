@@ -41,8 +41,7 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
               // This is an application of a "lambda" parameter
               PApp(predIdent, updateArgs(args.toSeq).toList)
 
-            case None =>
-              throw new Exception(s"Invalid pure predicate application: ${e}")
+            case None => e
 
             case Some(SPredicateValue(_)) =>
               throw new Exception("Spatial predicate used as a pure predicate: " + predIdent)
@@ -145,11 +144,11 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
 
     private val gen = new FreshIdentGen("%")
 
-    // private val freeVarNames: Set[Ident] = Set[Ident]()
-
-    // private val freeVars: Seq[FreeVar] = Seq[FreeVar]()
-
     def getFreeVarMap(x: A): Map[Var, Expr] = {
+      freeVarSet.clear()
+
+      x.visitAssertions(visit)
+
       freeVarSet.map((origV: Var) => {
         val newName = gen.genFresh(origV.name)
         (origV, Var(newName))
@@ -160,17 +159,6 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
       freeVarSet ++= asn.sigma.collect(_.isInstanceOf[PredicateAbstraction]).flatMap((x: PredicateAbstraction) => x.vars).toSet
       asn
     }
-
-    // protected def setup(): A = ???
-    // protected def transformExpr(e: Expr): SortedSet[Expressions.Expr] = ???
-    // protected def transformHeaplet(h: Heaplet): Seq[Heaplet] = ???
-
-    // private val freeVars: Seq[FreeVar] = freeVarNames.zip(0 to freeVarNames.size-1).map {
-    //     case (n, i) => new FreeVar(i, n, gen.genFresh(n))
-    // }.toSeq
-
-    // val freeVarMap: Map[Var, Expr] = freeVars.map((x: FreeVar) => (Var(x.origName), Var(x.newName))).toMap
-
   }
 }
 

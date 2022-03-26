@@ -47,6 +47,7 @@ case object IntType extends SSLType {
 
   override def supertype(target: Option[SSLType]): Option[SSLType] = target match {
     case None => Some(this)
+    case Some(AnyType) => Some(AnyType)
     case Some(LocType) => Some(LocType)
     case Some(IntType) => Some(this)
     case Some(CardType) => Some(this)
@@ -58,6 +59,7 @@ case object IntType extends SSLType {
     case Some(LocType) => Some(this)
     case Some(IntType) => Some(this)
     case Some(CardType) => Some(CardType)
+    case Some(AnyType) => Some(this)
     case _ => None
   }
 
@@ -68,6 +70,7 @@ case object LocType extends SSLType {
 
   override def supertype(target: Option[SSLType]): Option[SSLType] = target match {
     case None => Some(this)
+    case Some(AnyType) => Some(AnyType)
     case Some(LocType) => Some(this)
     case Some(IntType) => Some(this)
     case Some(CardType) => Some(this)
@@ -79,6 +82,7 @@ case object LocType extends SSLType {
     case Some(LocType) => Some(this)
     case Some(IntType) => Some(IntType)
     case Some(CardType) => Some(CardType)
+    case Some(AnyType) => Some(this)
     case _ => None
   }
 }

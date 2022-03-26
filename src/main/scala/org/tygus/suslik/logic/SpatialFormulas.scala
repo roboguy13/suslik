@@ -175,6 +175,7 @@ case class SApp(pred: Ident, args: Seq[Expr], tag: PTag, card: Expr) extends Hea
 
     val gamma1 = card.resolve(gamma, Some(CardType))
     val formals = env.predicates(pred).params
+
     if (formals.length == args.length) {
       (formals, args).zipped.foldLeft[Option[Gamma]](gamma1) { case (go, (formal, actual)) => go match {
         case None => None
