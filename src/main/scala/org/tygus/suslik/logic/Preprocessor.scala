@@ -51,6 +51,8 @@ object Preprocessor extends SepLogicUtils {
     // Enable predicate instrumentation
     val newPreds = preds.filter(noAbstractArgs).map(p => p.copy(clauses = p.clauses.map(addCardConstraints)))
     val predMap = newPreds.map(ps => ps.name -> ps).toMap
+
+    println(s"New preds: ${newPreds.map(_.pp)}")
     (List(goal.spec), predMap, funMap, goal.body)
   }
 

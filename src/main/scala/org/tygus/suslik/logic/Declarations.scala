@@ -191,7 +191,7 @@ case class InductivePredicate(name: Ident, params: Formals, clauses: Seq[Inducti
   }
 
   override def pp: String = {
-    val prelude = s"$name (${params.map(_._2.pp).mkString(", ")})"
+    val prelude = s"$name (${params.map(x => x._2.pp ++ " " ++ x._1.name).mkString(", ")})"
     // Print cardinality parameter
     val cls = clauses.map(_.pp).mkString(" | ")
     prelude  + s"{ $cls }"

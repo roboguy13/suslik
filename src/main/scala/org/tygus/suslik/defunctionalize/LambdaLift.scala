@@ -113,7 +113,7 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
           heaplet
         } else {
           // SApp(predIdent, updateCallArgs(args.map(updatePredicateArg)), tag, card)
-          SApp(predIdent, updateCallArgs(args), tag, card)
+          SApp(predIdent, updateCallArgs(args.map(updatePredicateArg)), tag, card)
         }
       }
 
