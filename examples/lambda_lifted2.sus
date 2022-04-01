@@ -1,0 +1,10 @@
+
+void lambda_lifted(loc x, int lowerBound)
+  { x :-> y ** lseg(y, s) }
+  { x :-> y ** constrained_list2(y, sR, pred(w, z) => w == z && lowerBound <= w) }
+{
+  ??
+}
+
+###
+
