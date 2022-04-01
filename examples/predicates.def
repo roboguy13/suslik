@@ -85,6 +85,6 @@ predicate lower_bounded(loc x, set s, int lb) {
 
 predicate general_list(loc x, set s, pred p) {
 | x == null        => { s =i {} ; emp }
-| not (x == null)  => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x+1) :-> z ** p(z, v) ** (x + 2) :-> nxt ** general_list(nxt, s1, p) }
+| not (x == null)  => { s =i {v} ++ s1 ; x :-> v ** (x+1) :-> x ** p(x, v) ** (x + 2) :-> nxt ** general_list(nxt, s1, p) }
 }
 

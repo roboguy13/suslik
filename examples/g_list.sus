@@ -1,15 +1,7 @@
 
-
-
-
-
-
-
-
-
 void g_list(loc x)
-  { x :-> y ** general_list(y, s, pred(z, v) => z :-> (v+1) ** (z+1) :-> 0 ** [z, 2] ) }
-  { x :-> y ** general_list(y, s, pred(z1, v) => z1 :-> (v+2) ** (z1+1) :-> (v+3) ** [z1, 2] ) }
+  { x :-> y ** general_list(y, s, pred(z, v) => (z+3) :-> (v+1) ** [z, 4] ) }
+  { x :-> y1 ** general_list(y1, s, pred(z, v) => (z+3) :-> (v+2) ** (z+4) :-> (v+3) ** [z, 5] ) }
 { ?? }
 
 ###
