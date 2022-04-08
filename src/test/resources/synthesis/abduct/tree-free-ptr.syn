@@ -1,7 +1,7 @@
 should be able to deallocate a tree from a pointer to the head
 ###
 
-{true; r :-> x ** tree0(x)}
+{true; r :-> x ** g_treeN(x, 0, pred(n) => true, pred(n, n1, n2) => n == n1 && n1 == n2)}
   void free_tree(loc r)
 {true ; r :-> 0 }
 

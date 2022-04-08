@@ -13,3 +13,9 @@ predicate treeN(loc x, int n) {
 |  not (x == 0)  => { n == n1 + n2  /\  0 <= n1  /\  0 <= n2 ;
                      [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** treeN(l, n1) ** treeN(r, n2)}
 }
+
+predicate g_treeN(loc x, int n, pred leaf_p, pred node_p) {
+|  x == 0        => { leaf_p(n) ; emp}
+|  not (x == 0)  => { node_p(n, n1, n2) ;
+                     [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** g_treeN(l, n1, leaf_p, node_p) ** g_treeN(r, n2, leaf_p, node_p)}
+}
