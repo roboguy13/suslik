@@ -34,7 +34,11 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
   }
 
   protected def transformExpr(e: Expr): SortedSet[Expr] = {
-    SortedSet[Expr](e match {
+    SortedSet[Expr](
+      if (freeVarMap.isEmpty) {
+        e
+      } else {
+        e match {
         case PApp(predIdent, args) => {
           funMap get predIdent match {
             case Some(PPredicateValue(_)) =>
@@ -44,37 +48,42 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
             case None => e
 
             case Some(SPredicateValue(_)) =>
-              throw new Exception("Spatial predicate used as a pure predicate: " + predIdent)
+              throw new Exception("LambdaLiftInductive: Spatial predicate used as a pure predicate: " + predIdent)
           }
         }
 
         case _ => e
       }
-    )
+    })
   }
 
   protected def transformHeaplet(h: Heaplet): Seq[Heaplet] = {
-    Seq[Heaplet](h match {
-        case SApp(predIdent, args, tag, card) => {
-          if (predIdent == pred.name) {
-            // Recursive call
+    Seq[Heaplet](
+      if (freeVarMap.isEmpty) {
+        h
+      } else {
+        h match {
+          case SApp(predIdent, args, tag, card) => {
+            if (predIdent == pred.name) {
+              // Recursive call
 
-            SApp(predIdent, updateArgs(args), tag, card)
-          } else {
-            funMap get predIdent match {
-              case Some(sp @ SPredicateValue(_)) =>
-                // This is an application of a "lambda" parameter
-                SApp(predIdent, updateArgs(args), tag, card)
+              SApp(predIdent, updateArgs(args), tag, card)
+            } else {
+              funMap get predIdent match {
+                case Some(sp @ SPredicateValue(_)) =>
+                  // This is an application of a "lambda" parameter
+                  SApp(predIdent, updateArgs(args), tag, card)
 
-              case Some(PPredicateValue(_)) =>
-                throw new Exception("Pure predicate used as a spatial predicate: " + predIdent)
+                case Some(p @ PPredicateValue(_)) =>
+                  throw new Exception("LambdaLiftInductive: Pure predicate used as a spatial predicate: " + predIdent + " = " + p)
 
-              case None => h
+                case None => h
+              }
             }
           }
-        }
 
-        case _ => h
+          case _ => h
+        }
       }
     )
   }

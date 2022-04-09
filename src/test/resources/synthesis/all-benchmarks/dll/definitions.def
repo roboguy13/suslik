@@ -8,3 +8,9 @@ predicate sll(loc x, set s) {
 |  x == 0        => { s =i {} ; emp }
 |  not (x == 0)  => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
 }
+
+predicate g_list(loc x, loc z, set s, pred pz, pred sp) {
+| x == 0 => { s =i {} ; emp }
+| not (x == 0) => { pz(x, z, y) && s =i {v} ++ s1 ; sp(x, z) ** x :-> v ** (x + 1) :-> w ** g_list(w, y, s1, pz, sp) }
+}
+
