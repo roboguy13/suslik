@@ -3,6 +3,11 @@ predicate sll(loc x, set s) {
 |  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
 }
 
+predicate g_sll(loc x, set s, pred p) {
+|  x == 0        => { s == {} ; emp }
+|  not (x == 0)  => { s == {v} ++ s1 /\ p(v, s1) ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** g_sll(nxt, s1, p) }
+}
+
 predicate ulist(loc x, set s) {
 |  x == 0        => { s == {} ; emp }
 |  not (x == 0)  => { s == {v} ++ s1 /\ not (v in s1); [x, 2] ** x :-> v ** (x + 1) :-> nxt ** ulist(nxt, s1) }
