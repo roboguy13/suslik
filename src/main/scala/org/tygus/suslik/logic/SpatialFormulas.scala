@@ -185,6 +185,8 @@ case class SApp(pred: Ident, args: Seq[Expr], tag: PTag, card: Expr) extends Hea
     } else None
   }
 
+  override def freeVars: Set[Var] = args.flatMap(_.freeVars).toSet
+
   override def getTag: Option[PTag] = Some(tag)
 
   override def setTag(t: PTag): Heaplet = this.copy(tag = t)
@@ -262,6 +264,8 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
     val ptsProfile = ptss.groupBy(_.offset).mapValues(_.length)
     SProfile(appProfile, blockProfile, ptsProfile)
   }
+
+  override def freeVars: Set[Var] = chunks.flatMap(_.freeVars).toSet
 
 
   // Size of the formula (in AST nodes)

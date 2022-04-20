@@ -4,9 +4,9 @@ difference of two unique lists
 
 #####
 
-{ r :-> x ** g_sll(x, s1, pred(v, nextS) => not (v in nextS)) ** g_sll(y, s2, pred(v, nextS) => not (v in nextS)) }
+{ r :-> x ** ulist(x, s1) ** ulist(y, s2) }
 void diff (loc r, loc y)
-{ r :-> z ** g_sll(z, s1 -- s2, pred(v, nextS) => not (v in nextS)) }
+{ r :-> z ** ulist(z, s1 -- s2) }
 
 #####
 

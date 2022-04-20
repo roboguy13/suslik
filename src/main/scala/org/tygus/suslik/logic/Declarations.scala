@@ -7,6 +7,7 @@ import org.tygus.suslik.language.SSLType
 import org.tygus.suslik.language.Statements.Statement
 import org.tygus.suslik.synthesis.SynConfig
 import org.tygus.suslik.util.SynStats
+import org.tygus.suslik.LanguageUtils.{cardinalityPrefix, getTotallyFreshName}
 
 /**
   * @author Ilya Sergey
@@ -215,6 +216,40 @@ case class InductivePredicate(name: Ident, params: Formals, clauses: Seq[Inducti
 
 }
 
+case class Synonym(name: Ident, params: Formals, sigma: SFormula)
+  extends TopLevelDeclaration {
+
+  def expand(args: Seq[Expr]): SFormula = {
+    val sf = params.map(_._1).zip(args).foldLeft(sigma) ((acc, z) =>
+              z match {
+                case (formal, actual) => {
+                  acc.subst(formal, actual)
+                }
+              })
+
+    SFormula(sf.chunks.map(freshenCards))
+  }
+
+  // Is the synonym definition well-scoped?
+  def scopeCheck() {
+    val fvs = sigma.freeVars.diff(params.map(_._1).toSet).filter(!_.name.startsWith(cardinalityPrefix))
+
+    if (!fvs.isEmpty) {
+      throw new Exception(s"Free variables are not allowed in synonym: ${this}\nFree vars: ${fvs}")
+    }
+  }
+
+  def freshenCards(h: Heaplet): Heaplet = {
+    h match {
+      case SApp(fName, args, tag, card) => {
+        SApp(fName, args, tag, Var(getTotallyFreshName(cardinalityPrefix)))
+      }
+
+      case _ => h
+    }
+  }
+}
+
 
 case class GoalContainer(spec: FunSpec, body: Statement) extends HasAssertions[GoalContainer] {
   def visitAssertions(f: Assertion => Assertion): GoalContainer = {
@@ -226,9 +261,10 @@ case class GoalContainer(spec: FunSpec, body: Statement) extends HasAssertions[G
   * Program: for now just a sequence of declarations
   */
 case class Program(predicates: Seq[InductivePredicate],
+                   synonyms: Seq[Synonym],
                    funs: Seq[FunSpec],
                    goal: GoalContainer) extends PrettyPrinting {
-  override def pp: String = predicates.map(_.pp).mkString("\n\n") ++ funs.map(_.pp).mkString("\n\n")
+  override def pp: String = predicates.map(_.pp).mkString("\n\n") ++ funs.map(_.pp).mkString("\n\n") ++ synonyms.map(_.pp).mkString("\n\n")
 }
 
 

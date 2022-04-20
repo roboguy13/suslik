@@ -10,6 +10,8 @@ import org.tygus.suslik.defunctionalize.GoalContainerEliminateAbstractions
 import org.tygus.suslik.defunctionalize.{PredicateValue,PPredicateValue,SPredicateValue}
 import org.tygus.suslik.language.PredType
 
+import org.tygus.suslik.synonym.ExpandSynonyms
+
 import scala.collection.immutable.Set
 import scala.collection.mutable.ListBuffer
 
@@ -20,7 +22,17 @@ object Preprocessor extends SepLogicUtils {
     * TODO: type checking
     */
   def preprocessProgram(prog: Program, params: SynConfig): (Seq[FunSpec], PredicateEnv, FunctionEnv, Statement) = {
-    val Program(preds0, funs0, goal0) = prog
+    val Program(predsWithSyns, syns, funsWithSyns, goalWithSyns) = prog
+
+    for (s <- syns) {
+      s.scopeCheck()
+    }
+
+    val synMap: Map[String, Synonym] = syns.map(s => s.name -> s).toMap
+
+    val preds0 = predsWithSyns.map(expandSynonyms(synMap, _))
+    val funs0 = funsWithSyns.map(expandSynonyms(synMap, _))
+    val goal0 = expandSynonyms(synMap, goalWithSyns)
 
     val predMap0 = preds0.map(ps => ps.name -> ps).toMap
 
@@ -45,6 +57,11 @@ object Preprocessor extends SepLogicUtils {
 
     // println(s"newPreds: ${newPreds.map(_.pp)}")
     (List(goal.spec), predMap, funMap, goal.body)
+  }
+
+  private def expandSynonyms[A <: HasAssertions[A]](synonyms: Map[String, Synonym], x: A): A = {
+    val tr = new ExpandSynonyms[A](synonyms, x)
+    tr.transform()
   }
 
   private def noAbstractArgs(p: InductivePredicate) = {

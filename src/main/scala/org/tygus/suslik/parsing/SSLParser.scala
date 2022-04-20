@@ -178,6 +178,11 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
         InductivePredicate(name, formals, clauses)
     }
 
+  def synonym: Parser[Synonym] =
+    ("synonym" ~> ident) ~ ("(" ~> repsep(formal, ",") <~ ")") ~ (("{" ~> sigma) <~ "}") ^^ {
+      case name ~ formals ~ sig => Synonym(name, formals, sig)
+    }
+
   type UGoal = (Assertion, Set[Var])
 
   def uGoal: Parser[UGoal] = ("(" ~> rep1sep(varParser, ",") <~ ")") ~ assertion ^^ {
@@ -237,8 +242,9 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
     case goal ~ body => GoalContainer(goal, body)
   }
 
-  def programSUS: Parser[Program] = phrase(rep(indPredicate | (goalFunctionV1 ||| nonGoalFunction))) ^^ { pfs =>
+  def programSUS: Parser[Program] = phrase(rep(synonym | indPredicate | (goalFunctionV1 ||| nonGoalFunction))) ^^ { pfs =>
     val ps = for (p@InductivePredicate(_, _, _) <- pfs) yield p
+    val syns = for (s@Synonym(_, _, _) <- pfs) yield s
     val fs = for (f@FunSpec(_, _, _, _, _, _) <- pfs) yield f
     val goals = for (gc@GoalContainer(_, _) <- pfs) yield gc
     if (goals.isEmpty) {
@@ -248,18 +254,19 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
       throw SynthesisException("Parsing failed: more than one goal is provided.")
     }
     val goal = goals.last
-    Program(ps, fs, goal)
+    Program(ps, syns, fs, goal)
   }
 
-  def programSYN: Parser[Program] = phrase(rep(indPredicate | goalFunctionSYN)) ^^ { pfs =>
+  def programSYN: Parser[Program] = phrase(rep(synonym | indPredicate | goalFunctionSYN)) ^^ { pfs =>
     val ps = for (p@InductivePredicate(_, _, _) <- pfs) yield p
+    val syns = for (s@Synonym(_, _, _) <- pfs) yield s
     val fs = for (f@FunSpec(_, _, _, _, _, _) <- pfs) yield f
     if (fs.isEmpty) {
       throw SynthesisException("Parsing failed. No single function spec is provided.")
     }
     val goal = fs.last
     val funs = fs.take(fs.length - 1)
-    Program(ps, funs, GoalContainer(goal, Hole))
+    Program(ps, syns, funs, GoalContainer(goal, Hole))
   }
 
   def parse[T](p: Parser[T])(input: String): ParseResult[T] = p(new lexical.Scanner(input)) match {
