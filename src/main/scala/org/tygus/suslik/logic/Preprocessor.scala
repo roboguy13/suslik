@@ -7,6 +7,7 @@ import org.tygus.suslik.logic.Specifications.Assertion
 import org.tygus.suslik.synthesis.SynConfig
 // import org.tygus.suslik.defunctionalize.{DefunctionalizeInductive,DefunctionalizeGoalContainer,DefunctionalizeFunSpec,FreshIdentGen}
 import org.tygus.suslik.defunctionalize.GoalContainerEliminateAbstractions
+import org.tygus.suslik.defunctionalize.FunSpecEliminateAbstractions
 import org.tygus.suslik.defunctionalize.{PredicateValue,PPredicateValue,SPredicateValue}
 import org.tygus.suslik.language.PredType
 
@@ -41,11 +42,19 @@ object Preprocessor extends SepLogicUtils {
 
     val preds = preds0.to[ListBuffer]
 
-    val funs = funs0 // TODO: Figure this out
+    val goalElimAbs = new GoalContainerEliminateAbstractions()
 
-    val elimAbs = new GoalContainerEliminateAbstractions()
+    val (freshIdentGen, (goal, generatedPreds)) = goalElimAbs.transform(goal0, predMap0)
 
-    val (goal, generatedPreds) = elimAbs.transform(goal0, predMap0)
+    val funSpecElimAbs = new FunSpecEliminateAbstractions(freshIdentGen)
+
+    val funs = funs0.map(f => {
+        println(s"generating for ${f.pp}")
+        val (newF, generated) = funSpecElimAbs.transform(f, predMap0)
+        preds ++= generated
+        newF
+      }
+    ) // TODO: Figure this out
 
     preds ++= generatedPreds
 
@@ -56,6 +65,8 @@ object Preprocessor extends SepLogicUtils {
     val predMap = newPreds.map(ps => ps.name -> ps).toMap
 
     // println(s"newPreds: ${newPreds.map(_.pp)}")
+    println(s"done preprocessing for ${goal.spec.pp}")
+    println(s"preds = ${newPreds.map(_.pp)}")
     (List(goal.spec), predMap, funMap, goal.body)
   }
 

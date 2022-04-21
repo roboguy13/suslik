@@ -7,6 +7,7 @@ import org.tygus.suslik.logic._
 import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic.PFormula._
 import org.tygus.suslik.logic.SFormula._
+import org.tygus.suslik.LanguageUtils.cardinalityPrefix
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.SortedSet
@@ -37,7 +38,7 @@ class PredicateValueMap(pred: InductivePredicate, fs: Seq[PredicateValue]) {
   //
   //   - 'newName' should be a fresh name w.r.t. the names of the other
   //   inductive predicates
-case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs: Seq[PredicateValue])
+case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: InductivePredicate, fs: Seq[PredicateValue])
   extends TransformAssertions[InductivePredicate] {
 
   import PredicateAbstractionUtils._
@@ -51,6 +52,26 @@ case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs
         case _ => true
       })
     InductivePredicate(newName, newParams, pred.clauses)
+  }
+
+  override protected def finish(x: InductivePredicate): InductivePredicate = {
+    val InductivePredicate(name, params, clauses0) = x
+
+    val cards: Set[Var] = clauses0.flatMap(_.asn.vars).filter(_.name.startsWith(cardinalityPrefix)).toSet
+
+    val clauses = clauses0.map (cl => {
+            cl.visitAssertions(a => {
+                val cardMap: Map[Var, Expr] = cards.map(card => card -> Var(gen.withCurrentUniq(card.name))).toMap
+                Assertion(a.phi.subst(cardMap), a.sigma.subst(cardMap))
+                // cards.map(card => {
+                //   val newCard = Var(gen.withCurrentUniq(card.name))
+                //   Assertion(a.phi.subst(card, newCard), a.sigma.subst(card, newCard))
+                // })
+              })
+          }
+        )
+
+    InductivePredicate(name, params, clauses)
   }
 
   // Spatial part
@@ -138,7 +159,7 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
               case Some(p) => p
             }
 
-          val defunctionalizer = new DefunctionalizeInductive(newPredName, pred, predValues)
+          val defunctionalizer = new DefunctionalizeInductive(newPredName, gen, pred, predValues)
 
           // TODO: Ensure there are no free variables remaining in any of the 'predValues'
           generatedPreds += defunctionalizer.transform()

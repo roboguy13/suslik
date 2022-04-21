@@ -36,6 +36,7 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
     ("int" ^^^ IntType
       | "bool" ^^^ BoolType
       | "loc" ^^^ LocType
+      | "any" ^^^ AnyType
       | "set" ^^^ IntSetType
       | "interval" ^^^ IntervalType
       | "pred" ^^^ PredType

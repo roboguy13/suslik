@@ -8,7 +8,7 @@ void srtl_insert (loc x, loc r)[int k]
 
 { n >= 0 ; r :-> 0 ** sll(x, s, n) }
 void insertion_sort (loc x, loc r)
-{ r :-> y ** sll(x, s, n) ** srtl(y, s, n) }
+{ r :-> y ** sll(x, s, n) ** g_sll(y, s, n, pred(currS, v) => lower currS == v) }
 
 #####
 

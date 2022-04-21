@@ -24,7 +24,11 @@ class ExpandSynonyms[A <: HasAssertions[A]](synonyms: Map[String, Synonym], orig
     h match {
       case SApp(predIdent, args, tag, card) => {
         synonyms get predIdent match {
-          case Some(syn) => syn.expand(args).chunks
+          case Some(syn) => {
+            val r = syn.expand(args)
+            println(s"Expanding ${predIdent} to ${r.pp}...")
+            r.chunks
+          }
           case None => Seq[Heaplet](h)
             // Seq[Heaplet](SApp(predIdent, args.map(new ExpandSynonyms[Expr](synonyms, _).transform()), tag, card))
         }

@@ -3,15 +3,28 @@ predicate sll(loc x, set s) {
 |  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
 }
 
-predicate g_sll(loc x, set s, pred p) {
-|  x == 0        => { s == {} ; emp }
-|  not (x == 0)  => { s == {v} ++ s1 /\ p(v, s1) ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** g_sll(nxt, s1, p) }
+predicate g_sll(loc x, set s, pred accNil, pred accCons, pred p) {
+|  x == 0        => { accNil(x, s) ; emp }
+|  not (x == 0)  => { accCons(v, s, s1) /\ p(v, s1) ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** g_sll(nxt, s1, accNil, accCons, p) }
 }
 
-synonym ulist(loc x, set s) { g_sll(x, s, pred(v, nextS) => not (v in nextS)) }
+synonym ulist(loc x, set s) {
+  g_sll(x, s, pred(ignore1, currS) => currS == {}, pred(v, currS, s1) => currS == {v} ++ s1, pred(v, nextS) => not (v in nextS))
+}
 
 predicate sll_bounded(loc x, int len, interval s) {
 |  x == 0        => { len == 0  && s == [] ; emp }
 |  not (x == 0)  => { 0 <= len1 && len == len1 + 1 && s == s1 + [v]  ;
                       [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll_bounded(nxt, len1, s1) }
 }
+
+
+predicate len_interval(loc x, int len, interval s, pred p) {
+|  x == 0 => { len == 0 && s == [] ; p(x, len, s) }
+|  not (x == 0) => { 0 <= len1 && len == len1 + 1 && s == s1 + [v] ; p(x, len1, s) }
+}
+
+// synonym sll_bounded(loc x, int len, interval s) {
+//   g_sll(x, s, pred(ignore1, s) =>
+// }
+

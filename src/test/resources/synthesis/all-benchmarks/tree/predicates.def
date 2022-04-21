@@ -3,11 +3,21 @@ predicate sll(loc x, set s) {
 |  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
 }
 
-predicate tree(loc x, set s) {
-|  x == 0        => {s == {} ; emp}
-|  not (x == 0)  => {s == {v} ++ s1 ++ s2 ;
-                     [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** tree(l, s1) ** tree(r, s2)}
+predicate g_tree(loc x, any s, pred emptyP, pred nodeP) {
+|  x == 0        => {emptyP(s) ; emp}
+|  not (x == 0)  => {nodeP(s, v, s1, s2) ;
+                     [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** g_tree(l, s1, emptyP, nodeP) ** g_tree(r, s2, emptyP, nodeP)}
 }
+
+synonym tree(loc x, set s) {
+  g_tree(x, s, pred(currS) => currS == {}, pred(currS, v, s1, s2) => currS == {v} ++ s1 ++ s2)
+}
+
+// predicate tree(loc x, set s) {
+// |  x == 0        => {s == {} ; emp}
+// |  not (x == 0)  => {s == {v} ++ s1 ++ s2 ;
+//                      [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** tree(l, s1) ** tree(r, s2)}
+// }
 
 predicate dll(loc x, loc z, set s) {
 |  x == 0 => { s == {} ; emp }
@@ -15,11 +25,15 @@ predicate dll(loc x, loc z, set s) {
    { s == {v} ++ s1 ; [x, 3] ** x :-> v ** (x + 1) :-> w ** (x + 2) :-> z ** dll(w, x, s1) }
 }
 
-predicate treeN(loc x, int n) {
-|  x == 0        => { n == 0 ; emp }
-|  not (x == 0)  => { n == 1 + n1 + n2  /\  0 <= n1  /\  0 <= n2 ;
-                     [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** treeN(l, n1) ** treeN(r, n2)}
+synonym treeN(loc x, int n) {
+  g_tree(x, n, pred(currN) => currN == 0, pred(currN, v, n1, n2) => currN == 1 + n1 + n2 /\ 0 <= n1 /\ 0 <= n2)
 }
+
+// predicate treeN(loc x, int n) {
+// |  x == 0        => { n == 0 ; emp }
+// |  not (x == 0)  => { n == 1 + n1 + n2  /\  0 <= n1  /\  0 <= n2 ;
+//                      [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** treeN(l, n1) ** treeN(r, n2)}
+// }
 
 predicate treeNH(loc x, int n, int h) {
 |  x == 0        => { n == 0 /\ h == 0; emp }

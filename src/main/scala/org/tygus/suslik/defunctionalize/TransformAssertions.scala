@@ -15,10 +15,12 @@ import scala.collection.immutable.SortedSet
 abstract class TransformAssertions[A <: HasAssertions[A]] {
 
   def transform(): A = {
-    setup().visitAssertions(asn => transformAssertion(asn))
+    finish(setup().visitAssertions(asn => transformAssertion(asn)))
   }
 
   protected def setup(): A
+
+  protected def finish(x: A): A = x
 
   protected def transformExpr(e: Expr): SortedSet[Expr]
   protected def transformHeaplet(h: Heaplet): Seq[Heaplet]

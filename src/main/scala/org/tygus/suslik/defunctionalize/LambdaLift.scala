@@ -75,7 +75,9 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
                   SApp(predIdent, updateArgs(args), tag, card)
 
                 case Some(p @ PPredicateValue(_)) =>
-                  throw new Exception("LambdaLiftInductive: Pure predicate used as a spatial predicate: " + predIdent + " = " + p)
+                  SApp(predIdent, updateArgs(args), tag, card)
+                  // TODO: Should this give an error?
+                  // throw new Exception("LambdaLiftInductive: Pure predicate used as a spatial predicate: " + predIdent + " = " + p)
 
                 case None => h
               }

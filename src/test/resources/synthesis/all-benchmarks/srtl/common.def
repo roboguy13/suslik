@@ -1,9 +1,24 @@
+predicate g_sll(loc x, interval s, int len, pred p) {
+|  x == 0        => { len == 0 && s == [] ; emp }
+|  not (x == 0)  => { len == len1 + 1  &&  len1 >= 0 &&
+                      s == [v] + s1 && p(s, v) ;
+                      [x, 2] ** x :-> v ** (x + 1) :-> nxt ** g_sll(nxt, s1, len1, p) }
+}
+
 predicate sll(loc x, interval s, int len) {
 |  x == 0        => { len == 0 && s == [] ; emp }
 |  not (x == 0)  => { len == len1 + 1  &&  len1 >= 0 &&
                       s == [v] + s1 ;
                       [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1, len1) }
 }
+
+// synonym sll(loc x, interval s, int len) {
+//   g_sll(x, s, len, pred(ignore1, ignore2) => true)
+// }
+
+// synonym srtl(loc x, interval s, int len) {
+//   g_sll(x, s, len, pred(currS, v) => lower currS == v)
+// }
 
 predicate srtl(loc x, interval s, int len) {
 |  x == 0        => { len == 0 && s == [] ; emp }
@@ -12,9 +27,9 @@ predicate srtl(loc x, interval s, int len) {
                       [x, 2] ** x :-> v ** (x + 1) :-> nxt ** srtl(nxt, s1, len1) }
 }
 
-predicate descl(loc x, interval s, int len) {
-|  x == 0        => { len == 0 && s == [] ; emp }
-|  not (x == 0)  => { len == len1 + 1  &&  len1 >= 0 &&
-                      s == [v] + s1 && upper s == v ;
-                      [x, 2] ** x :-> v ** (x + 1) :-> nxt ** descl(nxt, s1, len1) }
-}
+// predicate descl(loc x, interval s, int len) {
+// |  x == 0        => { len == 0 && s == [] ; emp }
+// |  not (x == 0)  => { len == len1 + 1  &&  len1 >= 0 &&
+//                       s == [v] + s1 && upper s == v ;
+//                       [x, 2] ** x :-> v ** (x + 1) :-> nxt ** descl(nxt, s1, len1) }
+// }

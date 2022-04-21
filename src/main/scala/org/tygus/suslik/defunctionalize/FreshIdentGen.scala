@@ -7,17 +7,26 @@ import scala.collection.mutable.ListBuffer
 class FreshIdentGen(mangleStr: String) {
   val existingIdents: ListBuffer[Ident] = ListBuffer[Ident]()
 
-  def genFresh(baseIdent: Ident): Ident = genFreshWith(baseIdent, 0)
+  private var uniq: Int = 0
 
-  def genFreshWith(baseIdent: Ident, n: Int): Ident = {
-    val newName = baseIdent + mangleStr + n.toString
+  def genFresh(baseIdent: Ident): Ident = {
+    uniq += 1
+    withCurrentUniq(baseIdent)
+  }
 
-    if (existingIdents.contains(newName)) {
-      genFreshWith(baseIdent, n + 1)
-    } else {
-      existingIdents += newName
-      newName
-    }
+  // def genFreshWith(baseIdent: Ident, n: Int): Ident = {
+  //   val newName = baseIdent + mangleStr + n.toString
+
+  //   if (existingIdents.contains(newName)) {
+  //     genFreshWith(baseIdent, n + 1)
+  //   } else {
+  //     existingIdents += newName
+  //     newName
+  //   }
+  // }
+
+  def withCurrentUniq(baseIdent: Ident): Ident = {
+    baseIdent + mangleStr + uniq.toString
   }
 }
 
