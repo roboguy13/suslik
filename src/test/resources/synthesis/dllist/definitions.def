@@ -1,3 +1,8 @@
+predicate g_lseg(loc x, set s, pred p) {
+|  x == 0        => { s =i {} ; emp }
+|  not (x == 0)  => { s =i {v} ++ s1 ; p(x) ** x :-> v ** (x + 1) :-> nxt ** g_lseg(nxt, s1, p) }
+}
+
 predicate lseg(loc x, set s) {
 |  x == 0        => { s =i {} ; emp }
 |  not (x == 0)  => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** lseg(nxt, s1) }
@@ -9,7 +14,11 @@ predicate dllseg(loc x, loc z, set s) {
    { s =i {v} ++ s1 ; [x, 3] ** x :-> v ** (x + 1) :-> w ** (x + 2) :-> z ** dllseg(w, x, s1) }
 }
 
-predicate lseg_extra(loc x, set s) {
-|  x == 0        => { s =i {} ; emp }
-|  not (x == 0)  => { s =i {v} ++ s1 ; [x, 3] ** x :-> v ** (x + 1) :-> nxt ** (x + 2) :-> extra ** lseg_extra(nxt, s1) }
+synonym lseg_extra(loc x, set s) {
+  g_lseg(x, s, pred(currX) => [currX, 3] ** (x + 2) :-> extra)
 }
+
+// predicate lseg_extra(loc x, set s) {
+// |  x == 0        => { s =i {} ; emp }
+// |  not (x == 0)  => { s =i {v} ++ s1 ; [x, 3] ** x :-> v ** (x + 1) :-> nxt ** (x + 2) :-> extra ** lseg_extra(nxt, s1) }
+// }

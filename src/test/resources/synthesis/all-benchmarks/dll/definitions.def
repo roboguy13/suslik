@@ -1,16 +1,24 @@
-predicate dll(loc x, loc z, set s) {
-|  x == 0 => { s =i {} ; emp }
-|  not (x == 0) =>
-   { s =i {v} ++ s1 ; [x, 3] ** x :-> v ** (x + 1) :-> w ** (x + 2) :-> z ** dll(w, x, s1) }
-}
+// predicate dll(loc x, loc z, set s) {
+// |  x == 0 => { s =i {} ; emp }
+// |  not (x == 0) =>
+//    { s =i {v} ++ s1 ; [x, 3] ** x :-> v ** (x + 1) :-> w ** (x + 2) :-> z ** dll(w, x, s1) }
+// }
 
-predicate sll(loc x, set s) {
-|  x == 0        => { s =i {} ; emp }
-|  not (x == 0)  => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
-}
+// predicate sll(loc x, set s) {
+// |  x == 0        => { s =i {} ; emp }
+// |  not (x == 0)  => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
+// }
 
 predicate g_list(loc x, loc z, set s, pred pz, pred sp) {
 | x == 0 => { s =i {} ; emp }
 | not (x == 0) => { pz(x, z, y) && s =i {v} ++ s1 ; sp(x, z) ** x :-> v ** (x + 1) :-> w ** g_list(w, y, s1, pz, sp) }
+}
+
+synonym dll(loc x, loc z, set s) {
+  g_list(x, z, s, pred(x0, z, y) => y == x0, pred(p, q) => [p, 3] ** (p+2) :-> q)
+}
+
+synonym sll(loc x, set s) {
+  g_list(x, 0, s, pred(x0, z, y) => z == y, pred(r, t) => [r, 2])
 }
 
