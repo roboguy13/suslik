@@ -1,7 +1,7 @@
 
 void constrained(loc x)
-  { x :-> y ** constrained_list2(y, s, pred(q, z) => z == q) }
-  { x :-> y ** constrained_list2(y, s, pred(q, z) => z == (q+1)) }
+  { x :-> y ** constrained_list2(y, preS, pred(q, z) => z == q) }
+  { x :-> y ** transformation_list(y, preS, postS, pred(q, z) => z == (q+1)) }
 {
   ??
 }
