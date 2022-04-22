@@ -1,11 +1,15 @@
-predicate sll(loc x, set s) {
-|  x == 0        => { s == {} ; emp }
-|  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
-}
+// predicate sll(loc x, set s) {
+// |  x == 0        => { s == {} ; emp }
+// |  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
+// }
 
 predicate g_sll(loc x, set s, pred accNil, pred accCons, pred p) {
 |  x == 0        => { accNil(x, s) ; emp }
 |  not (x == 0)  => { accCons(v, s, s1) /\ p(v, s1) ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** g_sll(nxt, s1, accNil, accCons, p) }
+}
+
+synonym sll(loc x, set s) {
+  g_sll(x, s, pred(currX, currS) => currS == {}, pred(v, currS, s1) => currS == {v} ++ s1, pred(v, nextS) => true)
 }
 
 synonym ulist(loc x, set s) {
