@@ -1,0 +1,7 @@
+void foldArg(loc x, loc y)
+  { x :-> x1 ** fold0(x1, s, acc) }
+  { x :-> x2 ** reify(x2, acc) }
+{ ?? }
+
+###
+

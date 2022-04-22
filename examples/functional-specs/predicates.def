@@ -1,0 +1,24 @@
+predicate transformation_list(loc x, set preS, set postS, pred p) {
+|  x == null        => { preS =i {} && postS =i {} ; emp }
+|  not (x == null)  => { preS =i {v} ++ preS1 && postS =i {r} ++ postS1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** transformation_list(nxt, preS1, postS1, p) }
+}
+
+predicate constrained_list(loc x, set s, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+}
+
+synonym unconstrained(loc x, set s) {
+  constrained_list(x, s, pred(u, v) => u == v)
+}
+
+// TODO: Include a z value as an argument and use predicate for fold operation
+predicate fold0(loc x, set s, int acc) {
+|  x == null => { acc == 0; emp }
+|  not (x == null) => { acc == v+acc1 && s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** fold0(nxt, s1, acc1) }
+}
+
+predicate reify(loc x, int i) {
+| true => { [x, 1] ** x :-> i }
+}
+

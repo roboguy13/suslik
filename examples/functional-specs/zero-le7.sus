@@ -1,0 +1,10 @@
+void zeroLe7(loc x)
+  { x :-> y ** unconstrained(y, s) }
+  { x :-> y ** constrained_list(y, s,
+      pred(u, v) =>
+        v == (u <= 7 ? 0 : u)) }
+
+{ ?? }
+
+###
+
