@@ -1,7 +1,7 @@
 
 void foldMapArg(loc x)
-  { x :-> w ** x :-> 0 ** unconstrained(w, s) }
-  { x :-> w ** x :-> acc **
+  { x :-> w ** (x+1) :-> 0 ** unconstrained(w, s) }
+  { x :-> w ** (x+1) :-> acc **
       foldMap(w, s, acc, 0,
         pred(u, v) => v == (u*2),
         pred(newAcc, mapResult, acc1) => newAcc == (mapResult + acc1)) }
