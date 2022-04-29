@@ -1,5 +1,7 @@
 void mapTimes2(loc x, loc y, loc intermediateArg)
-  { x :-> w ** y :-> 0 ** intermediateArg :-> 0 ** unconstrained(w, preS) }
-  { x :-> w ** y :-> acc ** intermediateArg :-> intermediate ** transformation_list(w, preS, postS, pred(v, r) => r == 2*v)
-      ** foldI(intermediate, preS, acc, 0, pred(currAcc, v, acc1) => currAcc == (acc1+v)) }
+  { x :-> w ** unconstrained(w, preS) }
+  { x :-> w ** constrained_list(w, preS, pred(v, r) => r == 2*v) }
 { ?? }
+
+###
+
