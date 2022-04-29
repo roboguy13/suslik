@@ -22,7 +22,10 @@ synonym unconstrained(loc x, set s) {
 
 predicate foldI(loc x, set s, int acc, int z, pred p) {
 |  x == null => { acc == z; emp }
-|  not (x == null) => { p(acc, v, acc1) && s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldI(nxt, s1, acc1, z, p) }
+|  not (x == null) => {
+    p(acc, v, acc1) && s =i {v} ++ s1
+      ;
+    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldI(nxt, s1, acc1, z, p) }
 }
 
 predicate foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
@@ -33,6 +36,29 @@ predicate foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
      [x, 2] ** x :-> v ** (x+1) :-> nxt ** foldMap(nxt, s1, acc1, z, mapFn, foldFn)
     }
 }
+
+// synonym foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
+//   join(foldI[x, s, acc, z, foldFn[_, ?mapResult, _]], constrained_list[x, s, mapFn[_, ?mapResult]])
+// }
+
+// predicate foldMap'(loc x, loc s, int acc, int z, pred mapFn, pred foldFn) {
+// |  x == null => { acc == z ; emp }
+// |  not (x == null) => {
+//     s =i {v} ++ s1 && mapFn(v, mapResult) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p)
+//    }
+// }
+
+
+//    predicate foldMap_generated(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
+//    | x == null => { acc == z && s =i {} ; emp }
+//    | not (x == null) => {
+//         s =i {v} ++ s1
+//         && mapFn(v, mapResult)
+//         && foldFn(acc, mapResult, acc1)
+//           ;
+//         [x, 2] ** x :-> mapResult ** (x + 1) :-> nxt ** foldMap_generated(nxt, s1, acc1, z, mapFn, foldFn)
+//      }
+//    }
 
 predicate reify(loc x, int i) {
 | true => { [x, 1] ** x :-> i }

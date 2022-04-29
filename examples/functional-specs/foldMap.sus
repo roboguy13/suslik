@@ -7,12 +7,27 @@ void foldMapArg(loc x)
         pred(newAcc, mapResult, acc1) => newAcc == (mapResult + acc1)) }
 { ?? }
 
-// void foldMapArg(loc x)
-//   { x :-> w ** (x+1) :-> 0 ** (x+2) :-> 0 ** (x+3) :-> 0 ** unconstrained(w, preS) }
-//   { x :-> w ** (x+1) :-> z ** (x+2) :-> inter ** (x+3) :-> acc **
-//       foldI(inter, postS, acc, 0, pred(currAcc, v, acc1) => currAcc == (acc1+v)) **
-//       list_relation(w, z, preS, postS, pred(xV, yV) => yV == (xV*2)) }
-// { ?? }
-
 ###
+
+
+
+
+
+
+
+{(x + 1) :-> 0 ** x :-> w ** constrained_list$1(w, s)<_alpha_10>}
+{(x + 1) :-> acc ** x :-> w ** foldMap$2(w, s, acc, 0)<_alpha_7>}
+void foldMapArg (loc x) {
+  let w = *x;
+  if (w == 0) {
+  } else {
+    let v = *w;
+    let n = *(w + 1);
+    *x = n;
+    foldMapArg(x);
+    let a = *(x + 1);
+    *x = w;
+    *(x + 1) = (v * 2) + a;
+  }
+}
 
