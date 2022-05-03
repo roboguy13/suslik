@@ -1,0 +1,12 @@
+
+####
+
+{ sll(s1, x1) ** sll(s2, x2) ** ret :-> x2 }
+void lseg_append (loc x1, loc ret)
+{ s =i s1 ++ s2 ; sll(s, y) ** ret :-> y }
+
+{ x :-> r ** pair_implicit_deque(s, r) }
+void sll_to_deque(loc x)
+{ x :-> w ** sll(s, w) }
+
+####

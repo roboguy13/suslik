@@ -1,0 +1,23 @@
+predicate implicit_deque(set s, loc x) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i {v} ++ s1
+      ;
+    [x, 2] ** x :-> v ** (x+1) :-> nxt ** pair_implicit_deque(s1, nxt)
+  }
+}
+
+predicate pair_implicit_deque(set s, loc x) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i {v} ++ s1 ++ s2
+      ;
+    [x, 3] ** x :-> v ** (x+1) :-> a ** (x+2) :-> b ** pair_implicit_deque(s1, a) ** pair_implicit_deque(s2, b)
+  }
+}
+
+predicate sll(set s, loc x) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => { s =i {v} ++ s1 ; x :-> v ** (x+1) :-> nxt ** sll(s1, nxt) }
+}
+
