@@ -1,13 +1,14 @@
 // Following the decomposition of non-regular (aka non-uniform) types into
 // regular types given in "Purely Functional Data Structures" by Okasaki (Sec. 10.1.1)
 
-predicate implicit_deque(set s, loc x) {
-| x == null => { s =i {} ; emp }
+predicate implicit_deque(int sz, set s, loc x) {
+| x == null => { sz == 0 && s =i {} ; emp }
 | not (x == null) => {
-    s =i s1 ++ s2
+    s =i s1 ++ s2 &&
+    sz == bin_sz + sz1
       ;
-    [x, 2] ** x :-> v ** (x+1) :-> nxt ** implicit_deque(s2, nxt)
-    ** binary_tree(sz, s1, v)
+    [x, 2] ** x :-> v ** (x+1) :-> nxt ** implicit_deque(sz1, s2, nxt)
+    ** binary_tree(bin_sz, s1, v)
   }
 }
 
