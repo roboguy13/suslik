@@ -12,12 +12,35 @@ predicate pair_implicit_deque(set s, loc x) {
 | not (x == null) => {
     s =i {v} ++ s1 ++ s2
       ;
-    [x, 3] ** x :-> v ** (x+1) :-> a ** (x+2) :-> b ** pair_implicit_deque(s1, a) ** pair_implicit_deque(s2, b)
+    [x, 3] ** x :-> v ** (x+1) :-> p ** (x+2) :-> q ** pair_implicit_deque(s1, p) ** pair_implicit_deque(s2, q)
   }
+}
+
+// Following the decomposition of non-regular (aka non-uniform) types into
+// regular types given in "Purely Functional Data Structures" by Okasaki (Sec. 10.1.1)
+
+predicate binary_tree(int sz, set s, loc x) {
+| true => { x :-> tag ** binary_tree_inner(sz, s, tag, x) }
+}
+
+// Tag is stored at x
+predicate binary_tree_inner(int sz, set s, int tag, loc x) {
+| tag == 0 => { sz == 1 && s =i {v} ; [x, 2] ** (x+1) :-> v }
+| tag == 1 =>
+    {
+      sz == 1 + sz1 + sz2 &&
+      s =i s1 ++ s2
+        ;
+      [x, 3] ** (x+1) :-> left ** (x+2) :-> right ** binary_tree(sz1, s1, left) ** binary_tree(sz2, s2, right)
+    }
+}
+
+predicate pair(loc x, loc y, loc z) {
+| true => { [x, 2] ** x :-> y ** (x+1) :-> z }
 }
 
 predicate sll(set s, loc x) {
 | x == null => { s =i {} ; emp }
-| not (x == null) => { s =i {v} ++ s1 ; x :-> v ** (x+1) :-> nxt ** sll(s1, nxt) }
+| not (x == null) => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x+1) :-> nxt ** sll(s1, nxt) }
 }
 

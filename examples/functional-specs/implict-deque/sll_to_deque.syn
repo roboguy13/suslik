@@ -1,12 +1,13 @@
+# -o 2 -c 2
 
 ####
 
-{ sll(s1, x1) ** sll(s2, x2) ** ret :-> x2 }
-void lseg_append (loc x1, loc ret)
-{ s =i s1 ++ s2 ; sll(s, y) ** ret :-> y }
+{true ; sll(s1, x1) ** sll(s2, x2) ** ret :-> x2}
+void sll_append (loc x1, loc ret)
+{s =i s1 ++ s2 ; sll(s, y) ** ret :-> y }
 
-{ x :-> r ** pair_implicit_deque(s, r) }
-void sll_to_deque(loc x)
-{ x :-> w ** sll(s, w) }
+{ binary_tree(sz, s, x) ** y :-> 0 }
+void flatten_binary_tree(loc x, loc y)
+{ binary_tree(sz, s, x) ** y :-> ret ** sll(s, ret) }
 
 ####
