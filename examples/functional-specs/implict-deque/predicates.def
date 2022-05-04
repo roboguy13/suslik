@@ -1,23 +1,15 @@
+// Following the decomposition of non-regular (aka non-uniform) types into
+// regular types given in "Purely Functional Data Structures" by Okasaki (Sec. 10.1.1)
+
 predicate implicit_deque(set s, loc x) {
 | x == null => { s =i {} ; emp }
 | not (x == null) => {
-    s =i {v} ++ s1
+    s =i s1 ++ s2
       ;
-    [x, 2] ** x :-> v ** (x+1) :-> nxt ** pair_implicit_deque(s1, nxt)
+    [x, 2] ** x :-> v ** (x+1) :-> nxt ** implicit_deque(s2, nxt)
+    ** binary_tree(sz, s1, v)
   }
 }
-
-predicate pair_implicit_deque(set s, loc x) {
-| x == null => { s =i {} ; emp }
-| not (x == null) => {
-    s =i {v} ++ s1 ++ s2
-      ;
-    [x, 3] ** x :-> v ** (x+1) :-> p ** (x+2) :-> q ** pair_implicit_deque(s1, p) ** pair_implicit_deque(s2, q)
-  }
-}
-
-// Following the decomposition of non-regular (aka non-uniform) types into
-// regular types given in "Purely Functional Data Structures" by Okasaki (Sec. 10.1.1)
 
 predicate binary_tree(int sz, set s, loc x) {
 | true => { x :-> tag ** binary_tree_inner(sz, s, tag, x) }
