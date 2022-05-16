@@ -3,10 +3,10 @@
 // |  not (x == 0)  => {[x, 3] ** x :-> 0 ** (x + 1) :-> l ** (x + 2) :-> r ** tree(l) ** tree(r)}
 // }
 
-// predicate tree_elem(loc x, int e) {
-// |  x == 0        => {emp}
-// |  not (x == 0)  => {[x, 3] ** x :-> e ** (x + 1) :-> l ** (x + 2) :-> r ** tree_elem(l, e) ** tree_elem(r, e)}
-// }
+predicate tree_elem(loc x, int e) {
+|  x == 0        => {emp}
+|  not (x == 0)  => {[x, 3] ** x :-> e ** (x + 1) :-> l ** (x + 2) :-> r ** tree_elem(l, e) ** tree_elem(r, e)}
+}
 
 // predicate treeN(loc x, int n) {
 // |  x == 0        => { n == 0 ; emp }
@@ -19,7 +19,7 @@ predicate g_tree(loc x, int n, pred p_base, pred p) {
 |  not (x == 0) => { p(n, n1, n2) ; [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** g_tree(l, n1) ** g_tree(r, n2) }
 }
 
-synonym tree(loc x, int n) {
+synonym treeN(loc x, int n) {
   g_tree(x, n,
     pred(m) => m == 0,
     pred(m, m1, m2) => m == 1 + m1 + m2  /\  0 <= m1  /\  0 <= m2
