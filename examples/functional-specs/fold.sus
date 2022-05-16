@@ -1,6 +1,11 @@
+
+
+
+
+
 void foldArg(loc x)
-  { x :-> x1 ** foldI(x1, s, acc, 0, pred(currAcc, v, acc1) => currAcc == (acc1+v)) }
-  { x :-> acc }
+  { x :-> x1 ** (x+1) :-> 0 ** unconstrained(x1, s) }
+  { x :-> x1 ** (x+1) :-> acc ** foldI(x1, s, acc, 0, pred(currAcc, v, acc1) => currAcc == (acc1+v)) }
 { ?? }
 
 ###

@@ -1,0 +1,6 @@
+void filter(loc x)
+  { x :-> w ** unconstrained(w, s) }
+  { x :-> w ** filter_gt_7(w, s) }
+{ ?? }
+
+###

@@ -1,18 +1,47 @@
-predicate tree(loc x) {
-|  x == 0        => {emp}
-|  not (x == 0)  => {[x, 3] ** x :-> 0 ** (x + 1) :-> l ** (x + 2) :-> r ** tree(l) ** tree(r)}
+// predicate tree(loc x) {
+// |  x == 0        => {emp}
+// |  not (x == 0)  => {[x, 3] ** x :-> 0 ** (x + 1) :-> l ** (x + 2) :-> r ** tree(l) ** tree(r)}
+// }
+
+// predicate tree_elem(loc x, int e) {
+// |  x == 0        => {emp}
+// |  not (x == 0)  => {[x, 3] ** x :-> e ** (x + 1) :-> l ** (x + 2) :-> r ** tree_elem(l, e) ** tree_elem(r, e)}
+// }
+
+// predicate treeN(loc x, int n) {
+// |  x == 0        => { n == 0 ; emp }
+// |  not (x == 0)  => { n == 1 + n1 + n2  /\  0 <= n1  /\  0 <= n2 ;
+//                      [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** treeN(l, n1) ** treeN(r, n2)}
+// }
+
+predicate g_tree(loc x, int n, pred p_base, pred p) {
+|  x == 0 => { p_base(n) ; emp }
+|  not (x == 0) => { p(n, n1, n2) ; [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** g_tree(l, n1) ** g_tree(r, n2) }
 }
 
-predicate tree_elem(loc x, int e) {
-|  x == 0        => {emp}
-|  not (x == 0)  => {[x, 3] ** x :-> e ** (x + 1) :-> l ** (x + 2) :-> r ** tree_elem(l, e) ** tree_elem(r, e)}
+synonym tree(loc x, int n) {
+  g_tree(x, n,
+    pred(m) => m == 0,
+    pred(m, m1, m2) => m == 1 + m1 + m2  /\  0 <= m1  /\  0 <= m2
+  )
 }
 
-predicate treeN(loc x, int n) {
-|  x == 0        => { n == 0 ; emp }
-|  not (x == 0)  => { n == 1 + n1 + n2  /\  0 <= n1  /\  0 <= n2 ;
-                     [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** treeN(l, n1) ** treeN(r, n2)}
+synonym tree(loc x) {
+  g_tree(x, 0,
+    pred(m) => m == 0,
+    pred(m, m1, m2) => m == 0 /\ m1 == 0 /\ m2 == 0
+  )
 }
+
+// TODO: Is there a way to get this to work (in a way that still synthesizes
+// the correct program for tree-morph.syn)?
+
+// synonym tree_elem(loc x, int e) {
+//   g_tree(x, e,
+//     pred(m) => true,
+//     pred(m, m1, m2) => m1 == 0 /\ m2 == 0
+//   )
+// }
 
 predicate treeS(loc x, set s) {
 |  x == 0        => {s =i {}; emp}

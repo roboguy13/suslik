@@ -616,6 +616,16 @@ object Expressions {
     def getType(gamma: Gamma): Option[SSLType] = left.getType(gamma)
   }
 
+  // This is for "#var" variables
+  case class JoinVar(val name: Ident) extends Expr {
+    override def pp: String = s"#${name}"
+
+      // TODO: Is this correct
+    override def subst(sigma: Subst): JoinVar = throw new Exception("JoinVar.subst should not be called")
+
+    def getType(gamma: Gamma): Option[SSLType] = None
+  }
+
   abstract class PredicateAbstraction(val params: List[Ident]) extends Expr {
       // Only includes free variables
     override def vars: Set[Var] =
