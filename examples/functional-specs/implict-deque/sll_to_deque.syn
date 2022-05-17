@@ -1,4 +1,4 @@
-# -o 2
+# -o 2 -c 2
 
 TODO: Fix variable capture that can happen in the post-condition of the size procedure
 
@@ -24,8 +24,8 @@ void flatten_binary_tree(loc x, loc y)
 void binary_tree_size(loc x, loc y)
 { binary_tree(sz, s, x) ** y :-> sz }
 
-{ binary_tree(sz, s, x) ** y :-> v }
-void binary_tree_insert(loc x, loc y)
-{ s1 =i {v} ++ s ; binary_tree(sz1, s1, x) ** y :-> v }
+{ implicit_deque(sz, s, x) ** y :-> 0 }
+void flatten_implicit_deque(loc x, loc y)
+{ implicit_deque(sz, s, x) ** y :-> ret ** sll(s, ret) }
 
 ####
