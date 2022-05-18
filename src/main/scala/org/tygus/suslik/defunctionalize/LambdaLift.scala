@@ -33,8 +33,7 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
     InductivePredicate(pred.name, pred.params ++ additionalParams, pred.clauses)
   }
 
-  protected def transformExpr(e: Expr): SortedSet[Expr] = {
-    SortedSet[Expr](
+  protected def transformExpr(e: Expr): Expr = {
       if (freeVarMap.isEmpty) {
         e
       } else {
@@ -54,7 +53,7 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
 
         case _ => e
       }
-    })
+    }
   }
 
   protected def transformHeaplet(h: Heaplet): Seq[Heaplet] = {
@@ -131,7 +130,7 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
     })
   }
 
-  protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
+  protected def transformExpr(e: Expr): Expr = e
 
   // Update the body of the predicate abstracts to refer to the closure argument
   // names rather than the original names of the variables being closed over

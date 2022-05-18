@@ -101,7 +101,7 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 
 
   // Pure part
-  protected def transformExpr(e: Expr): SortedSet[Expr] = {
+  protected def transformExpr(e: Expr): Expr = {
     e match {
       case PApp(predIdent, args) =>
         funMap get predIdent match {
@@ -111,7 +111,8 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
             throw new Exception(s"Spatial predicate used as a pure predicate: ${predIdent}")
           case Some(p @ PPredicateValue(_)) => p.apply(args)
         }
-      case _ => SortedSet[Expr](e)
+      case BinaryExpr(op, left, right) => BinaryExpr(op, transformExpr(left), transformExpr(right))
+      case _ => e
     }
   }
 }
@@ -171,6 +172,6 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
     })
   }
 
-  protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
+  protected def transformExpr(e: Expr): Expr = e
 }
 

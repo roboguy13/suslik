@@ -22,7 +22,7 @@ abstract class TransformAssertions[A <: HasAssertions[A]] {
 
   protected def finish(x: A): A = x
 
-  protected def transformExpr(e: Expr): SortedSet[Expr]
+  protected def transformExpr(e: Expr): Expr
   protected def transformHeaplet(h: Heaplet): Seq[Heaplet]
 
   private def transformAssertion(asn: Assertion): Assertion = {
@@ -30,7 +30,7 @@ abstract class TransformAssertions[A <: HasAssertions[A]] {
   }
 
   private def transformPFormula(phi: PFormula): PFormula = {
-    PFormula(phi.conjuncts.flatMap((e : Expr) => transformExpr(e)))
+    PFormula(phi.conjuncts.map((e : Expr) => transformExpr(e)))
   }
 
   private def transformSFormula(sigma: SFormula): SFormula = {
