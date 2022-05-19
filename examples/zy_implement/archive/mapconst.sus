@@ -1,0 +1,6 @@
+void mapconst(loc x, int N)
+  {unconstrained(x, preS)}
+  {constmap_list2(x, S, N)}
+{ ?? }
+
+###

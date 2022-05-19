@@ -1,0 +1,6 @@
+void replicate(loc x, int v)
+  { sll(x, Sz, s) }
+  { replicate(x, s1, v, Sz)}
+{ ?? }
+
+###

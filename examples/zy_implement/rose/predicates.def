@@ -1,0 +1,12 @@
+predicate foldBuds(loc x, set s, int acc, int z, pred p) {
+|  x == null => { acc == z; emp }
+|  not (x == null) => { p(acc, acc1, acc2) && s == s1 ++ s2 ;
+[x, 2] ** x :-> r ** foldRose(r, s1, acc1, z, p) ** (x + 1) :-> nxt ** foldBuds(nxt, s2, acc2, z, p) }
+}
+
+predicate foldRose(loc x, set s, int acc, int z, pred p) {
+|  x == null => { acc == z; emp }
+|  not (x == null) => {
+    p(acc, v, acc1) && s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> b ** foldBuds(b, s1, acc1, z, p) }
+}
+

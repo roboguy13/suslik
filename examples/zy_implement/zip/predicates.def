@@ -1,0 +1,15 @@
+predicate constrained_list(loc x, set s, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+}
+
+synonym unconstrained(loc x, set s) {
+  constrained_list(x, s, pred(u, v) => u == v)
+}
+
+predicate zip(loc ret, set aS, set bS){
+|  ret == null => {aS == {} && bs == {} ; emp }
+|  not (ret == null) => { aS == {va} ++ aS1 && bS == {vb} ++ bS1 && v == va + vb;
+[ret, 2] ** ret :-> v **  (ret+1) :-> retNxt ** zip(retNxt, aS1, bS)
+}
+}

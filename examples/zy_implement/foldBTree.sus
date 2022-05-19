@@ -1,0 +1,6 @@
+void foldArg(loc x)
+  { x :-> x1 ** foldBTree(x1, s, acc, 0, pred(currAcc, v, acc1, acc2) => currAcc == (acc1+acc2+v)) }
+  { x :-> acc }
+{ ?? }
+
+###

@@ -1,0 +1,7 @@
+
+###
+{ sll(x,Sz, s) }
+  void sll_init(loc x, int v)
+{ s1 <=i {v} ; sll(x,Sz, s1) }
+
+###

@@ -1,0 +1,7 @@
+void sll_init(loc x, int v)
+    { unconstrained(x,s) }
+    { s1 <=i {v} ; sll(x, len, s1) }
+
+{ ?? }
+
+###

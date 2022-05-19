@@ -1,0 +1,6 @@
+void f1(loc x, loc ret)
+  { true ;  unconstrained(x, Sx) ** ret :-> a }
+  { true ; filter_base_tag(x, y, Sx, Sy,1,0) ** ret :-> y}
+{ ?? }
+
+###

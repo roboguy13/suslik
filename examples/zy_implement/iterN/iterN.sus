@@ -1,0 +1,6 @@
+void iterN1(loc x, int seed)
+  {unconstrained(x,S)   }
+  {iterN(x, S1, seed, pred(v1, v) => v1 == v + 1)}
+{ ?? }
+
+###

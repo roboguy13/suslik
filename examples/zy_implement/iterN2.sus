@@ -1,0 +1,6 @@
+void iterN2(loc x, loc ret, int seed)
+  {sll(x, N, s) ** ret :-> a   }
+  {iterN(y, s1, N, seed) ** ret :-> y}
+{ ?? }
+
+###

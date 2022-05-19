@@ -1,0 +1,6 @@
+void f1(loc x, loc ret)
+  { true ;  unconstrained(x, preS) ** ret :-> a }
+  { true ; constrained_list(y, preS, pred(v, r) => r == (v < 9 ? v : null)) ** ret :-> y}
+{ ?? }
+
+###

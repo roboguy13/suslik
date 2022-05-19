@@ -1,0 +1,7 @@
+void concat (loc x1, loc x2, loc ret)
+    {true ; unconstrained(x1, s1) ** unconstrained(x2, s2) ** ret :-> x}
+    {s =i s1 ++ s2 ; constrained_list(y, s, pred(v, r) => r == 2*v) ** ret :-> y }
+
+{ ?? }
+
+###

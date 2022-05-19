@@ -1,0 +1,6 @@
+void f1(loc x, loc ret)
+  { true ;  sll(x,sz, s) ** ret :-> a }
+  { true ;  filter(y,s,sz) ** ret :-> y}
+{ ?? }
+
+###

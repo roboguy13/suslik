@@ -1,0 +1,18 @@
+predicate iterN(loc x, set s, int v, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => {s =i {v} ++ s1 && v == v1; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** iterN(nxt, s1, v1) }
+}
+
+predicate constrained_list(loc x, set s, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+}
+
+synonym unconstrained(loc x, set s) {
+  constrained_list(x, s, pred(u, v) => u == v)
+}
+
+predicate sll(loc x, int len, set s) {
+|  x == 0        => { len == 0 /\ s == {} ; emp }
+|  not (x == 0)  => { len == 1 + len1 /\ s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, len1, s1) }
+}

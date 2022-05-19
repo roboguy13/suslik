@@ -1,0 +1,39 @@
+predicate constmap_list(loc x, set s, int n) {
+|  x == 0        => { s =i {n} ; emp }
+|  not (x == 0)  => { s =i {n} && v == n ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** constmap_list(nxt, s, n) }
+}
+
+predicate filter_base_l9(loc x, loc y, set preS, set postS) {
+|  x == null       => { preS =i {} && postS =i {} && y == null ; emp }
+|  not (x == null) => { preS =i {xV} ++ preS1
+      ;
+      [x, 2] ** x :-> xV **  (x+1) :-> xNxt **
+      filter_judge_l9(x, y, preS, postS) }
+}
+predicate filter_judge_l9(loc x, loc y, set preS, set postS){
+|  true  => { preS =i {xV} ++ preS1 && postS =i {yV} ++ postS1 && xV == yV
+      ;
+      [x, 2] ** [y, 2] ** x :-> xV ** y :-> yV ** (x+1) :-> xNxt ** (y+1) :-> yNxt **
+      filter_base_l9(xNxt, yNxt, preS1, postS1) }
+}
+
+
+predicate filter_base_tag(loc x, loc y, set preS, set postS, int tag, int v) {
+|  x == null       => { preS =i {} && postS =i {} && y == null ; emp }
+|  (not (x == null)) && (tag == 1)  => {preS =i {xV} ++ preS1
+      ;
+      [x, 2] ** x :-> xV ** filter_base_tag(x, y, preS, postS, 0, xV)
+}
+|  (not (x == null)) && (tag == 0) => { preS =i {xV} ++ preS1 && postS =i {yV} ++ postS1 && xV == yV
+      ;
+      [x, 2] ** [y, 2] ** x :-> xV ** y :-> yV ** (x+1) :-> xNxt ** (y+1) :-> yNxt **
+      filter_base_tag(xNxt, yNxt, preS1, postS1, 1, 0) }
+}
+
+predicate zip(loc a, loc b, loc ret, set aS, set bS, set S){
+|  a == null => {aS == i {} && bS == i {} && b == null && S == i {} && ret == null; emp }
+|  not (a == null) => { aS == i {va} ++ aS1 && bS == i {vb} ++ bS1 && S == aS ++ bS && S1 == aS1 ++ bS1;
+[x, 2] ** [y, 2] ** [ret, 3] ** a :-> va ** (a+1) :-> aNxt ** b :-> vb ** (b+1) :-> bNxt ** ret :-> va ** (ret+1) :-> vb ** (ret+2) :-> retNxt ** zip(aNxt, bNxt, retNxt, aS1, bS1, S1)
+}
+
+}

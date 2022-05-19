@@ -1,0 +1,122 @@
+predicate transformation_list(loc x, set preS, set postS, pred p) {
+|  x == null        => { preS =i {} && postS =i {} ; emp }
+|  not (x == null)  => { preS =i {v} ++ preS1 && postS =i {r} ++ postS1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** transformation_list(nxt, preS1, postS1, p) }
+}
+
+predicate list_relation(loc x, loc y, set preS, set postS, pred p) {
+|  x == null       => { preS =i {} && postS =i {} && y == null ; emp }
+|  not (x == null) => { preS =i {xV} ++ preS1 && postS =i {yV} ++ postS1 && p(xV, yV)
+      ;
+      [x, 2] ** [y, 2] ** x :-> xV ** y :-> yV ** (x+1) :-> xNxt ** (y+1) :-> yNxt **
+      list_relation(xNxt, yNxt, preS1, postS1, p) }
+}
+
+predicate filter(loc x, set s, int sz) {
+|  true       => {x :-> tag ** filter_tag(x, s, sz, tag) }
+}
+
+predicate filter_tag(loc x, set s, int sz, int tag) {
+|  tag == 2       => { s == {v} && sz == 1
+      ;
+      [x, 2] ** x + 1 :-> v }
+}
+
+
+predicate constrained_list(loc x, set s, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+}
+
+synonym unconstrained(loc x, set s) {
+  constrained_list(x, s, pred(u, v) => u == v)
+}
+
+
+predicate constmap_list2(loc x, set s, int n){
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {n} ++ s1 && r == n ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constmap_list2(nxt, s1, n) }
+}
+
+
+
+predicate foldI(loc x, set s, int acc, int z, pred p) {
+|  x == null => { acc == z; emp }
+|  not (x == null) => {
+    p(acc, v, acc1) && s =i {v} ++ s1
+      ;
+    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldI(nxt, s1, acc1, z, p) }
+}
+
+predicate foldBTree(loc x, set s, int acc, int z, pred p) {
+|  x == null => { acc == z; emp }
+|  not (x == null) => {
+    p(acc, v, acc1, acc2) && s =i {v} ++ s1 ++ s2
+      ;
+    [x, 3] ** x :-> v ** (x + 1) :-> l ** (x + 2) :-> r ** foldBTree(l, s1, acc1, z, p) ** foldBTree(r, s2, acc2, z, p) }
+}
+
+
+
+predicate foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
+|  x == null       => { acc == z && s =i {} ; emp }
+|  not (x == null) => {
+     s =i {v} ++ s1 && mapFn(v, mapResult) && foldFn(acc, mapResult, acc1)
+       ;
+     [x, 2] ** x :-> v ** (x+1) :-> nxt ** foldMap(nxt, s1, acc1, z, mapFn, foldFn)
+    }
+}
+
+// synonym foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
+//   join(foldI[x, s, acc, z, foldFn[_, ?mapResult, _]], constrained_list[x, s, mapFn[_, ?mapResult]])
+// }
+
+// predicate foldMap'(loc x, loc s, int acc, int z, pred mapFn, pred foldFn) {
+// |  x == null => { acc == z ; emp }
+// |  not (x == null) => {
+//     s =i {v} ++ s1 && mapFn(v, mapResult) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p)
+//    }
+// }
+
+
+//    predicate foldMap_generated(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
+//    | x == null => { acc == z && s =i {} ; emp }
+//    | not (x == null) => {
+//         s =i {v} ++ s1
+//         && mapFn(v, mapResult)
+//         && foldFn(acc, mapResult, acc1)
+//           ;
+//         [x, 2] ** x :-> mapResult ** (x + 1) :-> nxt ** foldMap_generated(nxt, s1, acc1, z, mapFn, foldFn)
+//      }
+//    }
+
+predicate reify(loc x, int i) {
+| true => { [x, 1] ** x :-> i }
+}
+
+
+
+
+predicate iterN(loc x, set s, int N, int v) {
+|  x == null        => { N==0 && s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 && N == N1 + 1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** iterN(nxt, s1, N1, v) }
+}
+
+
+predicate sll(loc x, int len, set s) {
+|  x == 0        => { len == 0 /\ s == {} ; emp }
+|  not (x == 0)  => { len == 1 + len1 /\ s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, len1, s1) }
+}
+
+predicate replicate(loc x, set s, int i, int len) {
+|  x == 0        => { len == 0 /\ s == {} ; emp }
+|  not (x == 0)  => { len == 1 + len1 /\ s == {i} ++ s1 ; [x, 2] ** x :-> i ** (x + 1) :-> nxt ** replicate(nxt, s1, i, len1) }
+}
+
+predicate zip(loc ret, set aS, set bS){
+|  ret == null => {aS == {} && bS == {} ; emp }
+|  not (ret == null) => { aS == {va} ++ aS1 && bS == {vb} ++ bS1;
+[ret, 3] ** ret :-> va ** (ret+1) :-> vb ** (ret+2) :-> retNxt ** zip(retNxt, aS1, bS1)
+}
+}
+
+
