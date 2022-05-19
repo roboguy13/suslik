@@ -25,6 +25,10 @@ predicate spatially_constrained(loc x, set s, pred p) {
 |  not (x == null)  => { s =i {v} ++ s1 ; p(x) ** [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
 }
 
+predicate unfold(loc x, set s, int curr, pred stopCond, pred p) {
+|  stopCond(curr) => { emp }
+}
+
 
 predicate foldI(loc x, set s, int acc, int z, pred p) {
 |  x == null => { acc == z; emp }
@@ -42,8 +46,6 @@ predicate foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
      [x, 2] ** x :-> v ** (x+1) :-> nxt ** foldMap(nxt, s1, acc1, z, mapFn, foldFn)
     }
 }
-
-predicate implicit_deque(
 
 predicate digit(loc x, loc a, loc b, loc c) {
 | true => { [x,3] ** x :-> a ** (x+1) :-> b ** (x+2) :-> c }

@@ -59,17 +59,19 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 
     val cards: Set[Var] = clauses0.flatMap(_.asn.vars).filter(_.name.startsWith(cardinalityPrefix)).toSet
 
-    val clauses = clauses0.map (cl => {
-            cl.visitAssertions(a => {
-                val cardMap: Map[Var, Expr] = cards.map(card => card -> Var(gen.withCurrentUniq(card.name))).toMap
-                Assertion(a.phi.subst(cardMap), a.sigma.subst(cardMap))
-                // cards.map(card => {
-                //   val newCard = Var(gen.withCurrentUniq(card.name))
-                //   Assertion(a.phi.subst(card, newCard), a.sigma.subst(card, newCard))
-                // })
-              })
-          }
-        )
+    val clauses = clauses0.map(cl => cl.visitAssertions(e => transformExpr(e), h => transformHeaplet(h)))
+
+    // val clauses = clauses0.map (cl => {
+    //         cl.visitAssertions(a => {
+    //             val cardMap: Map[Var, Expr] = cards.map(card => card -> Var(gen.withCurrentUniq(card.name))).toMap
+    //             Assertion(a.phi.subst(cardMap), a.sigma.subst(cardMap))
+    //             // cards.map(card => {
+    //             //   val newCard = Var(gen.withCurrentUniq(card.name))
+    //             //   Assertion(a.phi.subst(card, newCard), a.sigma.subst(card, newCard))
+    //             // })
+    //           })
+    //       }
+    //     )
 
     InductivePredicate(name, params, clauses)
   }

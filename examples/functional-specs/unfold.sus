@@ -1,0 +1,8 @@
+
+void unfoldList(loc x, int start)
+  { x :-> 0 }
+  { x :-> r ** unfold(r, s, start, pred(curr) => curr == 0, pred(curr) => true) }
+{ ?? }
+
+###
+

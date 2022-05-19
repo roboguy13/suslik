@@ -15,7 +15,7 @@ import scala.collection.immutable.SortedSet
 abstract class TransformAssertions[A <: HasAssertions[A]] {
 
   def transform(): A = {
-    finish(setup().visitAssertions(asn => transformAssertion(asn)))
+    finish(setup().visitAssertions(expr => transformExpr(expr), h => transformHeaplet(h)))
   }
 
   protected def setup(): A
@@ -25,15 +25,8 @@ abstract class TransformAssertions[A <: HasAssertions[A]] {
   protected def transformExpr(e: Expr): Expr
   protected def transformHeaplet(h: Heaplet): Seq[Heaplet]
 
-  private def transformAssertion(asn: Assertion): Assertion = {
-    Assertion(transformPFormula(asn.phi), transformSFormula(asn.sigma))
-  }
-
-  private def transformPFormula(phi: PFormula): PFormula = {
-    PFormula(phi.conjuncts.map((e : Expr) => transformExpr(e)))
-  }
-
-  private def transformSFormula(sigma: SFormula): SFormula = {
-    SFormula(sigma.chunks.flatMap((chunk: Heaplet) => transformHeaplet(chunk)))
-  }
+  // private def transformAssertion(asn: Assertion): Assertion = {
+  //   Assertion(transformPFormula(asn.phi), transformSFormula(asn.sigma))
+  // }
+  //
 }

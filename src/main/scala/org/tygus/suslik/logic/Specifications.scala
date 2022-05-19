@@ -8,10 +8,20 @@ import scala.Ordering.Implicits._
 
 object Specifications extends SepLogicUtils {
 
-  case class Assertion(phi: PFormula, sigma: SFormula) extends HasExpressions[Assertion]
+  case class Assertion(phi: PFormula, sigma: SFormula) extends HasExpressions[Assertion] with HasAssertions[Assertion]
     with PureLogicUtils {
 
     def pp: String = if (phi.conjuncts.isEmpty) s"{${sigma.pp}}" else s"{${phi.pp} ; ${sigma.pp}}"
+
+    def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): Assertion = Assertion(transformPFormula(f, phi), transformSFormula(g, sigma))
+
+    private def transformPFormula(f: Expr => Expr, phi: PFormula): PFormula = {
+      PFormula(phi.conjuncts.map((e : Expr) => f(e)))
+    }
+
+    private def transformSFormula(g: Heaplet => Seq[Heaplet], sigma: SFormula): SFormula = {
+      SFormula(sigma.chunks.flatMap((chunk: Heaplet) => g(chunk)))
+    }
 
     // Collect arbitrary expressions
     def collect[R <: Expr](p: Expr => Boolean): Set[R] =

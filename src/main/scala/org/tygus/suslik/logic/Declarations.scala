@@ -14,7 +14,7 @@ import org.tygus.suslik.LanguageUtils.{cardinalityPrefix, getTotallyFreshName}
   */
 
 trait HasAssertions[+A] {
-  def visitAssertions(f: Assertion => Assertion): A
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): A
 }
 
 /**
@@ -36,8 +36,8 @@ case class FunSpec(name: Ident, rType: SSLType, params: Formals,
                    pre: Assertion, post: Assertion,
                    var_decl: Formals = Nil) extends TopLevelDeclaration with HasAssertions[FunSpec] {
 
-   def visitAssertions(f: Assertion => Assertion): FunSpec = {
-     FunSpec(name, rType, params, f(pre), f(post), var_decl)
+   def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): FunSpec = {
+     FunSpec(name, rType, params, pre.visitAssertions(f, g), post.visitAssertions(f, g), var_decl)
    }
 
   def resolveOverloading(env: Environment): FunSpec = {
@@ -106,8 +106,8 @@ case class InductiveClause(selector: Expr, asn: Assertion) extends PrettyPrintin
   with HasAssertions[InductiveClause] {
 
 
-  def visitAssertions(f: Assertion => Assertion) = {
-    InductiveClause(selector, f(asn))
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]) = {
+    InductiveClause(f(selector), asn.visitAssertions(f, g))
   }
 
   override def pp: String =
@@ -167,8 +167,8 @@ case class InductivePredicate(name: Ident, params: Formals, clauses: Seq[Inducti
     extends TopLevelDeclaration with PureLogicUtils
     with HasAssertions[InductivePredicate] {
 
-  def visitAssertions(f: Assertion => Assertion): InductivePredicate = {
-    InductivePredicate(name, params, clauses.map(_.visitAssertions(f)))
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): InductivePredicate = {
+    InductivePredicate(name, params, clauses.map(_.visitAssertions(f, g)))
   }
 
   def resolve(gamma: Gamma, env:Environment):Option[Gamma] = {
@@ -252,8 +252,8 @@ case class Synonym(name: Ident, params: Formals, sigma: SFormula)
 
 
 case class GoalContainer(spec: FunSpec, body: Statement) extends HasAssertions[GoalContainer] {
-  def visitAssertions(f: Assertion => Assertion): GoalContainer = {
-    GoalContainer(spec.visitAssertions(f), body)
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): GoalContainer = {
+    GoalContainer(spec.visitAssertions(f, g), body)
   }
 }
 
