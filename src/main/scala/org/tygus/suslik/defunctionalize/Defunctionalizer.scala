@@ -108,12 +108,14 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
       case PApp(predIdent, args) =>
         funMap get predIdent match {
           case None =>
-            throw new Exception(s"Invalid pure predicate application: ${e}")
+            PApp(predIdent, args.map(e => transformExpr(e)))
+            // throw new Exception(s"Invalid pure predicate application: ${e}")
           case Some(SPredicateValue(_)) =>
             throw new Exception(s"Spatial predicate used as a pure predicate: ${predIdent}")
           case Some(p @ PPredicateValue(_)) => p.apply(args)
         }
       case BinaryExpr(op, left, right) => BinaryExpr(op, transformExpr(left), transformExpr(right))
+      case UnaryExpr(op, arg) => UnaryExpr(op, transformExpr(arg))
       case _ => e
     }
   }

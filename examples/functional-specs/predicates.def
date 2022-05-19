@@ -26,7 +26,8 @@ predicate spatially_constrained(loc x, set s, pred p) {
 }
 
 predicate unfold(loc x, set s, int curr, pred stopCond, pred p) {
-|  stopCond(curr) => { emp }
+|  stopCond(curr) => { s =i {} ; emp }
+|  not(stopCond(curr)) => { emp }
 }
 
 
