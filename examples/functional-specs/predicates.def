@@ -30,7 +30,7 @@ predicate unfold(loc x, set s, int curr, pred stopCond, pred p) {
 |  not(stopCond(curr)) => {
      s =i {curr} ++ s1 && p(curr, newCurr)
        ;
-     x :-> v ** (x+1) :-> nxt **
+     x :-> curr ** (x+1) :-> nxt **
      unfold(nxt, s1, newCurr, stopCond, p)
    }
 }
