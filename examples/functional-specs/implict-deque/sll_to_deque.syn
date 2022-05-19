@@ -1,0 +1,43 @@
+# -o 2 -c 2
+
+TODO: Fix variable capture that can happen in the post-condition of the size procedure
+
+{ implicit_deque(sz, s, x) ** y :-> 0 }
+void flatten_implicit_deque(loc x, loc y)
+{ implicit_deque(sz, s, x) ** y :-> ret ** sll(s, ret) }
+
+{ x :-> d ** implicit_deque(sz, s, d) ** y :-> v }
+void implicit_deque_insert(loc x, loc y)
+{ s1 =i {v} ++ s ; x :-> d ** implicit_deque(sz1, s1, d) ** y :-> v }
+
+{ x :-> d ** implicit_deque(sz-1, s, d) ** y :-> v }
+void implicit_deque_insert(loc x, loc y)
+{ s1 =i {v} ++ s ; x :-> d ** implicit_deque(sz, s1, d) ** y :-> v }
+
+####
+
+{true ; sll(s1, x1) ** sll(s2, x2) ** ret :-> x2}
+void sll_append (loc x1, loc ret)
+{s =i s1 ++ s2 ; sll(s, y) ** ret :-> y }
+
+{ binary_tree(sz, s, x) ** y :-> 0 }
+void flatten_binary_tree(loc x, loc y)
+{ binary_tree(sz, s, x) ** y :-> ret ** sll(s, ret) }
+
+{ binary_tree(sz, s, x) ** y :-> 0 }
+void binary_tree_size(loc x, loc y)
+{ binary_tree(sz, s, x) ** y :-> sz }
+
+{ implicit_deque(sz, s, x) ** y :-> 0 }
+void flatten_implicit_deque(loc x, loc y)
+{ implicit_deque(sz, s, x) ** y :-> ret ** sll(s, ret) }
+
+{ implicit_deque(sz, s, x) ** y :-> 0 }
+void implicit_deque_size(loc x, loc y)
+{ implicit_deque(sz, s, x) ** y :-> sz }
+
+{ implicit_deque(szA, sA, x1) ** implicit_deque(szB, sB, x2) ** x :-> x1 ** (x+1) :-> x2 ** y :-> 0 }
+void implicit_deque_merge(loc x, loc y)
+{ implicit_deque(szA, sA, x1) ** implicit_deque(szB, sB, x2) ** x :-> x1 ** (x+1) :-> x2 ** implicit_deque(szA + szB, sA ++ sB, y1) ** y :-> y1 }
+
+####

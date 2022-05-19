@@ -1,0 +1,8 @@
+
+void unfoldList(loc x, int start)
+  { start < 7 && 0 < start ; x :-> 0 }
+  { start < 7 && 0 < start ; x :-> r ** unfold(r, s, start, pred(curr) => curr < 2, pred(curr, newCurr) => newCurr == curr-1) }
+{ ?? }
+
+###
+

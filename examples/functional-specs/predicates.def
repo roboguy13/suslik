@@ -20,6 +20,22 @@ synonym unconstrained(loc x, set s) {
   constrained_list(x, s, pred(u, v) => u == v)
 }
 
+predicate spatially_constrained(loc x, set s, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 ; p(x) ** [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+}
+
+predicate unfold(loc x, set s, int curr, pred stopCond, pred p) {
+|  stopCond(curr) => { s =i {} ; emp }
+|  not(stopCond(curr)) => {
+     s =i {curr} ++ s1 && p(curr, newCurr)
+       ;
+     x :-> curr ** (x+1) :-> nxt **
+     unfold(nxt, s1, newCurr, stopCond, p)
+   }
+}
+
+
 predicate foldI(loc x, set s, int acc, int z, pred p) {
 |  x == null => { acc == z; emp }
 |  not (x == null) => {
@@ -36,6 +52,45 @@ predicate foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
      [x, 2] ** x :-> v ** (x+1) :-> nxt ** foldMap(nxt, s1, acc1, z, mapFn, foldFn)
     }
 }
+
+predicate digit(loc x, loc a, loc b, loc c) {
+| true => { [x,3] ** x :-> a ** (x+1) :-> b ** (x+2) :-> c }
+}
+
+predicate pair(loc x, int a, int b) {
+| true => { [x, 2] ** x :-> a ** (x+1) :-> b }
+}
+
+predicate zipped(loc x, loc y, loc r, set lefts, set rights) {
+| x == 0 || y == 0 => { lefts =i {} && rights =i {} ; emp }
+| not (x == 0 || y == 0) => {
+    lefts =i {a} ++ lefts1 &&
+    rights =i {b} ++ rights1
+      ;
+    x :-> a ** (x+1) :-> nxtX **
+    y :-> b ** (y+1) :-> nxtY **
+    [r, 2] ** pair(p, a, b) ** r :-> p ** (r+1) :-> nxtR ** zipped(nxtX, nxtY, nxtR, lefts1, rights1)
+  }
+}
+
+predicate filter_gt_7(loc x, set preS, set postS) {
+| x == null => { preS =i {} && postS =i {} ; emp }
+| not (x == null) && preS =i {v} ++ preS1 && postS =i {v} ++ postS1 && v > 7 => { 
+    [x, 2] ** x :-> v ** (x+1) :-> nxt ** filter_gt_7(nxt, preS1, postS1)
+    }
+| not (x == null) && preS =i {v} ++ preS1 && not (v > 7) => { [x, 1] ** x :-> nxt ** filter_gt_7(nxt, preS1, postS) }
+}
+
+// synonym foldMap2(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
+//   
+// }
+
+// synonym pair_list(loc x, set lefts, set rights) {
+//   spatially_constrained
+// }
+
+// predicate pairwise_sum(loc x, loc y, set s) {
+// }
 
 // synonym foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
 //   join(foldI[x, s, acc, z, foldFn[_, ?mapResult, _]], constrained_list[x, s, mapFn[_, ?mapResult]])

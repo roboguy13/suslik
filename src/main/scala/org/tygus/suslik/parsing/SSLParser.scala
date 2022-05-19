@@ -67,6 +67,10 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
 
   def varParser: Parser[Var] = ident ^^ Var
 
+  def joinVarParser: Parser[JoinVar] = "#" ~ ident ^^ {
+    case _ ~ i => JoinVar(i)
+  }
+
   def unOpParser: Parser[UnOp] =
     ("not" ^^^ OpNot ||| "-" ^^^ OpUnaryMinus ||| "lower" ^^^ OpLower ||| "upper" ^^^ OpUpper)
 

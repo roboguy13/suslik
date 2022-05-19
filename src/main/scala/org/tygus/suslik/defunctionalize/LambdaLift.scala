@@ -33,28 +33,31 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
     InductivePredicate(pred.name, pred.params ++ additionalParams, pred.clauses)
   }
 
-  protected def transformExpr(e: Expr): SortedSet[Expr] = {
-    SortedSet[Expr](
+  protected def transformExpr(e: Expr): Expr = {
       if (freeVarMap.isEmpty) {
         e
       } else {
         e match {
-        case PApp(predIdent, args) => {
-          funMap get predIdent match {
-            case Some(PPredicateValue(_)) =>
-              // This is an application of a "lambda" parameter
-              PApp(predIdent, updateArgs(args.toSeq).toList)
+            case PApp(predIdent, args) => {
+              funMap get predIdent match {
+                case Some(PPredicateValue(_)) =>
+                  // This is an application of a "lambda" parameter
+                  PApp(predIdent, updateArgs(args.toSeq).toList)
 
-            case None => e
+                case None => e
 
-            case Some(SPredicateValue(_)) =>
-              throw new Exception("LambdaLiftInductive: Spatial predicate used as a pure predicate: " + predIdent)
-          }
-        }
+                case Some(SPredicateValue(_)) =>
+                  throw new Exception("LambdaLiftInductive: Spatial predicate used as a pure predicate: " + predIdent)
+              }
+            }
 
-        case _ => e
+            case BinaryExpr(op, left, right) => {
+              BinaryExpr(op, transformExpr(left), transformExpr(right))
+            }
+
+            case _ => e
       }
-    })
+    }
   }
 
   protected def transformHeaplet(h: Heaplet): Seq[Heaplet] = {
@@ -131,7 +134,7 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
     })
   }
 
-  protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
+  protected def transformExpr(e: Expr): Expr = e
 
   // Update the body of the predicate abstracts to refer to the closure argument
   // names rather than the original names of the variables being closed over
@@ -157,7 +160,7 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
     def getFreeVarMap(x: A): Map[Var, Expr] = {
       freeVarSet.clear()
 
-      x.visitAssertions(visit)
+      x.visitAssertions(visitE, visitH)
 
       freeVarSet.map((origV: Var) => {
         val newName = gen.genFresh(origV.name)
@@ -165,10 +168,18 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
       }).toMap
     }
 
-    def visit(asn: Assertion): Assertion = {
-      freeVarSet ++= asn.sigma.collect(_.isInstanceOf[PredicateAbstraction]).flatMap((x: PredicateAbstraction) => x.vars).toSet
-      asn
+    private def visitH(h: Heaplet): Seq[Heaplet] = {
+      freeVarSet ++= collectFreeVars(h)
+      Seq[Heaplet](h)
     }
+
+    private def visitE(e: Expr): Expr = {
+      freeVarSet ++= collectFreeVars(e)
+      e
+    }
+
+    private def collectFreeVars[T <: HasExpressions[T]](x: T): scala.collection.immutable.Set[Var] =
+      x.collect(_.isInstanceOf[PredicateAbstraction]).flatMap((x: PredicateAbstraction) => x.vars).toSet
   }
 }
 

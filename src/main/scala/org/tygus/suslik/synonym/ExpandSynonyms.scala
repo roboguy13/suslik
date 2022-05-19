@@ -18,7 +18,7 @@ import scala.collection.immutable.SortedSet
 class ExpandSynonyms[A <: HasAssertions[A]](synonyms: Map[String, Synonym], orig: A) extends TransformAssertions[A] {
   protected def setup(): A = orig
 
-  protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
+  protected def transformExpr(e: Expr): Expr = e
 
   protected def transformHeaplet(h: Heaplet): Seq[Heaplet] = {
     h match {

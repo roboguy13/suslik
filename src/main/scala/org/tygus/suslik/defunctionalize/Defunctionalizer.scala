@@ -59,17 +59,19 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 
     val cards: Set[Var] = clauses0.flatMap(_.asn.vars).filter(_.name.startsWith(cardinalityPrefix)).toSet
 
-    val clauses = clauses0.map (cl => {
-            cl.visitAssertions(a => {
-                val cardMap: Map[Var, Expr] = cards.map(card => card -> Var(gen.withCurrentUniq(card.name))).toMap
-                Assertion(a.phi.subst(cardMap), a.sigma.subst(cardMap))
-                // cards.map(card => {
-                //   val newCard = Var(gen.withCurrentUniq(card.name))
-                //   Assertion(a.phi.subst(card, newCard), a.sigma.subst(card, newCard))
-                // })
-              })
-          }
-        )
+    val clauses = clauses0.map(cl => cl.visitAssertions(e => transformExpr(e), h => transformHeaplet(h)))
+
+    // val clauses = clauses0.map (cl => {
+    //         cl.visitAssertions(a => {
+    //             val cardMap: Map[Var, Expr] = cards.map(card => card -> Var(gen.withCurrentUniq(card.name))).toMap
+    //             Assertion(a.phi.subst(cardMap), a.sigma.subst(cardMap))
+    //             // cards.map(card => {
+    //             //   val newCard = Var(gen.withCurrentUniq(card.name))
+    //             //   Assertion(a.phi.subst(card, newCard), a.sigma.subst(card, newCard))
+    //             // })
+    //           })
+    //       }
+    //     )
 
     InductivePredicate(name, params, clauses)
   }
@@ -101,17 +103,20 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 
 
   // Pure part
-  protected def transformExpr(e: Expr): SortedSet[Expr] = {
+  protected def transformExpr(e: Expr): Expr = {
     e match {
       case PApp(predIdent, args) =>
         funMap get predIdent match {
           case None =>
-            throw new Exception(s"Invalid pure predicate application: ${e}")
+            PApp(predIdent, args.map(e => transformExpr(e)))
+            // throw new Exception(s"Invalid pure predicate application: ${e}")
           case Some(SPredicateValue(_)) =>
             throw new Exception(s"Spatial predicate used as a pure predicate: ${predIdent}")
           case Some(p @ PPredicateValue(_)) => p.apply(args)
         }
-      case _ => SortedSet[Expr](e)
+      case BinaryExpr(op, left, right) => BinaryExpr(op, transformExpr(left), transformExpr(right))
+      case UnaryExpr(op, arg) => UnaryExpr(op, transformExpr(arg))
+      case _ => e
     }
   }
 }
@@ -171,6 +176,6 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
     })
   }
 
-  protected def transformExpr(e: Expr): SortedSet[Expr] = SortedSet[Expr](e)
+  protected def transformExpr(e: Expr): Expr = e
 }
 

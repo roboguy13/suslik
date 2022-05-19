@@ -1,4 +1,11 @@
 
+
+
+
+
+
+
+
 void foldMapArg(loc x)
   { x :-> w ** (x+1) :-> 0 ** unconstrained(w, s) }
   { x :-> w ** (x+1) :-> acc **
@@ -8,26 +15,4 @@ void foldMapArg(loc x)
 { ?? }
 
 ###
-
-
-
-
-
-
-
-{(x + 1) :-> 0 ** x :-> w ** constrained_list$1(w, s)<_alpha_10>}
-{(x + 1) :-> acc ** x :-> w ** foldMap$2(w, s, acc, 0)<_alpha_7>}
-void foldMapArg (loc x) {
-  let w = *x;
-  if (w == 0) {
-  } else {
-    let v = *w;
-    let n = *(w + 1);
-    *x = n;
-    foldMapArg(x);
-    let a = *(x + 1);
-    *x = w;
-    *(x + 1) = (v * 2) + a;
-  }
-}
 

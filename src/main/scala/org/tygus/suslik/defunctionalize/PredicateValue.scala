@@ -35,12 +35,12 @@ case class SPredicateValue(abstr: SpatialPredicateAbstraction)
 case class PPredicateValue(abstr: PurePredicateAbstraction)
   extends PredicateValue(abstr) {
 
-  def apply(args: Seq[Expr]): SortedSet[Expr] = {
+  def apply(args: Seq[Expr]): Expr = {
     val st = (abstr.params, args).zipped map((x: Ident, y: Expr) => (Var(x) , y))
 
     // assertNoFreeVars()
 
-    abstr.body.subst(st.toMap).conjuncts.iterator.to[SortedSet]
+    abstr.body.subst(st.toMap) // .conjuncts.iterator.to[SortedSet]
   }
 }
 
