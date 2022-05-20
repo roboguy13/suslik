@@ -39,6 +39,20 @@ predicate constrained_list(loc x, set s, pred p) {
 |  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
 }
 
+predicate assoc_list(loc x, set keys, set vals) {
+| x == null => { keys =i {} && vals =i {} ; emp }
+| not (x == null) => {
+    keys =i {k} ++ keys1 &&
+    vals =i {v} ++ vals1 &&
+      ;
+    [x, 3] **
+    x :-> k **
+    (x+1) :-> v **
+    (x+2) :-> nxt **
+    assoc_list(nxt, keys1, vals1)
+  }
+}
+
 synonym unconstrained(loc x, set s) {
   constrained_list(x, s, pred(u, v) => u == v)
 }

@@ -1,0 +1,8 @@
+
+###
+
+{ assoc_list(x, keys, vals) ** y :-> 0 }
+void lookup(loc x, loc y, int k)
+{ assoc_list(x, keys, vals) **
+
+###
