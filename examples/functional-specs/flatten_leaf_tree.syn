@@ -1,0 +1,12 @@
+
+###
+
+{true ; unconstrained(x1, s1) ** unconstrained(x2, s2) ** ret :-> x2}
+void sll_append (loc x1, loc ret)
+{s =i s1 ++ s2 ; unconstrained(y, s) ** ret :-> y }
+
+  { x :-> x1 ** wrapped_leaf_tree(x1, s) }
+void flatten_leaf_tree(loc x)
+  { x :-> x1 ** unconstrained(x1, s) }
+
+###
