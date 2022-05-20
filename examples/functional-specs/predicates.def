@@ -11,6 +11,29 @@ predicate list_relation(loc x, loc y, set preS, set postS, pred p) {
       list_relation(xNxt, yNxt, preS1, postS1, p) }
 }
 
+
+
+// TODO: See if this can work
+predicate fold_with(loc x, loc y, int curr, set s, pred p) {
+| x == null => { y == null ; emp}
+| not (x == null) => {
+    s =i {curr} ++ s1 &&
+    p(old, curr)
+      ;
+    [x, 2] **
+    x :-> old **
+    (x+1) :-> xNxt **
+    [y, 2] **
+    y :-> curr **
+    (y+1) :-> yNxt **
+    fold_with(xNxt, yNxt, curr, s1, p)
+  }
+}
+
+// predicate accum_list_relation(loc x, loc y, int last, set preS, set postS, pred p) {
+// | x == null => { preS =i {} && postS =i {} && y == null ; emp }
+// }
+
 predicate constrained_list(loc x, set s, pred p) {
 |  x == null        => { s =i {} ; emp }
 |  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
@@ -20,19 +43,41 @@ synonym unconstrained(loc x, set s) {
   constrained_list(x, s, pred(u, v) => u == v)
 }
 
+synonym fill(loc x, set s, int val) {
+  constrained_list(x, s, pred(unused, new) => new == val)
+}
+
 predicate spatially_constrained(loc x, set s, pred p) {
 |  x == null        => { s =i {} ; emp }
 |  not (x == null)  => { s =i {v} ++ s1 ; p(x) ** [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
 }
 
-predicate unfold(loc x, set s, int curr, pred stopCond, pred p) {
-|  stopCond(curr) => { s =i {} ; emp }
-|  not(stopCond(curr)) => {
-     s =i {curr} ++ s1 && p(curr, newCurr)
-       ;
-     x :-> curr ** (x+1) :-> nxt **
-     unfold(nxt, s1, newCurr, stopCond, p)
-   }
+predicate unfold(loc x, int curr, pred stopCond, pred p) {
+| stopCond(curr) => { emp }
+| not stopCond(curr) => {
+    p(curr, newCurr)
+      ;
+    [x, 2] **
+    x :-> curr ** (x+1) :-> nxt **
+    unfold(nxt, newCurr, stopCond, p)
+  }
+}
+
+predicate wrapped_leaf_tree(loc x, set s) {
+| true => { x :-> tag ** leaf_tree(x, tag, s) }
+}
+
+predicate leaf_tree(loc x, int tag, set s) {
+| tag == 0 => { s =i {v} ; [x, 2] ** (x+1) :-> v }
+| tag == 1 => {
+    s =i sL ++ sR
+      ;
+    [x, 3] **
+    (x+1) :-> left **
+    (x+2) :-> right **
+    leaf_tree(left, tagL, sL) **
+    leaf_tree(right, tagR, sR)
+  }
 }
 
 

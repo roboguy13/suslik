@@ -1,16 +1,3 @@
-TODO: Fix variable capture that can happen in the post-condition of the size procedure
-
-{ implicit_deque(sz, s, x) ** y :-> 0 }
-void flatten_implicit_deque(loc x, loc y)
-{ implicit_deque(sz, s, x) ** y :-> ret ** sll(s, ret) }
-
-{ x :-> d ** implicit_deque(sz, s, d) ** y :-> v }
-void implicit_deque_insert(loc x, loc y)
-{ s1 =i {v} ++ s ; x :-> d ** implicit_deque(sz1, s1, d) ** y :-> v }
-
-{ x :-> d ** implicit_deque(sz-1, s, d) ** y :-> v }
-void implicit_deque_insert(loc x, loc y)
-{ s1 =i {v} ++ s ; x :-> d ** implicit_deque(sz, s1, d) ** y :-> v }
 
 ####
 
