@@ -43,7 +43,7 @@ predicate assoc_list(loc x, set keys, set vals) {
 | x == null => { keys =i {} && vals =i {} ; emp }
 | not (x == null) => {
     keys =i {k} ++ keys1 &&
-    vals =i {v} ++ vals1 &&
+    vals =i {v} ++ vals1
       ;
     [x, 3] **
     x :-> k **
