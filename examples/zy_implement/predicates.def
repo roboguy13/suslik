@@ -112,7 +112,7 @@ predicate replicate(loc x, set s, int i, int len) {
 |  not (x == 0)  => { len == 1 + len1 /\ s == {i} ++ s1 ; [x, 2] ** x :-> i ** (x + 1) :-> nxt ** replicate(nxt, s1, i, len1) }
 }
 
-predicate zip(loc ret, set aS, set bS){
+predicate zip(loc ret, set aS, set bS) {
 |  ret == null => {aS == {} && bS == {} ; emp }
 |  not (ret == null) => { aS == {va} ++ aS1 && bS == {vb} ++ bS1;
 [ret, 3] ** ret :-> va ** (ret+1) :-> vb ** (ret+2) :-> retNxt ** zip(retNxt, aS1, bS1)

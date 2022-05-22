@@ -1,0 +1,10 @@
+predicate concat(loc x, set aS, set bS) {
+|  x == null        => {aS == {} &&  bS == {}; emp}
+| not (x == null) && not (aS == {})=> {aS == {va} ++ aS1; [x,2] ** x :-> va ** (x + 1) :-> xNxt ** concat(xNxt, aS1, bS)}
+| not (x == null) && aS == {}=> {bS == {vb} ++ bS1; x :-> vb ** (x + 1) :-> xNxt ** concat(xNxt, aS, bS1)}
+}
+
+predicate sll(loc x, set s) {
+|  x == 0        => { s == {} ; emp }
+|  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
+}

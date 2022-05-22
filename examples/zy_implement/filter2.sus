@@ -1,6 +1,6 @@
 void f1(loc x, loc ret)
-  { true ;  sll(x,sz, s) ** ret :-> a }
-  { true ;  filter(y,s,sz) ** ret :-> y}
+  { true ;  constrained_list(x, s, pred(v,r) => v == r) ** ret :-> a }
+  { s1 == s -- {a} ;  constrained_list(y, s1, pred(v,r) => v == r) ** ret :-> y}
 { ?? }
 
 ###

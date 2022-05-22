@@ -1,6 +1,6 @@
 void foldArg(loc x)
-  { x :-> x1 ** foldRose(x1, s, acc, 0, pred(currAcc, acc1, acc2) => currAcc == (acc1+acc2)) }
-  { x :-> acc }
+  { x :-> x1 ** (x+1) :-> 0 ** rose_tree(x1, s) }
+  { x :-> x1 ** (x+1) :-> acc ** foldrose(x1, s, acc, 0, pred(currAcc, acc1, acc2) => currAcc == (acc1+acc2)) }
 { ?? }
 
 ###

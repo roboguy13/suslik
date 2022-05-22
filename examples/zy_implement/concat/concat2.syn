@@ -1,0 +1,7 @@
+
+###
+  { true ; sll(a, aS) ** sll(b, bS) ** ret :-> a1 }
+  void f1(loc a, loc b, loc ret)
+  { true ; concat(x, aS, bS) ** ret :-> x}
+
+###

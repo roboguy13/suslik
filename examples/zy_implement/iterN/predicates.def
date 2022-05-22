@@ -1,6 +1,6 @@
 predicate iterN(loc x, set s, int v, pred p) {
 |  x == null        => { s =i {} ; emp }
-|  not (x == null)  => {s =i {v} ++ s1 && v == v1; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** iterN(nxt, s1, v1) }
+|  not (x == null)  => {s =i {v} ++ s1 && p(v1,v); [x, 2] ** x :-> v1 ** (x + 1) :-> nxt ** iterN(nxt, s1, v1) }
 }
 
 predicate constrained_list(loc x, set s, pred p) {

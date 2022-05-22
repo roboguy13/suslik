@@ -10,6 +10,6 @@ synonym unconstrained(loc x, set s) {
 predicate zip(loc ret, set aS, set bS){
 |  ret == null => {aS == {} && bs == {} ; emp }
 |  not (ret == null) => { aS == {va} ++ aS1 && bS == {vb} ++ bS1 && v == va + vb;
-[ret, 2] ** ret :-> v **  (ret+1) :-> retNxt ** zip(retNxt, aS1, bS)
+[ret, 2] ** ret :-> va **  (ret+1) :-> retNxt ** zip(retNxt, aS1, bS)
 }
 }

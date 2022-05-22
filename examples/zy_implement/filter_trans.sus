@@ -1,0 +1,6 @@
+void f1(loc x, loc ret)
+  { true ;  unconstrained(x, Sx) ** ret :-> a }
+  { true ; transformation_list(y, Sx, Sy,pred(v1, v) => v == (v1<9?v1:666)) ** ret :-> y}
+{ ?? }
+
+###
