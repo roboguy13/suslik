@@ -1,0 +1,8 @@
+
+###
+
+{ x :-> y ** implicit_deque(sz, s, y) }
+void insert(int v, loc x)
+{ postSZ == sz+1 && postS =i {v} ++ s ; x :-> r ** implicit_deque(postSZ, postS, r) }
+
+###

@@ -1,0 +1,12 @@
+
+####
+
+{ binary_tree(sz, s, x) ** y :-> 0 }
+void binary_tree_size(loc x, loc y)
+{ binary_tree(sz, s, x) ** y :-> sz }
+
+{ implicit_deque(sz, s, x) ** y :-> 0 }
+void implicit_deque_size(loc x, loc y)
+{ implicit_deque(sz, s, x) ** y :-> sz }
+
+####

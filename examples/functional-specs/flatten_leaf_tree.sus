@@ -1,0 +1,9 @@
+
+void flatten_leaf_tree(loc x)
+  { x :-> x1 ** wrapped_leaf_tree(x1, s) }
+  { x :-> x1 ** unconstrained(x1, s) }
+{
+  ??
+}
+
+###

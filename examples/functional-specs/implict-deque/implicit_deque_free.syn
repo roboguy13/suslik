@@ -1,0 +1,8 @@
+
+###
+
+{ true ; implicit_deque(sz, s, x) }
+void implicit_deque_free(loc x)
+{ true ; emp }
+
+###
