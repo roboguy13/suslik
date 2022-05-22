@@ -1,6 +1,0 @@
-void f1(loc a, loc b, loc ret)
-  { true ;  unconstrained(a, aS) ** unconstrained(b, bS) ** ret :-> a1 }
-  { true ; concat(a, b, x, aS, bS, s) ** ret :-> x}
-{ ?? }
-
-###
