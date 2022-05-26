@@ -45,7 +45,7 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 
   import PredicateAbstractionUtils._
 
-  val funSpecElimAbs = new FunSpecEliminateAbstractions(gen, spList)
+  val elimAbs = new EliminateAbstractions(gen, spList)
 
   val funMap = new PredicateValueMap(pred, fs)
 
@@ -139,8 +139,8 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 //
 // }
 //
-case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: PredicateEnv, spList: SpecializationList)
-  extends TransformAssertions[FunSpec] {
+case class Defunctionalize[A <: HasAssertions[A]](fun: A, gen: FreshIdentGen, predEnv: PredicateEnv, spList: SpecializationList)
+  extends TransformAssertions[A] {
 
   import PredicateAbstractionUtils._
 
@@ -148,7 +148,7 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
 
   def getGeneratedPreds(): List[InductivePredicate] = generatedPreds.result()
 
-  protected def setup(): FunSpec = fun
+  protected def setup(): A = fun
 
   protected def transformHeaplet(heaplet: Heaplet): Seq[Heaplet] = {
     Seq[Heaplet](heaplet match {
