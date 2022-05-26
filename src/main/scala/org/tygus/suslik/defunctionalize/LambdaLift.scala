@@ -102,7 +102,7 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
 
 class LambdaLiftGoalContainer(goal: GoalContainer) {
   def transform(): (GoalContainer, Map[Var, Expr]) = {
-    val lambdaLiftFunSpec = new LambdaLiftFunSpec(goal.spec)
+    val lambdaLiftFunSpec = new LambdaLiftHasAssns(goal.spec)
 
     val newSpec = lambdaLiftFunSpec.transform()
 
@@ -110,13 +110,13 @@ class LambdaLiftGoalContainer(goal: GoalContainer) {
   }
 }
 
-class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
+class LambdaLiftHasAssns[A <: HasAssertions[A]](fun: A) extends LambdaLift[A] {
   import PredicateAbstractionUtils._
 
-  private val collectFVs = new CollectFreeVars[FunSpec]()
+  private val collectFVs = new CollectFreeVars[A]()
   val freeVarMap: Map[Var, Expr] = collectFVs.getFreeVarMap(fun)
 
-  protected def setup(): FunSpec = fun
+  protected def setup(): A = fun
 
   protected def transformHeaplet(heaplet: Heaplet): Seq[Heaplet] = {
     Seq[Heaplet](heaplet match {
@@ -181,30 +181,5 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
     private def collectFreeVars[T <: HasExpressions[T]](x: T): scala.collection.immutable.Set[Var] =
       x.collect(_.isInstanceOf[PredicateAbstraction]).flatMap((x: PredicateAbstraction) => x.vars).toSet
   }
-}
-
-// | This keeps track of the specializations we've already done
-private class SpecializationList() {
-  private var sps: ListBuffer[Specialization] = ListBuffer[Specialization]()
-
-  def insertSpecialization(s: Specialization) {
-    sps += s
-  }
-
-  def lookupSpecialization(name: Ident, fromExpr: Expr): Option[Expr] =
-    sps.collectFirst(Function.unlift(_.getSubstFor(name, fromExpr)))
-}
-
-private class Specialization(name: Ident, fromExpr: Expr, toExpr: Expr) {
-  def getSubstFor(theName: Ident, theFromExpr: Expr): Option[Expr] =
-    if (name == theName && theFromExpr == fromExpr) {
-      Some(toExpr)
-    } else {
-      None
-    }
-}
-
-// TODO: Calculate newName from origName and occurrence
-class FreeVar(val occurrence: Int, val origName: Ident, val newName: Ident) {
 }
 

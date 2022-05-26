@@ -9,6 +9,8 @@ import org.tygus.suslik.logic.PFormula._
 import org.tygus.suslik.logic.SFormula._
 import org.tygus.suslik.LanguageUtils.cardinalityPrefix
 
+import org.tygus.suslik.defunctionalize._
+
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.SortedSet
 
@@ -38,10 +40,12 @@ class PredicateValueMap(pred: InductivePredicate, fs: Seq[PredicateValue]) {
   //
   //   - 'newName' should be a fresh name w.r.t. the names of the other
   //   inductive predicates
-case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: InductivePredicate, fs: Seq[PredicateValue])
+case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: InductivePredicate, fs: Seq[PredicateValue], spList: SpecializationList)
   extends TransformAssertions[InductivePredicate] {
 
   import PredicateAbstractionUtils._
+
+  val funSpecElimAbs = new FunSpecEliminateAbstractions(gen, spList)
 
   val funMap = new PredicateValueMap(pred, fs)
 
@@ -122,19 +126,20 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 }
 
 // Defunctionalization on the side of the predicate abstractions
-case class DefunctionalizeGoalContainer(goal: GoalContainer, gen: FreshIdentGen, predEnv: PredicateEnv) {
-  def transform(): (GoalContainer, List[InductivePredicate]) = {
 
-    val defun = new DefunctionalizeFunSpec(goal.spec, gen, predEnv)
-
-    val newSpec = defun.transform()
-
-    (GoalContainer(newSpec, goal.body), defun.getGeneratedPreds)
-  }
-
-}
-
-case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: PredicateEnv)
+// case class DefunctionalizeGoalContainer(goal: GoalContainer, gen: FreshIdentGen, predEnv: PredicateEnv) {
+//   def transform(): (GoalContainer, List[InductivePredicate]) = {
+//
+//     val defun = new DefunctionalizeFunSpec(goal.spec, gen, predEnv, spList)
+//
+//     val newSpec = defun.transform()
+//
+//     (GoalContainer(newSpec, goal.body), defun.getGeneratedPreds)
+//   }
+//
+// }
+//
+case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: PredicateEnv, spList: SpecializationList)
   extends TransformAssertions[FunSpec] {
 
   import PredicateAbstractionUtils._
@@ -164,7 +169,7 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
               case Some(p) => p
             }
 
-          val defunctionalizer = new DefunctionalizeInductive(newPredName, gen, pred, predValues)
+          val defunctionalizer = new DefunctionalizeInductive(newPredName, gen, pred, predValues, spList)
 
           // TODO: Ensure there are no free variables remaining in any of the 'predValues'
           generatedPreds += defunctionalizer.transform()
@@ -177,5 +182,30 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
   }
 
   protected def transformExpr(e: Expr): Expr = e
+}
+
+// | This keeps track of the specializations we've already done
+class SpecializationList() {
+  private var sps: ListBuffer[Specialization] = ListBuffer[Specialization]()
+
+  def insertSpecialization(s: Specialization) {
+    sps += s
+  }
+
+  def lookupSpecialization(name: Ident, fromExpr: Expr): Option[Expr] =
+    sps.collectFirst(Function.unlift(_.getSubstFor(name, fromExpr)))
+}
+
+private class Specialization(name: Ident, fromExpr: Expr, toExpr: Expr) {
+  def getSubstFor(theName: Ident, theFromExpr: Expr): Option[Expr] =
+    if (name == theName && theFromExpr == fromExpr) {
+      Some(toExpr)
+    } else {
+      None
+    }
+}
+
+// TODO: Calculate newName from origName and occurrence
+class FreeVar(val occurrence: Int, val origName: Ident, val newName: Ident) {
 }
 

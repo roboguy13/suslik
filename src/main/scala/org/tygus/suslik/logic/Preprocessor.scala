@@ -8,6 +8,7 @@ import org.tygus.suslik.synthesis.SynConfig
 // import org.tygus.suslik.defunctionalize.{DefunctionalizeInductive,DefunctionalizeGoalContainer,DefunctionalizeFunSpec,FreshIdentGen}
 import org.tygus.suslik.defunctionalize.GoalContainerEliminateAbstractions
 import org.tygus.suslik.defunctionalize.FunSpecEliminateAbstractions
+import org.tygus.suslik.defunctionalize.SpecializationList
 import org.tygus.suslik.defunctionalize.{PredicateValue,PPredicateValue,SPredicateValue}
 import org.tygus.suslik.language.PredType
 
@@ -46,7 +47,7 @@ object Preprocessor extends SepLogicUtils {
 
     val (freshIdentGen, (goal, generatedPreds)) = goalElimAbs.transform(goal0, predMap0)
 
-    val funSpecElimAbs = new FunSpecEliminateAbstractions(freshIdentGen)
+    val funSpecElimAbs = new FunSpecEliminateAbstractions(freshIdentGen, new SpecializationList())
 
     val funs = funs0.map(f => {
         println(s"generating for ${f.pp}")

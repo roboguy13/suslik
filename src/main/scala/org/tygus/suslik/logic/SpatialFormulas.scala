@@ -198,7 +198,11 @@ case class SApp(pred: Ident, args: Seq[Expr], tag: PTag, card: Expr) extends Hea
 }
 
 
-case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpressions[SFormula] {
+case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpressions[SFormula] with HasAssertions[SFormula] {
+
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): SFormula =
+    SFormula(chunks.flatMap(g))
+
   def resolveOverloading(gamma: Gamma): SFormula = {
     this.copy(chunks = chunks.map(_.resolveOverloading(gamma)))
   }
