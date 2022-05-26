@@ -14,22 +14,12 @@ class GoalContainerEliminateAbstractions {
 
     val (goal, freeVarMap) = lambdaLiftGC.transform()
 
-    val predVals = (PredicateAbstractionUtils.collectPredValues(goal.spec.pre.collect(_ => true).toSeq)
-                ++ PredicateAbstractionUtils.collectPredValues(goal.spec.post.collect(_ => true).toSeq))
-
-    val predMap = predMap0.map{
-      case (name: Ident, p: InductivePredicate) => {
-        val lambdaLiftInductive = new LambdaLiftInductive(p, freeVarMap, predVals)
-
-        (name, lambdaLiftInductive.transform())
-      }
-    }
-
     val freshIdentGen = new FreshIdentGen("$")
 
-    val defun = new DefunctionalizeGoalContainer(goal, freshIdentGen, predMap)
+    val funSpecElimAbs = new FunSpecEliminateAbstractions(freshIdentGen)
+    val (newFunSpec, newPreds) = funSpecElimAbs.transform(goal.spec, predMap0)
 
-    (freshIdentGen, defun.transform())
+    (freshIdentGen, (goal.copy(spec = newFunSpec), newPreds))
   }
 }
 

@@ -9,6 +9,7 @@ import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic.PFormula._
 import org.tygus.suslik.logic.SFormula._
 
+import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.SortedSet
 
 abstract class LambdaLift[A <: HasAssertions[A]] extends TransformAssertions[A] {
@@ -24,10 +25,9 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
   extends LambdaLift[InductivePredicate] {
 
   private val funMap = new PredicateValueMap(pred, fs)
-
   private val gen = new FreshIdentGen("%")
-
   private val additionalParams: Formals = freeVarMap.toList.map{ case (origVar, Var(newVar)) => (new Var(newVar), AnyType) }
+  private val specList = new SpecializationList()
 
   protected def setup(): InductivePredicate = {
     InductivePredicate(pred.name, pred.params ++ additionalParams, pred.clauses)
@@ -181,6 +181,27 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
     private def collectFreeVars[T <: HasExpressions[T]](x: T): scala.collection.immutable.Set[Var] =
       x.collect(_.isInstanceOf[PredicateAbstraction]).flatMap((x: PredicateAbstraction) => x.vars).toSet
   }
+}
+
+// | This keeps track of the specializations we've already done
+private class SpecializationList() {
+  private var sps: ListBuffer[Specialization] = ListBuffer[Specialization]()
+
+  def insertSpecialization(s: Specialization) {
+    sps += s
+  }
+
+  def lookupSpecialization(name: Ident, fromExpr: Expr): Option[Expr] =
+    sps.collectFirst(Function.unlift(_.getSubstFor(name, fromExpr)))
+}
+
+private class Specialization(name: Ident, fromExpr: Expr, toExpr: Expr) {
+  def getSubstFor(theName: Ident, theFromExpr: Expr): Option[Expr] =
+    if (name == theName && theFromExpr == fromExpr) {
+      Some(toExpr)
+    } else {
+      None
+    }
 }
 
 // TODO: Calculate newName from origName and occurrence
