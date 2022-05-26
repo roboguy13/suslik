@@ -1,7 +1,7 @@
 package org.tygus.suslik.synonym
 
 import org.tygus.suslik.language._
-import org.tygus.suslik.defunctionalize.TransformAssertions
+import org.tygus.suslik.defunctionalize.TransformAssertionsH
 import org.tygus.suslik.logic.HasAssertions
 import org.tygus.suslik.logic.InductivePredicate
 
@@ -15,7 +15,7 @@ import org.tygus.suslik.language.Expressions._
 
 import scala.collection.immutable.SortedSet
 
-class ExpandSynonyms[A <: HasAssertions[A]](synonyms: Map[String, Synonym], orig: A) extends TransformAssertions[A] {
+class ExpandSynonyms[A <: HasAssertions[A]](synonyms: Map[String, Synonym], orig: A) extends TransformAssertionsH[A] {
   protected def setup(): A = orig
 
   protected def transformExpr(e: Expr): Expr = e

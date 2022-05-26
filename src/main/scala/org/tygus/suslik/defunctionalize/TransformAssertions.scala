@@ -12,15 +12,15 @@ import scala.collection.immutable.SortedSet
   // defunctionalization that traverses the inductive predicate as well
   // as the part that traverses expressions which use the inductive predicate and
   // might contain abstractions.
-abstract class TransformAssertions[A <: HasAssertions[A]] {
+abstract class TransformAssertions[S, A <: HasAssertions[S]] {
 
-  def transform(): A = {
+  def transform(): S = {
     finish(setup().visitAssertions(expr => transformExpr(expr), h => transformHeaplet(h)))
   }
 
   protected def setup(): A
 
-  protected def finish(x: A): A = x
+  protected def finish(x: S): S = x
 
   protected def transformExpr(e: Expr): Expr
   protected def transformHeaplet(h: Heaplet): Seq[Heaplet]
@@ -29,4 +29,7 @@ abstract class TransformAssertions[A <: HasAssertions[A]] {
   //   Assertion(transformPFormula(asn.phi), transformSFormula(asn.sigma))
   // }
   //
+}
+
+abstract class TransformAssertionsH[A <: HasAssertions[A]] extends TransformAssertions[A, A] {
 }

@@ -12,8 +12,11 @@ import org.tygus.suslik.logic.SFormula._
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.SortedSet
 
-abstract class LambdaLift[A <: HasAssertions[A]] extends TransformAssertions[A] {
+abstract class LambdaLift[S, A <: HasAssertions[S]] extends TransformAssertions[S, A] {
   // protected val freeVars: Seq[FreeVar]
+}
+
+abstract class LambdaLiftH[A <: HasAssertions[A]] extends LambdaLift[A, A] {
 }
 
 
@@ -22,7 +25,7 @@ abstract class LambdaLift[A <: HasAssertions[A]] extends TransformAssertions[A] 
 // Do this for recursive calls and for applications of predicate abstraction
 // arguments.
 class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], fs: Seq[PredicateValue])
-  extends LambdaLift[InductivePredicate] {
+  extends LambdaLiftH[InductivePredicate] {
 
   private val funMap = new PredicateValueMap(pred, fs)
   private val gen = new FreshIdentGen("%")
@@ -102,7 +105,7 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
 
 class LambdaLiftGoalContainer(goal: GoalContainer) {
   def transform(): (GoalContainer, Map[Var, Expr]) = {
-    val lambdaLiftFunSpec = new LambdaLiftHasAssns(goal.spec)
+    val lambdaLiftFunSpec = new LambdaLiftHasAssns[FunSpec, FunSpec](goal.spec)
 
     val newSpec = lambdaLiftFunSpec.transform()
 
@@ -110,10 +113,10 @@ class LambdaLiftGoalContainer(goal: GoalContainer) {
   }
 }
 
-class LambdaLiftHasAssns[A <: HasAssertions[A]](fun: A) extends LambdaLift[A] {
+class LambdaLiftHasAssns[S, A <: HasAssertions[S]](fun: A) extends LambdaLift[S, A] {
   import PredicateAbstractionUtils._
 
-  private val collectFVs = new CollectFreeVars[A]()
+  private val collectFVs = new CollectFreeVars[S, A]()
   val freeVarMap: Map[Var, Expr] = collectFVs.getFreeVarMap(fun)
 
   protected def setup(): A = fun
@@ -152,7 +155,7 @@ class LambdaLiftHasAssns[A <: HasAssertions[A]](fun: A) extends LambdaLift[A] {
     args ++ freeVarMap.toSeq.map((x : (Var, Expr)) => x match { case (oldVar, newVar) => oldVar })
   }
 
-  private class CollectFreeVars[A <: HasAssertions[A]] {
+  private class CollectFreeVars[S, A <: HasAssertions[S]] {
     private val freeVarSet: scala.collection.mutable.Set[Var] = scala.collection.mutable.Set[Var]()
 
     private val gen = new FreshIdentGen("%")

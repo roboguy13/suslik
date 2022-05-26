@@ -13,14 +13,15 @@ import org.tygus.suslik.LanguageUtils.{cardinalityPrefix, getTotallyFreshName}
   * @author Ilya Sergey
   */
 
-trait HasAssertions[+A] {
-  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): A
-}
-
 /**
   * A top-level declaration in a program
   */
 sealed abstract class TopLevelDeclaration extends PrettyPrinting with PureLogicUtils
+
+// TODO: Come up with a better name
+trait HasAssertions[+A] {
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): A
+}
 
 /**
   * Function to synthesize
