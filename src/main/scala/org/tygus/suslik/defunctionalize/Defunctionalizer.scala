@@ -9,6 +9,8 @@ import org.tygus.suslik.logic.PFormula._
 import org.tygus.suslik.logic.SFormula._
 import org.tygus.suslik.LanguageUtils.cardinalityPrefix
 
+import org.tygus.suslik.defunctionalize._
+
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.SortedSet
 
@@ -38,12 +40,18 @@ class PredicateValueMap(pred: InductivePredicate, fs: Seq[PredicateValue]) {
   //
   //   - 'newName' should be a fresh name w.r.t. the names of the other
   //   inductive predicates
-case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: InductivePredicate, fs: Seq[PredicateValue])
-  extends TransformAssertions[InductivePredicate] {
+case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: InductivePredicate, fs: Seq[PredicateValue], spList: SpecializationList, predEnv: PredicateEnv)
+  extends TransformAssertionsH[InductivePredicate] {
 
   import PredicateAbstractionUtils._
 
-  val funMap = new PredicateValueMap(pred, fs)
+  private val elimAbs = new AppEliminateAbstractions(gen, spList)
+
+  private val funMap = new PredicateValueMap(pred, fs)
+  private val generatedPreds = new ListBuffer[InductivePredicate]()
+
+  def getGeneratedPreds: List[InductivePredicate] =
+    generatedPreds.toList
 
   def setup(): InductivePredicate = {
     val newParams = pred.params.filter(
@@ -57,22 +65,7 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
   override protected def finish(x: InductivePredicate): InductivePredicate = {
     val InductivePredicate(name, params, clauses0) = x
 
-    val cards: Set[Var] = clauses0.flatMap(_.asn.vars).filter(_.name.startsWith(cardinalityPrefix)).toSet
-
     val clauses = clauses0.map(cl => cl.visitAssertions(e => transformExpr(e), h => transformHeaplet(h)))
-
-    // val clauses = clauses0.map (cl => {
-    //         cl.visitAssertions(a => {
-    //             val cardMap: Map[Var, Expr] = cards.map(card => card -> Var(gen.withCurrentUniq(card.name))).toMap
-    //             Assertion(a.phi.subst(cardMap), a.sigma.subst(cardMap))
-    //             // cards.map(card => {
-    //             //   val newCard = Var(gen.withCurrentUniq(card.name))
-    //             //   Assertion(a.phi.subst(card, newCard), a.sigma.subst(card, newCard))
-    //             // })
-    //           })
-    //       }
-    //     )
-
     InductivePredicate(name, params, clauses)
   }
 
@@ -86,7 +79,13 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
           // NOTE: We do not currently support changing predicate abstractions
           // in recursive calls
 
-          Seq(SApp(newName, withoutPredAbstractions(pred.params, args), tag, card))
+          val app = SApp(newName, withoutPredAbstractions(pred.params, args), tag, card)
+          Seq(app)
+          // val (newApp, newPreds) = elimAbs.transform(app, predEnv)
+          //
+          // generatedPreds ++= newPreds
+          //
+          // Seq(newApp)
 
         } else {
           funMap get predIdent match {
@@ -122,20 +121,21 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 }
 
 // Defunctionalization on the side of the predicate abstractions
-case class DefunctionalizeGoalContainer(goal: GoalContainer, gen: FreshIdentGen, predEnv: PredicateEnv) {
-  def transform(): (GoalContainer, List[InductivePredicate]) = {
 
-    val defun = new DefunctionalizeFunSpec(goal.spec, gen, predEnv)
-
-    val newSpec = defun.transform()
-
-    (GoalContainer(newSpec, goal.body), defun.getGeneratedPreds)
-  }
-
-}
-
-case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: PredicateEnv)
-  extends TransformAssertions[FunSpec] {
+// case class DefunctionalizeGoalContainer(goal: GoalContainer, gen: FreshIdentGen, predEnv: PredicateEnv) {
+//   def transform(): (GoalContainer, List[InductivePredicate]) = {
+//
+//     val defun = new DefunctionalizeFunSpec(goal.spec, gen, predEnv, spList)
+//
+//     val newSpec = defun.transform()
+//
+//     (GoalContainer(newSpec, goal.body), defun.getGeneratedPreds)
+//   }
+//
+// }
+//
+case class Defunctionalize[S, A <: HasAssertions[S]](fun: A, gen: FreshIdentGen, predEnv: PredicateEnv, spList: SpecializationList)
+  extends TransformAssertions[S, A] {
 
   import PredicateAbstractionUtils._
 
@@ -143,7 +143,7 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
 
   def getGeneratedPreds(): List[InductivePredicate] = generatedPreds.result()
 
-  protected def setup(): FunSpec = fun
+  protected def setup(): A = fun
 
   protected def transformHeaplet(heaplet: Heaplet): Seq[Heaplet] = {
     Seq[Heaplet](heaplet match {
@@ -159,15 +159,16 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
 
           val pred = predEnv.get(predIdent) match {
               case None => // TODO: Improve error message
-                throw new Exception(s"Cannot find predicate ${predIdent}")
+                throw new Exception(s"Defunctionalize: Cannot find predicate ${predIdent}")
 
               case Some(p) => p
             }
 
-          val defunctionalizer = new DefunctionalizeInductive(newPredName, gen, pred, predValues)
+          val defunctionalizer = new DefunctionalizeInductive(newPredName, gen, pred, predValues, spList, predEnv)
 
           // TODO: Ensure there are no free variables remaining in any of the 'predValues'
           generatedPreds += defunctionalizer.transform()
+          generatedPreds ++= defunctionalizer.getGeneratedPreds
           SApp(newPredName, newArgs, tag, card)
         }
       }
@@ -177,5 +178,33 @@ case class DefunctionalizeFunSpec(fun: FunSpec, gen: FreshIdentGen, predEnv: Pre
   }
 
   protected def transformExpr(e: Expr): Expr = e
+}
+
+// | This keeps track of the specializations we've already done
+class SpecializationList() {
+  private var sps: ListBuffer[ExistSpecialization] = ListBuffer[ExistSpecialization]()
+
+  def insertSpecialization(s: ExistSpecialization) {
+    sps += s
+  }
+
+  def lookupSpecialization[A <: App](name: Ident, fromApp: A): Option[A] =
+    ???
+    // sps.collectFirst(Function.unlift(_.sp.getSubstFor[A](name, fromApp)))
+}
+
+private class ExistSpecialization(val sp: Specialization[T] forSome {type T <: App})
+
+private class Specialization[T <: App](name: Ident, fromApp: T, toApp: T) {
+  def getSubstFor[S <: App](theName: Ident, theFromApp: S)(implicit evidence: S =:= T): Option[T] =
+    if (name == theName && theFromApp == fromApp) {
+      Some(toApp)
+    } else {
+      None
+    }
+}
+
+// TODO: Calculate newName from origName and occurrence
+class FreeVar(val occurrence: Int, val origName: Ident, val newName: Ident) {
 }
 

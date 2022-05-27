@@ -14,35 +14,25 @@ class GoalContainerEliminateAbstractions {
 
     val (goal, freeVarMap) = lambdaLiftGC.transform()
 
-    val predVals = (PredicateAbstractionUtils.collectPredValues(goal.spec.pre.collect(_ => true).toSeq)
-                ++ PredicateAbstractionUtils.collectPredValues(goal.spec.post.collect(_ => true).toSeq))
-
-    val predMap = predMap0.map{
-      case (name: Ident, p: InductivePredicate) => {
-        val lambdaLiftInductive = new LambdaLiftInductive(p, freeVarMap, predVals)
-
-        (name, lambdaLiftInductive.transform())
-      }
-    }
-
     val freshIdentGen = new FreshIdentGen("$")
 
-    val defun = new DefunctionalizeGoalContainer(goal, freshIdentGen, predMap)
+    val funSpecElimAbs = new EliminateAbstractions[FunSpec, FunSpec](freshIdentGen, new SpecializationList())
+    val (newFunSpec, newPreds) = funSpecElimAbs.transform(goal.spec, predMap0)
 
-    (freshIdentGen, defun.transform())
+    (freshIdentGen, (goal.copy(spec = newFunSpec), newPreds))
   }
 }
 
-class FunSpecEliminateAbstractions(freshIdentGen: FreshIdentGen) {
+class EliminateAbstractions[S <: HasExpressions[S] with HasAssertions[S], A <: HasAssertions[S] with HasExpressions[A]]
+  (freshIdentGen: FreshIdentGen, spList: SpecializationList) {
 
-  def transform(funSpec0: FunSpec, predMap0: PredicateEnv) : (FunSpec, List[InductivePredicate]) = {
-    val lambdaLift = new LambdaLiftFunSpec(funSpec0)
+  def transform(x0: A, predMap0: PredicateEnv): (S, List[InductivePredicate]) = {
+    val lambdaLift = new LambdaLiftHasAssns[S, A](x0)
 
-    val funSpec = lambdaLift.transform()
+    val x = lambdaLift.transform()
     val freeVarMap = lambdaLift.freeVarMap
 
-    val predVals = (PredicateAbstractionUtils.collectPredValues(funSpec.pre.collect(_ => true).toSeq)
-                ++ PredicateAbstractionUtils.collectPredValues(funSpec.post.collect(_ => true).toSeq))
+    val predVals = PredicateAbstractionUtils.collectPredValues(x.collect(_ => true).toSeq)
 
     val predMap = predMap0.map{
       case (name: Ident, p: InductivePredicate) => {
@@ -52,20 +42,22 @@ class FunSpecEliminateAbstractions(freshIdentGen: FreshIdentGen) {
       }
     }
 
-    val defun = new DefunctionalizeFunSpec(funSpec, freshIdentGen, predMap)
+    val defun = new Defunctionalize[S, S](x, freshIdentGen, predMap, spList)
 
-    val newFunSpec = defun.transform()
-    (newFunSpec, defun.getGeneratedPreds())
+    val newX = defun.transform()
+    (newX, defun.getGeneratedPreds())
+  }
+}
 
-    // val lambdaLiftFunSpec: LambdaLiftFunSpec = new LambdaLiftFunSpec(funSpec0)
+class AppEliminateAbstractions(freshIdentGen: FreshIdentGen, spList: SpecializationList) {
+  def transform[A <: App](origin: Ident, app: A, predMap: PredicateEnv):
+      (A, List[InductivePredicate]) = {
 
-    // val funSpec = lambdaLiftFunSpec.transform()
+    // val elimAbs = new EliminateAbstractions[App](freshIdentGen, spList)
 
-    // // TODO: Finish implementing
-    // // val defun = new DefunctionalizeFunSpec
-
-    // // (funSpec, lambdaLiftFunSpec.freeVarMap)
-    // funSpec
+    spList.lookupSpecialization(origin, app) match {
+      case Some(newApp) => (newApp, List())
+    }
   }
 }
 

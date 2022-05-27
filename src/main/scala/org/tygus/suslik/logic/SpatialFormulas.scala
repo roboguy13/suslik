@@ -140,7 +140,10 @@ case class PTag(calls: Int = 0, unrolls: Int = 0) extends PrettyPrinting {
   *
   *       Predicate application
   */
-case class SApp(pred: Ident, args: Seq[Expr], tag: PTag, card: Expr) extends Heaplet {
+case class SApp(pred: Ident, args: Seq[Expr], tag: PTag, card: Expr) extends Heaplet with HasAssertions[SFormula] with App {
+
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): SFormula =
+    SFormula(g(this).to[List])
 
   override def resolveOverloading(gamma: Gamma): Heaplet = this.copy(args = args.map(_.resolveOverloading(gamma)))
 
@@ -198,7 +201,11 @@ case class SApp(pred: Ident, args: Seq[Expr], tag: PTag, card: Expr) extends Hea
 }
 
 
-case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpressions[SFormula] {
+case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpressions[SFormula] with HasAssertions[SFormula] {
+
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): SFormula =
+    SFormula(chunks.flatMap(g))
+
   def resolveOverloading(gamma: Gamma): SFormula = {
     this.copy(chunks = chunks.map(_.resolveOverloading(gamma)))
   }

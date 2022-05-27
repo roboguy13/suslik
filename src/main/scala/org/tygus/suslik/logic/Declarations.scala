@@ -13,14 +13,15 @@ import org.tygus.suslik.LanguageUtils.{cardinalityPrefix, getTotallyFreshName}
   * @author Ilya Sergey
   */
 
-trait HasAssertions[+A] {
-  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): A
-}
-
 /**
   * A top-level declaration in a program
   */
 sealed abstract class TopLevelDeclaration extends PrettyPrinting with PureLogicUtils
+
+// TODO: Come up with a better name
+trait HasAssertions[+A] {
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): A
+}
 
 /**
   * Function to synthesize
@@ -34,11 +35,23 @@ sealed abstract class TopLevelDeclaration extends PrettyPrinting with PureLogicU
   */
 case class FunSpec(name: Ident, rType: SSLType, params: Formals,
                    pre: Assertion, post: Assertion,
-                   var_decl: Formals = Nil) extends TopLevelDeclaration with HasAssertions[FunSpec] {
+                   var_decl: Formals = Nil) extends TopLevelDeclaration with HasAssertions[FunSpec] with HasExpressions[FunSpec] {
 
-   def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): FunSpec = {
-     FunSpec(name, rType, params, pre.visitAssertions(f, g), post.visitAssertions(f, g), var_decl)
-   }
+  def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): FunSpec = {
+    FunSpec(name, rType, params, pre.visitAssertions(f, g), post.visitAssertions(f, g), var_decl)
+  }
+
+  def subst(sigma: Subst): FunSpec =
+    copy(pre = pre.subst(sigma), post = post.subst(sigma))
+
+  def resolveOverloading(gamma: Gamma): FunSpec =
+    copy(pre = pre.resolveOverloading(gamma), post = post.resolveOverloading(gamma))
+
+  def collect[R <: Expr](p: Expr => Boolean): Set[R] =
+    pre.collect(p) ++ post.collect(p)
+
+  override def vars: Set[Var] = pre.vars ++ post.vars
+  override def freeVars: Set[Var] = pre.vars ++ post.vars
 
   def resolveOverloading(env: Environment): FunSpec = {
     val gamma0 = params.toMap // initial environment: derived from the formals

@@ -9,10 +9,14 @@ import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic.PFormula._
 import org.tygus.suslik.logic.SFormula._
 
+import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.SortedSet
 
-abstract class LambdaLift[A <: HasAssertions[A]] extends TransformAssertions[A] {
+abstract class LambdaLift[S, A <: HasAssertions[S]] extends TransformAssertions[S, A] {
   // protected val freeVars: Seq[FreeVar]
+}
+
+abstract class LambdaLiftH[A <: HasAssertions[A]] extends LambdaLift[A, A] {
 }
 
 
@@ -21,13 +25,12 @@ abstract class LambdaLift[A <: HasAssertions[A]] extends TransformAssertions[A] 
 // Do this for recursive calls and for applications of predicate abstraction
 // arguments.
 class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], fs: Seq[PredicateValue])
-  extends LambdaLift[InductivePredicate] {
+  extends LambdaLiftH[InductivePredicate] {
 
   private val funMap = new PredicateValueMap(pred, fs)
-
   private val gen = new FreshIdentGen("%")
-
   private val additionalParams: Formals = freeVarMap.toList.map{ case (origVar, Var(newVar)) => (new Var(newVar), AnyType) }
+  private val specList = new SpecializationList()
 
   protected def setup(): InductivePredicate = {
     InductivePredicate(pred.name, pred.params ++ additionalParams, pred.clauses)
@@ -102,7 +105,7 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
 
 class LambdaLiftGoalContainer(goal: GoalContainer) {
   def transform(): (GoalContainer, Map[Var, Expr]) = {
-    val lambdaLiftFunSpec = new LambdaLiftFunSpec(goal.spec)
+    val lambdaLiftFunSpec = new LambdaLiftHasAssns[FunSpec, FunSpec](goal.spec)
 
     val newSpec = lambdaLiftFunSpec.transform()
 
@@ -110,13 +113,13 @@ class LambdaLiftGoalContainer(goal: GoalContainer) {
   }
 }
 
-class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
+class LambdaLiftHasAssns[S, A <: HasAssertions[S]](fun: A) extends LambdaLift[S, A] {
   import PredicateAbstractionUtils._
 
-  private val collectFVs = new CollectFreeVars[FunSpec]()
+  private val collectFVs = new CollectFreeVars[S, A]()
   val freeVarMap: Map[Var, Expr] = collectFVs.getFreeVarMap(fun)
 
-  protected def setup(): FunSpec = fun
+  protected def setup(): A = fun
 
   protected def transformHeaplet(heaplet: Heaplet): Seq[Heaplet] = {
     Seq[Heaplet](heaplet match {
@@ -152,7 +155,7 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
     args ++ freeVarMap.toSeq.map((x : (Var, Expr)) => x match { case (oldVar, newVar) => oldVar })
   }
 
-  private class CollectFreeVars[A <: HasAssertions[A]] {
+  private class CollectFreeVars[S, A <: HasAssertions[S]] {
     private val freeVarSet: scala.collection.mutable.Set[Var] = scala.collection.mutable.Set[Var]()
 
     private val gen = new FreshIdentGen("%")
@@ -181,9 +184,5 @@ class LambdaLiftFunSpec(fun: FunSpec) extends LambdaLift[FunSpec] {
     private def collectFreeVars[T <: HasExpressions[T]](x: T): scala.collection.immutable.Set[Var] =
       x.collect(_.isInstanceOf[PredicateAbstraction]).flatMap((x: PredicateAbstraction) => x.vars).toSet
   }
-}
-
-// TODO: Calculate newName from origName and occurrence
-class FreeVar(val occurrence: Int, val origName: Ident, val newName: Ident) {
 }
 

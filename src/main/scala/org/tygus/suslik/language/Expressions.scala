@@ -4,6 +4,9 @@ import org.tygus.suslik.logic.{Gamma, PureLogicUtils}
 import org.tygus.suslik.synthesis.SynthesisException
 import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic.SFormula
+import org.tygus.suslik.logic.Heaplet
+import org.tygus.suslik.logic.HasAssertions
+import org.tygus.suslik.logic.SApp
 
 /**
   * @author Ilya Sergey
@@ -302,7 +305,9 @@ object Expressions {
   }
 
 
-  sealed abstract class Expr extends PrettyPrinting with HasExpressions[Expr] with Ordered[Expr] {
+  sealed abstract class Expr extends PrettyPrinting with HasExpressions[Expr] with HasAssertions[Expr] with Ordered[Expr] {
+
+    def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): Expr = f(this)
 
     def compare(that: Expr): Int = this.pp.compare(that.pp)
 
@@ -626,6 +631,43 @@ object Expressions {
     def getType(gamma: Gamma): Option[SSLType] = None
   }
 
+  // sealed trait AppKind[A]
+  // case object KindPApp extends AppKind[PApp]
+  // case object KindSApp extends AppKind[SApp]
+
+  trait App {
+    // type Base <: HasExpressions[Base]
+    // type T <: Base
+
+    // def kind: AppKind[T]
+
+    // def unwrap: T
+
+    // def convertTo[A <: App](y: A): Option[A]
+  }
+
+  // class WrappedPApp(x: PApp) extends PApp(x.fName, x.args) with App {
+  //   // def kind = KindPApp
+  //   // def unwrap: T = x
+  //
+  //   def convertTo[A <: App](y: A): Option[A] =
+  //     y match {
+  //       case y2@WrappedPApp(_) => Some(this.asInstanceOf[A])
+  //       case _ => None
+  //     }
+  // }
+  //
+  // class WrappedSApp(x: SApp) extends App {
+  //   // def kind = KindSApp
+  //   // def unwrap: T = new SFormula(List(x))
+  //
+  //   def convertTo[A <: App](y: A): Option[A] =
+  //     y match {
+  //       case y2@WrappedSApp(_) => Some(this.asInstanceOf[A])
+  //       case _ => None
+  //     }
+  // }
+  //
   abstract class PredicateAbstraction(val params: List[Ident]) extends Expr {
       // Only includes free variables
     override def vars: Set[Var] =
@@ -659,7 +701,7 @@ object Expressions {
     }
   }
 
-  case class PApp(fName: Ident, args: List[Expr]) extends Expr {
+  case class PApp(fName: Ident, args: List[Expr]) extends Expr with App {
     def subst(sigma: Subst): PApp = this // TODO: Is this correct?
 
     override def pp: String = s"${fName}(${args.mkString(", ")})"
