@@ -7,9 +7,20 @@ synonym unconstrained(loc x, set s) {
   constrained_list(x, s, pred(u, v) => u == v)
 }
 
+
 predicate zip(loc ret, set aS, set bS){
-|  ret == null => {aS == {} && bs == {} ; emp }
-|  not (ret == null) => { aS == {va} ++ aS1 && bS == {vb} ++ bS1 && v == va + vb;
-[ret, 2] ** ret :-> va **  (ret+1) :-> retNxt ** zip(retNxt, aS1, bS)
+|  ret == null => {aS == {} && bS == {} ; emp }
+|  not (ret == null) => { aS == {va} ++ aS1 && bS == {vb} ++ bS1;
+[ret, 3] ** ret :-> va ** (ret+1) :-> vb **  (ret+2) :-> retNxt ** zip(retNxt, aS1, bS1)
 }
 }
+
+
+/*
+predicate zip(loc ret, set aS, set bS){
+|  ret == null => {bS == {} ; emp }
+|  not (ret == null) => { bS == {vb} ++ bS1;
+[ret, 3] ** ret :-> vb ** (ret+1) :-> vb **  (ret+2) :-> retNxt ** zip(retNxt, aS, bS1)
+}
+}
+*/

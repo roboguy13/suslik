@@ -1,3 +1,4 @@
+
 void zip (loc x1, loc x2, loc ret)
     {true ; unconstrained(x1, s1) ** unconstrained(x2, s2) ** ret :-> a}
     {true ; unconstrained(x1, s1) ** unconstrained(x2, s2) ** zip(y, s1, s2) ** ret :-> y}

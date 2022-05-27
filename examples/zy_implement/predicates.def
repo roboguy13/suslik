@@ -120,3 +120,14 @@ predicate zip(loc ret, set aS, set bS) {
 }
 
 
+predicate zipped(loc x, loc y, loc r, set lefts, set rights) {
+| z == 0 => { lefts =i {} && rights =i {} ; emp }
+| not (z == 0) => {
+    lefts =i {a} ++ lefts1 &&
+    rights =i {b} ++ rights1
+      ;
+    x :-> a ** (x+1) :-> nxtX **
+    y :-> b ** (y+1) :-> nxtY **
+    [r, 3] ** r :-> a ** (r+1) :-> b ** (r+2) :-> nxtR ** zipped(nxtX, nxtY, nxtR, lefts1, rights1)
+  }
+}

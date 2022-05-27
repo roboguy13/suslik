@@ -1,0 +1,6 @@
+# -o 2 -c 2 -b true
+void filter (loc x, loc ret)
+    {unconstrained(x, s) ** ret :-> a}
+    {unconstrained(x, s) ** base(y, x, s) ** ret :-> y }
+{ ?? }
+###
