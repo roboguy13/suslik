@@ -635,39 +635,52 @@ object Expressions {
   // case object KindPApp extends AppKind[PApp]
   // case object KindSApp extends AppKind[SApp]
 
-  trait App {
-    // type Base <: HasExpressions[Base]
-    // type T <: Base
+  sealed trait App {
+    type Base <: HasExpressions[Base]
+    type T <: HasAssertions[R] with HasExpressions[Base]
+    type R <: HasAssertions[R] with HasExpressions[R]
+    def unwrap: T
+    def toR: R
 
-    // def kind: AppKind[T]
+    def args: List[Expr]
+    def name: Ident
 
-    // def unwrap: T
+    def subst(x: Var, by: Expr): T = substMap(List((x, by)).toMap)
+    def substMap(m: Map[Var, Expr]): T
+  }
+  case class WrappedPApp(app: PApp) extends App {
+    type Base = Expr
+    type T = PApp
+    type R = Expr
+    def unwrap = app
+    def toR = app
 
-    // def convertTo[A <: App](y: A): Option[A]
+    def args = app.args
+    def name = app.fName
+
+    def substMap(m: Map[Var, Expr]): PApp =
+      m.foldRight(app) {
+        case ((k, v), x) =>
+          x.copy(args = args.map(_.subst(k, v)))
+      }
+  }
+  case class WrappedSApp(app: SApp) extends App {
+    type Base = Heaplet
+    type T = SApp
+    type R = SFormula
+    def unwrap = app
+    def toR = SFormula(List(app))
+
+    def args = app.args.to[List]
+    def name = app.pred
+
+    def substMap(m: Map[Var, Expr]): SApp =
+      m.foldRight(app) {
+        case ((k, v), x) =>
+          x.copy(args = args.map(_.subst(k, v)))
+      }
   }
 
-  // class WrappedPApp(x: PApp) extends PApp(x.fName, x.args) with App {
-  //   // def kind = KindPApp
-  //   // def unwrap: T = x
-  //
-  //   def convertTo[A <: App](y: A): Option[A] =
-  //     y match {
-  //       case y2@WrappedPApp(_) => Some(this.asInstanceOf[A])
-  //       case _ => None
-  //     }
-  // }
-  //
-  // class WrappedSApp(x: SApp) extends App {
-  //   // def kind = KindSApp
-  //   // def unwrap: T = new SFormula(List(x))
-  //
-  //   def convertTo[A <: App](y: A): Option[A] =
-  //     y match {
-  //       case y2@WrappedSApp(_) => Some(this.asInstanceOf[A])
-  //       case _ => None
-  //     }
-  // }
-  //
   abstract class PredicateAbstraction(val params: List[Ident]) extends Expr {
       // Only includes free variables
     override def vars: Set[Var] =
@@ -701,7 +714,7 @@ object Expressions {
     }
   }
 
-  case class PApp(fName: Ident, args: List[Expr]) extends Expr with App {
+  case class PApp(fName: Ident, args: List[Expr]) extends Expr {
     def subst(sigma: Subst): PApp = this // TODO: Is this correct?
 
     override def pp: String = s"${fName}(${args.mkString(", ")})"

@@ -7,7 +7,7 @@ import org.tygus.suslik.logic.Heaplet
 
 import scala.collection.immutable.SortedSet
 
-sealed abstract class PredicateValue(abstr: PredicateAbstraction) {
+sealed abstract class PredicateValue(val abstr: PredicateAbstraction) {
   val params: Seq[Ident] = abstr.params
   val fvNames: Seq[Ident] = params.diff(params.map(Var(_))).toSeq
 
@@ -20,7 +20,7 @@ sealed abstract class PredicateValue(abstr: PredicateAbstraction) {
   // }
 }
 
-case class SPredicateValue(abstr: SpatialPredicateAbstraction)
+case class SPredicateValue(override val abstr: SpatialPredicateAbstraction)
   extends PredicateValue(abstr) {
 
   def apply(args: Seq[Expr]): List[Heaplet] = {
@@ -32,7 +32,7 @@ case class SPredicateValue(abstr: SpatialPredicateAbstraction)
   }
 }
 
-case class PPredicateValue(abstr: PurePredicateAbstraction)
+case class PPredicateValue(override val abstr: PurePredicateAbstraction)
   extends PredicateValue(abstr) {
 
   def apply(args: Seq[Expr]): Expr = {

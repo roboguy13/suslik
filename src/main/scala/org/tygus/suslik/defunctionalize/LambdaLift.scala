@@ -30,7 +30,12 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
   private val funMap = new PredicateValueMap(pred, fs)
   private val gen = new FreshIdentGen("%")
   private val additionalParams: Formals = freeVarMap.toList.map{ case (origVar, Var(newVar)) => (new Var(newVar), AnyType) }
-  private val specList = new SpecializationList()
+  private val specList = new SpecializationLists()
+
+  // private val predParamMap: Map[Var, PredicateAbstraction]
+  //   = pred.params.filter(x => x._2 == PredType).map(_._1).zip(fs.map(_.abstr)).toMap
+
+  // private val abstractionMap: Map[Ident, PredicateValue]
 
   protected def setup(): InductivePredicate = {
     InductivePredicate(pred.name, pred.params ++ additionalParams, pred.clauses)
@@ -96,6 +101,7 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
     )
   }
 
+
   // Include the "closure arguments"
   private def updateArgs(args: Seq[Expr]): Seq[Expr] = {
     args ++ additionalParams.map(_._1)
@@ -137,6 +143,7 @@ class LambdaLiftHasAssns[S, A <: HasAssertions[S]](fun: A) extends LambdaLift[S,
     })
   }
 
+  // TODO: Is this correct?
   protected def transformExpr(e: Expr): Expr = e
 
   // Update the body of the predicate abstracts to refer to the closure argument

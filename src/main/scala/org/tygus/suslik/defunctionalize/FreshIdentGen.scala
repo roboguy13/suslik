@@ -28,5 +28,9 @@ class FreshIdentGen(mangleStr: String) {
   def withCurrentUniq(baseIdent: Ident): Ident = {
     baseIdent + mangleStr + uniq.toString
   }
+
+  // def getBaseName(baseIdent: Ident): Ident = {
+  //   baseIdent.takeWhile(c => c != mangleStr)
+  // }
 }
 

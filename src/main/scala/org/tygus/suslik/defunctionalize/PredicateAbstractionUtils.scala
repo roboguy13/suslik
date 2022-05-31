@@ -2,6 +2,7 @@ package org.tygus.suslik.defunctionalize
 
 import org.tygus.suslik.language._
 import org.tygus.suslik.language.Expressions._
+import org.tygus.suslik.logic.InductivePredicate
 import org.tygus.suslik.language.Expressions.PredicateAbstraction
 import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic._
@@ -38,5 +39,24 @@ object PredicateAbstractionUtils {
         }
       )._2
   }
+
+  def getPredBaseName(p: InductivePredicate): Ident =
+    stripDollarSuffix(p.name)
+
+  def stripDollarSuffix(n: Ident): Ident =
+    n.takeWhile(c => c != '$')
+
+  // // Extend a PredicateEnv with a defunctionalized version of a predicate that
+  // // is already in it based on the fresh name given (which consists of the
+  // // original name, mangled with a unique ID)
+  // def extendPredEnv(predEnv: PredicateEnv, n: Ident): PredicateEnv = {
+  //   val origN = stripDollarSuffix(n)
+  //   predEnv.get(origN) match {
+  //     case None => throw new Exception(s"extendPredEnv: Name ${origN} does not exist in predEnv")
+  //     case Some(p) =>
+  //       predEnv + (n -> p.copy(name = n))
+  //   }
+  // }
+  //   
 }
 
