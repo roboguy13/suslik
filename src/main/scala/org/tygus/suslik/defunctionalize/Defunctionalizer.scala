@@ -97,8 +97,8 @@ case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs
             case None => //Seq(chunk)
               val predBaseName = getPredBaseName(pred)
 
-              spList.lookupSpatial(predBaseName, app) match {
-                case Some(r) => r
+              spList.lookupSpatial(predBaseName, app).map(_.head) match {
+                case Some(r: SApp) => Seq(r.copy(args = withoutPredAbstractions(r.args)))
                 case None =>
                   val elimAbs = new AppEliminateAbstractions(spList, new PredicateApplication(pred.copy(name = predBaseName), fs))
                   val (lambdaLifted0, freeVarMap) = elimAbs.lambdaLiftSApp(app, predEnv)
@@ -113,12 +113,14 @@ case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs
 
                     // val lambdaLifted: SApp = lambdaLifted0.chunks.head.asInstanceOf[SApp]
 
-                    spList.insertSpatial(predBaseName, app, Seq[Heaplet](new SApp(getNewName(predIdent).name, lambdaLifted.args, tag, card)))
+
+                    val newPredName = getNewName(predIdent).name
+                    spList.insertSpatial(predBaseName, app, Seq[Heaplet](new SApp(newPredName, lambdaLifted.args, tag, card)))
 
                     println(s"+++ ${predBaseName}: inserting ${(predBaseName, app, Seq[Heaplet](new SApp(getNewName(predIdent).name, lambdaLifted.args, tag, card)))}")
                     println(s"*** ${predBaseName}: transforming ${lambdaLifted}")
                     println("")
-                    val (xs, newPreds) = elimAbs.transformSApp(lambdaLifted, freeVarMap, predEnv)
+                    val (xs, newPreds) = elimAbs.transformSApp(lambdaLifted, freeVarMap, predEnv, Some(newPredName))
                     println(s"*** newPreds = ${newPreds}")
                     generatedPreds ++= newPreds
                     println(s"====> xs = ${xs}")
@@ -182,7 +184,7 @@ case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs
 //
 // }
 //
-case class Defunctionalize[S, A <: HasAssertions[S]](fun: A, predEnv: PredicateEnv, spList: SpecializationLists)
+case class Defunctionalize[S, A <: HasAssertions[S]](fun: A, predEnv: PredicateEnv, spList: SpecializationLists, newNameOpt: Option[Ident] = None)
   extends TransformAssertions[S, A] {
 
   import PredicateAbstractionUtils._
@@ -207,13 +209,17 @@ case class Defunctionalize[S, A <: HasAssertions[S]](fun: A, predEnv: PredicateE
         } else {
           val newArgs = withoutPredAbstractions(args)
 
-          val newPredName = PredFreshNameGen.genFresh(predIdent)
+          val newPredName =
+            newNameOpt match {
+              case None => PredFreshNameGen.genFresh(predIdent)
+              case Some(n) => Var(n)
+            }
 
           val pred = predEnv.get(PredFreshNameGen.removeUniq(predIdent)) match {
               case None => // TODO: Improve error message
                 throw new Exception(s"Defunctionalize: Cannot find predicate ${predIdent}")
 
-              case Some(p) => p.copy(args = withoutPredAbstractions(p.args))
+              case Some(p) => p //p.copy(args = withoutPredAbstractions(p.args))
             }
 
           val defunctionalizer = new DefunctionalizeInductive(newPredName.name, pred, predValues, spList, predEnv)
