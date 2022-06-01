@@ -494,7 +494,7 @@ object Expressions {
   }
 
   // Program-level variable: program-level or ghost
-  case class Var(name: String) extends Expr {
+  case class Var(val name: String) extends Expr {
     override def pp: String = name
 
     def subst(sigma: Subst): Expr =
@@ -505,6 +505,11 @@ object Expressions {
     def getType(gamma: Gamma): Option[SSLType] = gamma.get(this)
   }
 
+  // case class SimpleVar(str: String)
+
+  // object Var {
+  // }
+  //
   // Program-level constant
   sealed abstract class Const(value: Any) extends Expr {
     override def pp: String = value.toString

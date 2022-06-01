@@ -28,7 +28,6 @@ class LambdaLiftInductive(pred: InductivePredicate, freeVarMap: Map[Var, Expr], 
   extends LambdaLiftH[InductivePredicate] {
 
   private val funMap = new PredicateValueMap(pred, fs)
-  private val gen = new FreshIdentGen("%")
   private val additionalParams: Formals = freeVarMap.toList.map{ case (origVar, Var(newVar)) => (new Var(newVar), AnyType) }
   private val specList = new SpecializationLists()
 
@@ -165,16 +164,14 @@ class LambdaLiftHasAssns[S, A <: HasAssertions[S]](fun: A) extends LambdaLift[S,
   private class CollectFreeVars[S, A <: HasAssertions[S]] {
     private val freeVarSet: scala.collection.mutable.Set[Var] = scala.collection.mutable.Set[Var]()
 
-    private val gen = new FreshIdentGen("%")
-
     def getFreeVarMap(x: A): Map[Var, Expr] = {
       freeVarSet.clear()
 
       x.visitAssertions(visitE, visitH)
 
       freeVarSet.map((origV: Var) => {
-        val newName = gen.genFresh(origV.name)
-        (origV, Var(newName))
+        val newName = LambdaLiftNameGen.genFresh(origV.name)
+        (origV, Var(newName.name))
       }).toMap
     }
 

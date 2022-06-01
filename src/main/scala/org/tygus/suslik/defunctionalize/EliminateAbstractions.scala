@@ -9,22 +9,20 @@ import org.tygus.suslik.logic.Specifications._
 // Perform both lambda lifting and defunctionalization
 
 class GoalContainerEliminateAbstractions {
-  def transform(goal0: GoalContainer, predMap0: PredicateEnv): (FreshIdentGen, (GoalContainer, List[InductivePredicate])) = {
+  def transform(goal0: GoalContainer, predMap0: PredicateEnv): (GoalContainer, List[InductivePredicate]) = {
     val lambdaLiftGC = new LambdaLiftGoalContainer(goal0)
 
     val (goal, freeVarMap) = lambdaLiftGC.transform()
 
-    val freshIdentGen = new FreshIdentGen("$")
-
-    val funSpecElimAbs = new EliminateAbstractions[FunSpec, FunSpec, FunSpec](freshIdentGen, new SpecializationLists())
+    val funSpecElimAbs = new EliminateAbstractions[FunSpec, FunSpec, FunSpec](new SpecializationLists())
     val (newFunSpec, newPreds) = funSpecElimAbs.transform(goal.spec, predMap0)
 
-    (freshIdentGen, (goal.copy(spec = newFunSpec), newPreds))
+    (goal.copy(spec = newFunSpec), newPreds)
   }
 }
 
 class EliminateAbstractions[Base <: HasExpressions[Base], S <: HasExpressions[S] with HasAssertions[S], A <: HasAssertions[S] with HasExpressions[Base]]
-  (freshIdentGen: FreshIdentGen, spList: SpecializationLists, originOpt: Option[PredicateApplication] = None) {
+  (spList: SpecializationLists, originOpt: Option[PredicateApplication] = None) {
 
   def lambdaLift(x0: A, predMap0: PredicateEnv): (S, Map[Var, Expr]) = {
     val lambdaLift = new LambdaLiftHasAssns[S, A](x0)
@@ -65,7 +63,7 @@ class EliminateAbstractions[Base <: HasExpressions[Base], S <: HasExpressions[S]
         }
       }
 
-    val defun = new Defunctionalize[S, S](x, freshIdentGen, predMap, spList)
+    val defun = new Defunctionalize[S, S](x, predMap, spList)
 
     val newX = defun.transform()
     (newX, defun.getGeneratedPreds())
@@ -92,23 +90,23 @@ class InstantiatePredParams[S, A <: HasAssertions[S]](origin: InductivePredicate
     }
 }
 
-class AppEliminateAbstractions(freshIdentGen: FreshIdentGen, spList: SpecializationLists, origin: PredicateApplication) {
+class AppEliminateAbstractions(spList: SpecializationLists, origin: PredicateApplication) {
 
   def lambdaLiftSApp(x: SApp, predMap: PredicateEnv): (SApp, Map[Var, Expr]) = {
-    val elimAbs = new EliminateAbstractions[Heaplet, SFormula, SApp](freshIdentGen, spList, Some(origin))
+    val elimAbs = new EliminateAbstractions[Heaplet, SFormula, SApp](spList, Some(origin))
     val (r, freeVarMap) = elimAbs.lambdaLift(x, predMap)
     (r.chunks.head.asInstanceOf[SApp], freeVarMap)
   }
 
   def transformSApp(x: SApp, freeVarMap: Map[Var, Expr], predMap: PredicateEnv): (SApp, List[InductivePredicate]) = {
-    val elimAbs = new EliminateAbstractions[Heaplet, SFormula, SApp](freshIdentGen, spList, Some(origin))
-    spList.lookupSpatial(origin.pred.name, x) match {
-      case None => {
+    val elimAbs = new EliminateAbstractions[Heaplet, SFormula, SApp](spList, Some(origin))
+    // spList.lookupSpatial(origin.pred.name, x) match {
+    //   case None => {
         val (r, newMap) = elimAbs.transformWithoutLambdaLift(SFormula(List(x)), freeVarMap, predMap)
         (r.chunks.head.asInstanceOf[SApp], newMap)
-      }
-      case Some(r) => (r.head.asInstanceOf[SApp], List())
-    }
+      // }
+      // case Some(r) => (r.head.asInstanceOf[SApp], List())
+    // }
   }
 
   // def transform[A <: App](origin: Ident, app: A, predMap: PredicateEnv):

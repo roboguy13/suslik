@@ -40,7 +40,7 @@ class PredicateValueMap(pred: InductivePredicate, fs: Seq[PredicateValue]) {
   //
   //   - 'newName' should be a fresh name w.r.t. the names of the other
   //   inductive predicates
-case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: InductivePredicate, fs: Seq[PredicateValue], spList: SpecializationLists, predEnv: PredicateEnv)
+case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs: Seq[PredicateValue], spList: SpecializationLists, predEnv: PredicateEnv)
   extends TransformAssertionsH[InductivePredicate] {
 
   import PredicateAbstractionUtils._
@@ -48,6 +48,9 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 
   private val funMap = new PredicateValueMap(pred, fs)
   private val generatedPreds = new ListBuffer[InductivePredicate]()
+
+  private val predParamMap: Map[Var, PredicateAbstraction]
+    = pred.params.filter(_._2 == PredType).map(_._1).zip(fs.map(_.abstr)).toMap
 
   def getGeneratedPreds: List[InductivePredicate] =
     generatedPreds.toList
@@ -68,11 +71,14 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
     InductivePredicate(name, params, clauses)
   }
 
+  private def substPredParamsIn(e: Expr): Expr =
+    e.subst(predParamMap)
+
   // Spatial part
   protected def transformHeaplet(chunk: Heaplet): Seq[Heaplet] = {
     chunk match {
       case app@SApp(predIdent, args, tag, card) =>
-        if (predIdent == pred.name) {
+        if (PredFreshNameGen.eqModUniq(predIdent, pred.name)) {
           // Recursive call
 
           // NOTE: We do not currently support changing predicate abstractions
@@ -91,23 +97,43 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
             case None => //Seq(chunk)
               val predBaseName = getPredBaseName(pred)
 
-              val elimAbs = new AppEliminateAbstractions(gen, spList, new PredicateApplication(pred.copy(name = predBaseName), fs))
-              val (lambdaLifted, freeVarMap) = elimAbs.lambdaLiftSApp(app, predEnv)
+              spList.lookupSpatial(predBaseName, app) match {
+                case Some(r) => r
+                case None =>
+                  val elimAbs = new AppEliminateAbstractions(spList, new PredicateApplication(pred.copy(name = predBaseName), fs))
+                  val (lambdaLifted0, freeVarMap) = elimAbs.lambdaLiftSApp(app, predEnv)
+                  val lambdaLifted =
+                    SApp(lambdaLifted0.pred
+                        ,lambdaLifted0.args.map(substPredParamsIn(_))
+                        ,lambdaLifted0.tag
+                        ,lambdaLifted0.card
+                        )
 
-              // if (lambdaLifted.args.exists{ case SpatialPredicateAbstraction(_, _) | PurePredicateAbstraction(_, _) => true ; case _ => false }) {
+                  // if (lambdaLifted.args.exists{ case SpatialPredicateAbstraction(_, _) | PurePredicateAbstraction(_, _) => true ; case _ => false }) {
 
-                // val lambdaLifted: SApp = lambdaLifted0.chunks.head.asInstanceOf[SApp]
+                    // val lambdaLifted: SApp = lambdaLifted0.chunks.head.asInstanceOf[SApp]
 
-                spList.insertSpatial(predBaseName, app, Seq[Heaplet](new SApp(getNewName(predIdent), getNewAppArgs(new WrappedSApp(lambdaLifted)), tag, card)))
+                    spList.insertSpatial(predBaseName, app, Seq[Heaplet](new SApp(getNewName(predIdent).name, lambdaLifted.args, tag, card)))
 
-                val (xs, newPreds) = elimAbs.transformSApp(lambdaLifted, freeVarMap, predEnv)
-                println(s"*** ${predBaseName}: transforming ${lambdaLifted}")
-                println(s"*** newPreds = ${newPreds}")
-                generatedPreds ++= newPreds
-                Seq(xs)
-              // } else {
-              //   Seq(chunk)
-              // }
+                    println(s"+++ ${predBaseName}: inserting ${(predBaseName, app, Seq[Heaplet](new SApp(getNewName(predIdent).name, lambdaLifted.args, tag, card)))}")
+                    println(s"*** ${predBaseName}: transforming ${lambdaLifted}")
+                    println("")
+                    val (xs, newPreds) = elimAbs.transformSApp(lambdaLifted, freeVarMap, predEnv)
+                    println(s"*** newPreds = ${newPreds}")
+                    generatedPreds ++= newPreds
+                    println(s"====> xs = ${xs}")
+
+                    Seq(xs.copy(args = withoutPredAbstractions(xs.args.map(substPredParamsIn(_)))))
+
+                    // substPredParamsIn(xs) match {
+                    //   case SApp(xsName, xsArgs, _, _) =>
+                    //     Seq(SApp(xsName, withoutPredAbstractions(xsArgs), tag, card))
+                    // }
+                    // Seq(xs)
+                  // } else {
+                  //   Seq(chunk)
+                  // }
+              }
             case Some(sp @ SPredicateValue(_)) => sp.apply(args)
             case Some(PPredicateValue(_)) =>
               throw new Exception("Pure predicate used as a spatial predicate: " + predIdent)
@@ -137,9 +163,9 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
     }
   }
 
-  private def getNewName(n: Ident): Ident = gen.withCurrentUniq(stripDollarSuffix(n))
+  private def getNewName(n: Ident): Var = PredFreshNameGen.withCurrentUniq(n)
 
-  private def getNewAppArgs(app: App): Seq[Expr] = withoutPredAbstractions(app.args)
+  // private def getNewAppArgs(app: App): Seq[Expr] = withoutPredAbstractions(app.args)
 }
 
 // Defunctionalization on the side of the predicate abstractions
@@ -156,7 +182,7 @@ case class DefunctionalizeInductive(newName: Ident, gen: FreshIdentGen, pred: In
 //
 // }
 //
-case class Defunctionalize[S, A <: HasAssertions[S]](fun: A, gen: FreshIdentGen, predEnv: PredicateEnv, spList: SpecializationLists)
+case class Defunctionalize[S, A <: HasAssertions[S]](fun: A, predEnv: PredicateEnv, spList: SpecializationLists)
   extends TransformAssertions[S, A] {
 
   import PredicateAbstractionUtils._
@@ -181,21 +207,21 @@ case class Defunctionalize[S, A <: HasAssertions[S]](fun: A, gen: FreshIdentGen,
         } else {
           val newArgs = withoutPredAbstractions(args)
 
-          val newPredName = gen.genFresh(predIdent)
+          val newPredName = PredFreshNameGen.genFresh(predIdent)
 
-          val pred = predEnv.get(predIdent) match {
+          val pred = predEnv.get(PredFreshNameGen.removeUniq(predIdent)) match {
               case None => // TODO: Improve error message
                 throw new Exception(s"Defunctionalize: Cannot find predicate ${predIdent}")
 
-              case Some(p) => p
+              case Some(p) => p.copy(args = withoutPredAbstractions(p.args))
             }
 
-          val defunctionalizer = new DefunctionalizeInductive(newPredName, gen, pred, predValues, spList, predEnv)
+          val defunctionalizer = new DefunctionalizeInductive(newPredName.name, pred, predValues, spList, predEnv)
 
           // TODO: Ensure there are no free variables remaining in any of the 'predValues'
           generatedPreds += defunctionalizer.transform()
           generatedPreds ++= defunctionalizer.getGeneratedPreds
-          SApp(newPredName, newArgs, tag, card)
+          SApp(newPredName.name, newArgs, tag, card)
         }
       }
 
@@ -218,8 +244,16 @@ class SpecializationLists() {
   def insertPure(name: Ident, fromApp: PApp, toApp: Expr) =
     pureSps.insertSpecialization(new Specialization(name, fromApp, toApp))
 
-  def lookupSpatial(name: Ident, fromApp: SApp): Option[Seq[Heaplet]] =
-    spatialSps.lookupSpecialization(name, fromApp)
+  def lookupSpatial(name: Ident, fromApp: SApp): Option[Seq[Heaplet]] = {
+    println(s"&&& Looking up ${(name, fromApp)}")
+    println(s"  ^--> length = ${spatialSps.length}")
+    val r = spatialSps.lookupSpecialization(name, fromApp)
+    r match {
+      case None => println("  ^--> not found")
+      case Some(_) => println("  ^--> found")
+    }
+    r
+  }
 
   def lookupPure(name: Ident, fromApp: PApp): Option[Expr] =
     pureSps.lookupSpecialization(name, fromApp)
@@ -236,6 +270,8 @@ class SpecializationLists() {
   private class SpecializationList[Src, Tgt]() {
     private val sps: ListBuffer[Specialization[Src, Tgt]] = ListBuffer[Specialization[Src, Tgt]]()
 
+    def length: Int = sps.length
+
     def insertSpecialization(s: Specialization[Src, Tgt]) =
       sps += s
 
@@ -244,12 +280,15 @@ class SpecializationLists() {
   }
 
   class Specialization[Src, Tgt](name: Ident, fromApp: Src, toApp: Tgt) {
-    def getSubstFor(theName: Ident, theFromApp: Src): Option[Tgt] =
-      if (name == theName && theFromApp == fromApp) {
+    def getSubstFor(theName: Ident, theFromApp: Src): Option[Tgt] = {
+      println(s"====== comparing ${name} with ${theName}")
+      println(s"====== comparing ${theFromApp} with ${fromApp}")
+      if (PredFreshNameGen.eqModUniq(name, theName) && theFromApp == fromApp) {
         Some(toApp)
       } else {
         None
       }
+    }
   }
 }
 

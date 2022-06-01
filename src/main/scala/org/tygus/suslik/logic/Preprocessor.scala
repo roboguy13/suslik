@@ -45,9 +45,9 @@ object Preprocessor extends SepLogicUtils {
 
     val goalElimAbs = new GoalContainerEliminateAbstractions()
 
-    val (freshIdentGen, (goal, generatedPreds)) = goalElimAbs.transform(goal0, predMap0)
+    val (goal, generatedPreds) = goalElimAbs.transform(goal0, predMap0)
 
-    val funSpecElimAbs = new EliminateAbstractions[FunSpec, FunSpec, FunSpec](freshIdentGen, new SpecializationLists())
+    val funSpecElimAbs = new EliminateAbstractions[FunSpec, FunSpec, FunSpec](new SpecializationLists())
 
     val funs = funs0.map(f => {
         println(s"generating for ${f.pp}")
