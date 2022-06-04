@@ -11,11 +11,16 @@
 //    *x = m;
 //  }
 
-void unfoldList(loc x)
-  { x :-> y ** unconstrained(y, preS) }
-  { x :-> y ** fill(y, postS, 7) }
-{
-  ??
-}
+// void unfoldList(loc x)
+//   { x :-> y ** unconstrained(y, preS) }
+//   { x :-> y ** fill(y, postS, 7) }
+// {
+//   ??
+// }
+void subseqs(loc xs0, loc y)
+  { sll(xs0, s) ** y :-> 0 }
+  { sll(xs0, s) ** y :-> r **
+     map_pred(r, pred(xs) => subseq_of(xs0, subsetS, s)) }
+{ ?? }
 
 ###

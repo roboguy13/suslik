@@ -39,6 +39,11 @@ predicate constrained_list(loc x, set s, pred p) {
 |  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
 }
 
+predicate snoc_list(loc x, set s) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => { s =i {v} ++ s1 ; [x, 2] ** x :-> nxt ** (x+1) :-> v ** snoc_list(nxt, s1) }
+}
+
 predicate assoc_list(loc x, set keys, set vals) {
 | x == null => { keys =i {} && vals =i {} ; emp }
 | not (x == null) => {
@@ -60,6 +65,67 @@ synonym unconstrained(loc x, set s) {
 synonym fill(loc x, set s, int val) {
   constrained_list(x, s, pred(unused, new) => new == val)
 }
+
+predicate sll(loc x, set s) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x+1) :-> nxt ** sll(nxt, s1) }
+}
+
+predicate nonempty(loc x, set s) {
+| not (x == null) => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x+1) :-> nxt ** sll(nxt, s1) }
+}
+
+// predicate last(loc x, loc y, set s) {
+// | 
+// }
+
+predicate subsets(loc x, set inS, set outS) {
+| x == null => { inS =i {} && outS =i {} ; emp }
+| not (x == null) => { outS =i {v} ++ inS1 ++ outS1
+    ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    subsets(nxt, inS1, outS1)
+  }
+}
+
+predicate take(int n, loc x, set s) {
+| n == 0 || x == null => { s =i {} ; emp }
+| not (n == 0 || x == null) => { s =i {v} ++ s1
+    ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    take(n-1, nxt, s1)
+  }
+}
+
+predicate subseq_of(loc xs, set subsetS, set s) {
+| xs == null => { subsetS =i {} ; emp }
+| not (xs == null) => {
+    subsetS =i {v} ++ subsetS1 && v in s
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    subseq_of(nxt, subsetS1, s - {v})
+  }
+}
+
+predicate map_pred(loc x, set s, pred p) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i {v} ++ s1
+      ;
+    p(v) **
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    map_pred(nxt, s1, p)
+  }
+}
+
 
 predicate spatially_constrained(loc x, set s, pred p) {
 |  x == null        => { s =i {} ; emp }
@@ -89,8 +155,8 @@ predicate leaf_tree(loc x, int tag, set s) {
     [x, 3] **
     (x+1) :-> left **
     (x+2) :-> right **
-    leaf_tree(left, tagL, sL) **
-    leaf_tree(right, tagR, sR)
+    wrapped_leaf_tree(left, sL) **
+    wrapped_leaf_tree(right, sR)
   }
 }
 
@@ -155,6 +221,18 @@ predicate filter_gt_7(loc x, set preS, set postS) {
 //   join(foldI[x, s, acc, z, foldFn[_, ?mapResult, _]], constrained_list[x, s, mapFn[_, ?mapResult]])
 // }
 
+predicate subseq_of(loc xs, set subsetS, set s) {
+| xs == null => { subsetS =i {} ; emp }
+| not (xs == null) => {
+    subsetS =i {v} ++ subsetS1 && v in s
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    subseq_of(nxt, subsetS1, s - {v})
+  }
+}
+
 // predicate foldMap'(loc x, loc s, int acc, int z, pred mapFn, pred foldFn) {
 // |  x == null => { acc == z ; emp }
 // |  not (x == null) => {
@@ -176,5 +254,58 @@ predicate filter_gt_7(loc x, set preS, set postS) {
 
 predicate reify(loc x, int i) {
 | true => { [x, 1] ** x :-> i }
+}
+
+predicate height_leaf_tree(loc x, set s, int height) {
+| x == 0 => { height == 0 && s =i {} ; emp }
+| not (x == 0) => {
+    height =i (heightLeft <= heightRight ? heightRight : heightLeft) + 1 &&
+    s =i sLeft ++ sRight
+      ;
+    [x, 2] **
+    x :-> left **
+    (x+1) :-> right **
+    height_leaf_tree(left, sLeft, heightLeft) **
+    height_leaf_tree(right, sRight, heightRight)
+  }
+}
+
+predicate wrapped_height_leaf_tree(loc x, set s) {
+| true => { x :-> height ** height_leaf_tree(x, s, height) }
+}
+
+predicate minHeight(loc x, set s, int height) {
+| x == 0 => { height == 0 && s =i {} ; emp }
+| not (x == 0) => {
+    height =i (heightHere <= heightThere ? heightHere : heightThere)
+    && b == (heightHere <= heightThere ? 1 : 0)
+      ;
+    [x, 2] **
+    x :-> r **
+    (x+1) :-> nxt **
+    // cond(r, b, x1, nxt) **   // <- This violates the "separation condition"
+    height_leaf_tree(x1, s, heightHere) **
+    minHeight(nxt, s, heightThere)
+  }
+}
+
+predicate cond(loc res, int c, loc t, loc f) {
+| c == 0 => { res :-> f }
+| not (c == 0) => { res :-> t }
+}
+
+predicate singleton_list(loc x, int n) {
+| true => { [x, 2] ** x :-> n ** (x+1) :-> 0 }
+}
+
+// Unary representation of natural numbers
+predicate natural(loc x) {
+| x == null => { emp }
+| not (x == null) => {
+    [x, 2] **
+    x :-> 0 ** // This is included so that we can use "list-style" functions
+    (x+1) :-> nxt **
+    natural(nxt)
+  }
 }
 

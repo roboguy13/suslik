@@ -1,0 +1,8 @@
+
+void mkSingletonList(loc x, int n)
+  { x :-> 0 }
+  { x :-> r ** singleton_list(r, n) }
+{ ?? }
+
+###
+

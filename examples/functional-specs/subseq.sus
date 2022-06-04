@@ -1,0 +1,8 @@
+
+void subseq(loc x, loc z)
+  { unconstrained(x, xS) ** z :-> 0 }
+  { z :-> r ** subseq_of(r, xS, xS) }
+{ ?? }
+
+###
+

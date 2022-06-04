@@ -1,0 +1,7 @@
+void min_height(loc x, loc y)
+  { unconstrained(x, s) ** y :-> 0 }
+  { unconstrained(x, s) ** y :-> r ** minHeight(r, s, height) }
+{ ?? }
+
+###
+

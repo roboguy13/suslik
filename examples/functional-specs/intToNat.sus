@@ -1,0 +1,7 @@
+
+void intToNat(loc x, loc y)
+  { x :-> n ** y :-> 0 }
+  { y :->  }
+
+###
+

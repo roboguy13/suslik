@@ -5,8 +5,8 @@
 void sll_append (loc x1, loc ret)
 {s =i s1 ++ s2 ; unconstrained(y, s) ** ret :-> y }
 
-  { x :-> x1 ** wrapped_leaf_tree(x1, s) }
+  { wrapped_leaf_tree(x, s) }
 void flatten_leaf_tree(loc x)
-  { x :-> x1 ** unconstrained(x1, s) }
+  { emp }
 
 ###

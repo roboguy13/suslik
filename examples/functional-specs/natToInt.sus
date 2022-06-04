@@ -1,0 +1,8 @@
+
+void natToInt(loc x, loc y)
+  { natural(x) ** y :-> 0 }
+  { y :-> n ** foldI(x, s, n, 0, pred(newAcc, v, oldAcc) => newAcc == 1+oldAcc) }
+{ ?? }
+
+###
+

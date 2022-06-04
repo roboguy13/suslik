@@ -1,7 +1,13 @@
 void mapTimes2(loc x, loc y, loc intermediateArg)
-  { x :-> w ** unconstrained(w, preS) }
-  { x :-> w ** constrained_list(w, preS, pred(v, r) => r == 2*v) }
-{ ?? }
+  { x :-> w1 ** unconstrained(w1, preS) }
+  { x :-> w1 ** constrained_list(w1, preS, pred(v, r) => r == 2*v) }
+{
+  let w = *x;
+  if (w == 0) {
+  } else {
+    ??
+  }
+}
 
 ###
 
