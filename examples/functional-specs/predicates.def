@@ -39,6 +39,16 @@ predicate constrained_list(loc x, set s, pred p) {
 |  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
 }
 
+predicate sll(loc x, set s) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i {v} ++ s1
+      ;
+    [x, 2] ** x :-> v ** (x+1) :-> nxt **
+    sll(nxt, s1)
+  }
+}
+
 predicate snoc_list(loc x, set s) {
 | x == null => { s =i {} ; emp }
 | not (x == null) => { s =i {v} ++ s1 ; [x, 2] ** x :-> nxt ** (x+1) :-> v ** snoc_list(nxt, s1) }
@@ -309,30 +319,44 @@ predicate natural(loc x) {
   }
 }
 
-predicate append(loc r, loc x, loc y, set sX, set sY) {
-| r == null => { x == null && y == null && sX =i {} && sY =i {} ; emp }
-| not (r == null) && x == null => {
-    sX =i {} &&
-    sY =i {v} ++ sY1
-      ;
-    [r, 2] **
-    r :-> v **
-    (r+1) :-> nxt **
+predicate foldL(loc x, loc acc, pred z, pred p) {
+|  x == null => { z(acc) }
+|  not (x == null) => {
+    p(acc, v, nxtAcc) **
+    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldL(nxt, s1, nxtAcc, z, p) }
+}
 
-    y :-> v **
-    (y+1) :-> nxtY **
-    append(nxt, x, nxtY, sX, sY1)
-  }
-| not (r == null) && not (x == null) => {
-    sX =i {v} ++ sX1
-      ;
-    [r, 2] **
-    r :-> v **
-    (r+1) :-> nxt **
+// map (x:) xs
+predicate cons_map(int v, loc xsPtr, loc r) {
+| r == null => { s =i {} ; emp }
+| not (r == null) => {
+    xsPtr :-> xs **
+    (xsPtr+1) :-> xsPtrNxt **
 
-    x :-> v **
-    (x+1) :-> nxtX **
-    append(nxt, nxtX, y, sX1, sY)
+    [ys, 2] **  // New cons cell
+    ys :-> v **
+    (ys+1) :-> nxt **
+    r :-> ys **
+    (r+1) :-> xsPtr **
+    cons_map(x, xsPtrNxt, xsPtr)
   }
+}
+
+predicate list_of_lists(loc x, set s) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i headS ++ s1
+      ;
+    sll(head, headS) **
+
+    [x, 2] **
+    x :-> head **
+    (x+1) :-> nxt **
+    list_of_lists(nxt, s1)
+  }
+}
+
+predicate append(loc r, set sX, set sY, pred unused) {
+| true => { constrained_list(r, sX ++ sY, pred(u, v) => u == v) }
 }
 

@@ -1,0 +1,20 @@
+
+void subseqs(loc xs0, loc y)
+  { unconstrained(xs0, origS) ** y :-> 0 }
+  {
+    y :-> r **
+    foldL
+      (xs0
+      ,r
+      ,pred(acc) => emp
+      ,pred(acc, v, nxtAcc) =>
+        nxtAcc :-> nxtAccR **
+        constrained_list(nxtAccR, s,
+          pred(z, w) =>
+            
+        )
+      )
+  }
+
+###
+

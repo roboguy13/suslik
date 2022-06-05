@@ -1,7 +1,7 @@
 
-void append(loc x, loc y, loc z)
+void append_args(loc x, loc y, loc z)
   { unconstrained(x, sX) ** unconstrained(y, sY) ** z :-> 0 }
-  { z :-> r ** append(r, x, y, sX, sY) }
+  { unconstrained(x, sX) ** unconstrained(y, sY) ** z :-> r ** append(r, sX, sY, pred(w) => w == 1) }
 { ?? }
 
 ###
