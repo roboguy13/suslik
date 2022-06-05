@@ -309,3 +309,30 @@ predicate natural(loc x) {
   }
 }
 
+predicate append(loc r, loc x, loc y, set sX, set sY) {
+| r == null => { x == null && y == null && sX =i {} && sY =i {} ; emp }
+| not (r == null) && x == null => {
+    sX =i {} &&
+    sY =i {v} ++ sY1
+      ;
+    [r, 2] **
+    r :-> v **
+    (r+1) :-> nxt **
+
+    y :-> v **
+    (y+1) :-> nxtY **
+    append(nxt, x, nxtY, sX, sY1)
+  }
+| not (r == null) && not (x == null) => {
+    sX =i {v} ++ sX1
+      ;
+    [r, 2] **
+    r :-> v **
+    (r+1) :-> nxt **
+
+    x :-> v **
+    (x+1) :-> nxtX **
+    append(nxt, nxtX, y, sX1, sY)
+  }
+}
+
