@@ -327,18 +327,14 @@ predicate foldL(loc x, loc acc, pred z, pred p) {
 }
 
 // map (x:) xs
-predicate cons_map(int v, loc xsPtr, loc r) {
-| r == null => { s =i {} ; emp }
-| not (r == null) => {
-    xsPtr :-> xs **
-    (xsPtr+1) :-> xsPtrNxt **
-
-    [ys, 2] **  // New cons cell
-    ys :-> v **
-    (ys+1) :-> nxt **
-    r :-> ys **
-    (r+1) :-> xsPtr **
-    cons_map(x, xsPtrNxt, xsPtr)
+predicate cons_map(int v, loc x) {
+| x == null => { emp }
+| not (x == null) => {
+    sll(head, {v} ++ s) **
+    [x, 2] **
+    x :-> head **
+    (x+1) :-> nxt **
+    cons_map(v, nxt)
   }
 }
 

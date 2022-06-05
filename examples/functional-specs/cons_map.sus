@@ -1,8 +1,0 @@
-# -o 2
-void cons_map(loc x, loc y)
-  { list_of_lists(x, s) ** y :-> 0 }
-  { cons_map(7, x, r) ** y :-> r }
-{ ?? }
-
-###
-
