@@ -330,7 +330,9 @@ predicate foldL(loc x, loc acc, pred z, pred p) {
 predicate cons_map(int v, loc x) {
 | x == null => { emp }
 | not (x == null) => {
-    sll(head, {v} ++ s) **
+    s1 =i {v} ++ s
+      ;
+    sll(head, s1) **
     [x, 2] **
     x :-> head **
     (x+1) :-> nxt **
