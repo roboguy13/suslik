@@ -326,19 +326,31 @@ predicate foldL(loc x, loc acc, pred z, pred p) {
     [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldL(nxt, s1, nxtAcc, z, p) }
 }
 
+predicate duplicate(loc r, loc x) {
+| true => { r :-> x ** (r+1) :-> x }
+}
+
 // map (x:) xs
-predicate cons_map(int v, loc x) {
-| x == null => { emp }
-| not (x == null) => {
-    s1 =i {v} ++ s
+predicate cons_map(int x, loc xs) {
+| xs == null => { emp }
+| not (xs == null) => {
+    s1 =i {x} ++ s
       ;
     sll(head, s1) **
-    [x, 2] **
-    x :-> head **
-    (x+1) :-> nxt **
-    cons_map(v, nxt)
+    [xs, 2] **
+    xs :-> head **
+    (xs+1) :-> nxt **
+    cons_map(x, nxt)
   }
 }
+
+// (map (x:) xs) ++ xs
+predicate append_cons_map(int x, set s) {
+| true => {
+    cons_map(x, xs)
+  }
+}
+
 
 predicate list_of_lists(loc x, set s) {
 | x == null => { s =i {} ; emp }
@@ -354,7 +366,52 @@ predicate list_of_lists(loc x, set s) {
   }
 }
 
+predicate list_of_lists_len(loc x, int len) {
+| x == null => { len == 0 ; emp }
+| not (x == null) => {
+    len == 1 + len1
+      ;
+    sll(head, headS) **
+
+    [x, 3] **
+    (x+1) :-> head **
+    (x+2) :-> nxt **
+    list_of_lists_len(nxt, len1)
+  }
+}
+
+predicate wrapped_list_of_lists(loc x) {
+| true => { x :-> len ** list_of_lists_len(x, len) }
+}
+
+predicate singleton_list_of_lists(loc x, set s) {
+| true => {
+    sll(r, s) **
+
+    [x, 2] **
+    x :-> r **
+    (x+1) :-> 0
+  }
+}
+
 predicate append(loc r, set sX, set sY, pred unused) {
 | true => { constrained_list(r, sX ++ sY, pred(u, v) => u == v) }
 }
+
+predicate spatial_append(loc r, loc x, loc y) {
+| true => {
+    sll(x, xS_internal) **
+    sll(y, yS_internal) **
+    sll(r, xS_internal ++ yS_internal)
+  }
+}
+
+// predicate subseq_fold(loc r, loc x) {
+// | r == 0 => { emp }
+// | not (r == 0) => {
+//     [x, 3] **
+//     (x+1) :-> head
+//     (x+2) :-> tail
+//   }
+// }
 

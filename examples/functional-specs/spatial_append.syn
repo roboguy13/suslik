@@ -1,0 +1,9 @@
+
+###
+
+  { list_of_lists_len(x, m) ** list_of_lists_len(y, n) ** z :-> 0 }
+void spatial_append_fn(loc x, loc y, loc z)
+  {k == m + n ; z :-> r ** list_of_lists_len(r, k) }
+
+###
+
