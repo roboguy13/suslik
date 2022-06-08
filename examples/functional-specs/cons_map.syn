@@ -1,4 +1,3 @@
-# -o 2 -c 2
 
 ###
 
@@ -8,7 +7,7 @@ void cons(int v, loc x, loc y)
 
   { x :-> z ** list_of_lists(z, s) ** y :-> 0 }
 void cons_map_fn(int v, loc x, loc y)
-  { x :-> z ** cons_map(v, r) ** y :-> r }
+  { x :-> z ** cons_map_s(v, s, r) ** y :-> r }
 
 ###
 

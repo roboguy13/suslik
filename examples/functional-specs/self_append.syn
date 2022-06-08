@@ -1,0 +1,9 @@
+
+###
+
+{ x :-> a ** z :-> a ** sll(a, s) ** y :-> 0 }
+void self_append(loc x, loc y)
+{ x :-> a ** z :-> a ** sll(a, s) ** y :-> r ** sll(r, s ) }
+
+###
+

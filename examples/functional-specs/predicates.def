@@ -330,7 +330,7 @@ predicate duplicate(loc r, loc x) {
 | true => { r :-> x ** (r+1) :-> x }
 }
 
-// map (x:) xs
+// map (x:) xss
 predicate cons_map(int x, loc xs) {
 | xs == null => { emp }
 | not (xs == null) => {
@@ -344,10 +344,52 @@ predicate cons_map(int x, loc xs) {
   }
 }
 
-// (map (x:) xs) ++ xs
-predicate append_cons_map(int x, set s) {
+predicate cons_map_s(int x, set s, loc xs) {
+| xs == null => { emp }
+| not (xs == null) => {
+    s1 =i {x} ++ s
+      ;
+    sll(head, s1) **
+    [xs, 2] **
+    xs :-> head **
+    (xs+1) :-> nxt **
+    cons_map_s(x, s1, nxt)
+  }
+}
+
+// (map (x:) xss) ++ xss
+predicate append_cons_map(loc r, int x, set s) {
 | true => {
-    cons_map(x, xs)
+    list_of_lists(r, {x} + s)
+
+    // cons_map_s(x, s, xs)
+  }
+}
+
+// (map (v:) xss) ++ xss
+predicate append_cons_map_set(loc x, int v, set s) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i {v} ++ headS ++ s1
+      ;
+    sll(head, {v} ++ headS) **
+
+    [x, 3] **
+    (x+1) :-> head **
+    (x+2) :-> nxt **
+    append_cons_map_set(nxt, v, s1)
+  }
+}
+
+predicate replicate(int payload, int len, loc x) {
+| x == null => { len == 0 ; emp }
+| not (x == null) => {
+    len == len1 + 1
+      ;
+    [x, 2] **
+    x :-> payload **
+    (x+1) :-> nxt **
+    replicate(payload, len1, nxt)
   }
 }
 

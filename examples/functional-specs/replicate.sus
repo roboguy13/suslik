@@ -1,6 +1,6 @@
-void replicate(loc x, int val, int n)
+void replicate_fn(loc x, int val, int n)
   { x :-> 0 }
-  { x :-> constrained_list(x,  }
+  { x :-> r ** replicate(val, 2, r) }
 { ?? }
 
 ###
