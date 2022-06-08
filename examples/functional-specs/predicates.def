@@ -188,6 +188,14 @@ predicate foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
     }
 }
 
+predicate list_sum(loc x, set s, int acc, int z) {
+|  x == null => { acc == z; emp }
+|  not (x == null) => {
+    acc == (acc1+v) && s =i {v} ++ s1
+      ;
+    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** list_sum(nxt, s1, acc1, z) }
+}
+
 predicate digit(loc x, loc a, loc b, loc c) {
 | true => { [x,3] ** x :-> a ** (x+1) :-> b ** (x+2) :-> c }
 }
@@ -390,6 +398,25 @@ predicate replicate(int payload, int len, loc x) {
     x :-> payload **
     (x+1) :-> nxt **
     replicate(payload, len1, nxt)
+  }
+}
+
+predicate map_sum(loc x, loc r, set resultSet) {
+| x == null => { emp }
+| not (x == null) => {
+    resultSet =i {a} + resultSet1
+      ;
+    [x, 2] **
+    x :-> head **
+    (x+1) :-> tail **
+
+    [r, 2] **
+    r :-> a **
+    (r+1) :-> nxt **
+
+    list_sum(head, s, a, 0) **
+
+    map_sum(tail, nxt, resultSet1)
   }
 }
 
