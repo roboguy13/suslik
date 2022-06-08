@@ -402,7 +402,7 @@ predicate replicate(int payload, int len, loc x) {
 }
 
 predicate map_sum(loc x, loc r, set resultSet) {
-| x == null => { emp }
+| x == null => { r == null ; emp }
 | not (x == null) => {
     resultSet =i {a} + resultSet1
       ;
