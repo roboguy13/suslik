@@ -1,0 +1,9 @@
+
+###
+
+{ sll(x, s) ** y :-> 0 }
+void maximum_map_sum_fn(loc x, loc y)
+{ map_sum(x, r, postS) ** maximum(r, postS, m) ** y :-> m }
+
+###
+
