@@ -296,6 +296,7 @@ predicate minHeight(loc x, set s, int height) {
 | x == 0 => { height == 0 && s =i {} ; emp }
 | not (x == 0) => {
     height =i (heightHere <= heightThere ? heightHere : heightThere)
+    && r == (heightHere <= heightThere ? x1 : nxt)
     // && b == (heightHere <= heightThere ? 1 : 0)
       ;
     [x, 2] **
