@@ -434,6 +434,26 @@ predicate maximum(loc x, set s, int m) {
   }
 }
 
+predicate maximum_map_sum(loc x, set outSet, int m) {
+| x == null => { r == null && m == 0 && outSet =i {} ; emp }
+| not (x == null) => {
+    outSet =i {a} + outSet1 &&
+    m == (m1 <= a ? a : m1)
+      ;
+    [x, 2] **
+    x :-> head **
+    (x+1) :-> tail **
+
+    [r, 2] **
+    r :-> a **
+    (r+1) :-> nxt **
+
+    list_sum(head, s, a, 0) **
+
+    maximum_map_sum(nxt, outSet1, m1)
+  }
+}
+
 
 predicate list_of_lists(loc x, set s) {
 | x == null => { s =i {} ; emp }
