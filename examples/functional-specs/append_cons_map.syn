@@ -3,7 +3,7 @@
 
 { x :-> a ** list_of_lists(a, s) ** y :-> 0 }
 void append_cons_map_fn(int v, loc x, loc y)
-{ x :-> a ** list_of_lists(a, s) ** y :-> r ** append_cons_map_set(r, v, s) }
+{ x :-> a ** list_of_lists(a, s) ** y :-> r ** append_cons_map_set(r, v, {v} + s) }
 
 ###
 

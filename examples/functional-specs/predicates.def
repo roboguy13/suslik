@@ -296,12 +296,12 @@ predicate minHeight(loc x, set s, int height) {
 | x == 0 => { height == 0 && s =i {} ; emp }
 | not (x == 0) => {
     height =i (heightHere <= heightThere ? heightHere : heightThere)
-    && b == (heightHere <= heightThere ? 1 : 0)
+    // && b == (heightHere <= heightThere ? 1 : 0)
       ;
     [x, 2] **
     x :-> r **
     (x+1) :-> nxt **
-    // cond(r, b, x1, nxt) **   // <- This violates the "separation condition"
+    // cond(r, b, x1, nxt) **   // <- This violates the "separation condition"?
     height_leaf_tree(x1, s, heightHere) **
     minHeight(nxt, s, heightThere)
   }
@@ -401,6 +401,7 @@ predicate replicate(int payload, int len, loc x) {
   }
 }
 
+// map sum xs
 predicate map_sum(loc x, loc r, set resultSet) {
 | x == null => { r == null ; emp }
 | not (x == null) => {
@@ -417,6 +418,19 @@ predicate map_sum(loc x, loc r, set resultSet) {
     list_sum(head, s, a, 0) **
 
     map_sum(tail, nxt, resultSet1)
+  }
+}
+
+predicate maximum(loc x, set s, int m) {
+| x == null => { m == 0 ; emp }
+| not (x == null) => {
+    m == (m1 <= head ? head : m1) &&
+    s =i {head} ++ s1
+      ;
+    [x, 2] **
+    x :-> head **
+    (x+1) :-> tail **
+    maximum(tail, s1, m1)
   }
 }
 
