@@ -402,11 +402,11 @@ predicate replicate(int payload, int len, loc x) {
   }
 }
 
-// map sum xs
-predicate map_sum(loc x, loc r, set resultSet) {
-| x == null => { r == null ; emp }
+// map sum xss
+predicate map_sum(loc x, loc r, set fullS) {
+| x == null => { r == null && fullS =i {} ; emp }
 | not (x == null) => {
-    resultSet =i {a} + resultSet1
+    fullS =i s ++ fullS1
       ;
     [x, 2] **
     x :-> head **
@@ -418,8 +418,13 @@ predicate map_sum(loc x, loc r, set resultSet) {
 
     list_sum(head, s, a, 0) **
 
-    map_sum(tail, nxt, resultSet1)
+    map_sum(tail, nxt, fullS1)
   }
+}
+
+// sum (head xss)
+predicate sum_head(loc x, loc r, set s) {
+| true => { emp }
 }
 
 predicate maximum(loc x, set s, int m) {
