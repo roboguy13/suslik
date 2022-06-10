@@ -1,0 +1,24 @@
+
+    void add_one(loc x, loc y)
+      { x :-> a ** y :-> 0 }
+      { b == a + 1 ; x :-> a ** y :-> b }
+    { ?? }
+
+
+   void get_odd(loc x, loc y, loc z)
+     { x :-> a ** y :-> 0 ** z :-> 0 }
+     { b == a*2 && c == b + 1 ; x :-> a ** y :-> b ** z :-> c }
+   { ?? }
+
+// {
+//   
+//   add_one(y, z);
+// }
+
+###
+
+    void get_odd(loc x, loc y, loc z)
+      { x :-> a ** y :-> 0 ** z :-> 0 }
+      { b == 2*a ; x :-> a ** y :-> b ** add_one(y, z) }
+    { ?? }
+

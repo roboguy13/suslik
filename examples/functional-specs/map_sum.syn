@@ -4,8 +4,7 @@
 
 { x :-> a ** list_of_lists(a, s) ** y :-> 0 }
 void map_sum_fn(loc x, loc y)
-{ x :-> a ** y :-> r **
-  map_sum(a, r, s) }
+{ x :-> a ** y :-> r ** map_sum(a, r, s, sumSet) }
 
 ###
 
