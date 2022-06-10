@@ -1,7 +1,7 @@
 
 void subseq(loc x, loc z)
   { unconstrained(x, xS) ** z :-> 0 }
-  { z :-> r ** subseq_of(r, xS, xS) }
+  { unconstrained(x, xS) ** z :-> r ** subseq_of(r, xS, xS) }
 { ?? }
 
 ###
