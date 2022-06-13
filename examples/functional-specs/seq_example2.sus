@@ -1,11 +1,29 @@
 
-void max_map_sum(loc x, loc y, loc z)
-  { x :-> a ** list_of_lists(a, s) ** y :-> 0 ** z :-> 0 }
-  { x :-> a ** y :-> b ** z :-> c **
-    map_sum(a, b, s, sumSet) **
-    maximum(b, c, sumSet) // Violates separating conjunction requirement
-  }
-{ ?? }
+
+    void map_sum_fn(loc x, loc y)
+      { x :-> a ** list_of_lists(a, s) ** y :-> 0 }
+      { x :-> a ** y :-> r ** map_sum(a, r, s, sumSet) }
+
+    void maximum_fn(loc x, loc y)
+      { sll(x, s) ** y :-> 0 }
+      { y :-> r ** maximum(x, r, s) }
+
+    void copy(loc x, loc y)
+      { sll(x, s) ** y :-> 0 }
+      { sll(x, s) ** y :-> r ** sll(r, s) }
+
+    void max_map_sum(loc x, loc y, loc z)
+      { x :-> a ** list_of_lists(a, s) ** y :-> 0 ** z :-> 0 }
+      { y :-> b ** z :-> r **
+        map_sum(a, b, s, sumSet) **
+        maximum(c, r, sumSet)
+      }
+    {
+      ??
+       // map_sum_fn(x, b);
+ 
+       // maximum_fn(b, z);
+    }
 
 ###
 
@@ -19,6 +37,12 @@ void maximum_map_sum_fn(loc x, loc y)
       } with
           map_sum(a, b, s, sumSet),
           maximum(b, sumSet, c)
-      }
     { ?? }
 
+void max_map_sum(loc x, loc y, loc z)
+  { x :-> a ** list_of_lists(a, s) ** y :-> 0 ** z :-> 0 }
+  { x :-> a ** y :-> b **
+    map_sum(a, b, s, sumSet) **
+    maximum(c, z, sumSet) // Problem with the separating conjunction requirement
+  }
+{ ?? }

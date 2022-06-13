@@ -1,0 +1,10 @@
+
+void running_sum(loc x, loc y)
+  { x :-> a ** sll(a, preS) ** y :-> 0 }
+  { x :-> a ** y :-> r **
+    sll(r, postS) **
+    scanr(a, 0, preS, postS, pred(v, acc, new) => new == v+acc) }
+{ ?? }
+
+###
+

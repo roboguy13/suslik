@@ -428,6 +428,10 @@ predicate sum_head(loc x, loc r, set s) {
 | true => { emp }
 }
 
+predicate deref_maximum(loc x, int m, set s) {
+| true => { x :-> y ** maximum(y, m, s) }
+}
+
 predicate maximum(loc x, int m, set s) {
 | x == null => { m == 0 ; emp }
 | not (x == null) => {
@@ -509,6 +513,20 @@ predicate spatial_append(loc r, loc x, loc y) {
     sll(x, xS_internal) **
     sll(y, yS_internal) **
     sll(r, xS_internal ++ yS_internal)
+  }
+}
+
+predicate scanr(loc x, int acc, set preS, set postS, pred p) {
+| x == null => { preS =i {} && postS =i {} ; emp }
+| not (x == null) => {
+    preS =i {v} ++ preS1 &&
+    p(v, acc, r) &&
+    postS =i {r} ++ postS1
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    scanr(nxt, r, preS1, postS1, p)
   }
 }
 
