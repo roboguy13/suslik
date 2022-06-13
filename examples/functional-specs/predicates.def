@@ -516,8 +516,8 @@ predicate spatial_append(loc r, loc x, loc y) {
   }
 }
 
-predicate scanr(loc x, int acc, set preS, set postS, pred p) {
-| x == null => { preS =i {} && postS =i {} ; emp }
+predicate scanr(loc x, int acc, int z, set preS, set postS, pred p) {
+| x == null => { preS =i {} && postS =i {} && acc == z ; emp}
 | not (x == null) => {
     preS =i {v} ++ preS1 &&
     p(v, acc, r) &&
@@ -526,7 +526,8 @@ predicate scanr(loc x, int acc, set preS, set postS, pred p) {
     [x, 2] **
     x :-> v **
     (x+1) :-> nxt **
-    scanr(nxt, r, preS1, postS1, p)
+
+    scanr(nxt, r, z, preS1, postS1, p)
   }
 }
 

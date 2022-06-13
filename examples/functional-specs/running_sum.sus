@@ -1,9 +1,9 @@
 
-void running_sum(loc x, loc y)
-  { x :-> a ** sll(a, preS) ** y :-> 0 }
-  { x :-> a ** y :-> r **
+void running_sum(loc x, loc y, loc z)
+  { x :-> a ** sll(a, preS) ** y :-> 0 ** z :-> 0 }
+  { x :-> a ** y :-> r ** z :-> acc **
     sll(r, postS) **
-    scanr(a, 0, preS, postS, pred(v, acc, new) => new == v+acc) }
+    scanr(a, acc, 0, preS, postS, pred(v, acc, next) => acc == v+next) }
 { ?? }
 
 ###
