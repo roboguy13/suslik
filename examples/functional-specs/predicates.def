@@ -531,6 +531,26 @@ predicate scanr(loc x, int acc, int z, set preS, set postS, pred p) {
   }
 }
 
+predicate zipWith(loc x, loc y, set xS, set yS, set zS, pred p) {
+| x == null || y == null => { xS =i {} && yS =i {} && zS =i {} ; emp }
+| not (x == null) && not (y == null) => {
+    xS =i {xV} ++ xS1 &&
+    yS =i {yV} ++ yS1 &&
+    zS =i {zV} ++ zS1 &&
+    p(xV, yV, zV)
+      ;
+    [x, 2] **
+    x :-> xV **
+    (x+1) :-> xNxt **
+
+    [y, 2] **
+    y :-> yV **
+    (y+1) :-> yNxt **
+
+    zipWith(xNxt, yNxt, xS1, yS1, zS1, p)
+  }
+}
+
 // predicate subseq_fold(loc r, loc x) {
 // | r == 0 => { emp }
 // | not (r == 0) => {
