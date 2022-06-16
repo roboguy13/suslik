@@ -136,6 +136,12 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
       case fName ~ args => PApp(fName, args.map(Var))
     }
 
+  def composedPureApp: Parser[PApp] =
+    ident ~ ("(" ~> rep1sep(atom | composedPureApp, ",") <~ ")") ^^ {
+      case fName ~ args => PApp(fName, args)
+    }
+    
+
   def expr: Parser[Expr] =
     chainl1(relExpr, binOpParser(logOpParser)) ~ opt(("?" ~> expr <~ ":") ~ expr) ^^ {
       case a ~ None => a
@@ -243,15 +249,18 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
   def codeWithHoles: Parser[Statement] = rep(statementParser) ^^ (seq => if (seq.nonEmpty) seq.reduceRight(SeqComp) else Skip)
 
 
-  def goalFunctionV1: Parser[GoalContainer] = nonGoalFunction ~ ("{" ~> codeWithHoles <~ "}") ^^ {
-    case goal ~ body => GoalContainer(goal, body)
+  def goalFunctionV1: Parser[GoalContainer] = nonGoalFunction ~ opt("with" ~> "[" ~> (repsep(composedPureApp, ",") <~ "]")) ~ ("{" ~> codeWithHoles <~ "}") ^^ {
+    case goal ~ withClause ~ body => {
+      println(s"========= Goal container: ${withClause} =========")
+      GoalContainer(goal, body, withClause.map(new WithClause(_)))
+    }
   }
 
   def programSUS: Parser[Program] = phrase(rep(synonym | indPredicate | (goalFunctionV1 ||| nonGoalFunction))) ^^ { pfs =>
     val ps = for (p@InductivePredicate(_, _, _) <- pfs) yield p
     val syns = for (s@Synonym(_, _, _) <- pfs) yield s
     val fs = for (f@FunSpec(_, _, _, _, _, _) <- pfs) yield f
-    val goals = for (gc@GoalContainer(_, _) <- pfs) yield gc
+    val goals = for (gc@GoalContainer(_, _, _) <- pfs) yield gc
     if (goals.isEmpty) {
       throw SynthesisException("Parsing failed: no single goal spec is provided.")
     }
@@ -259,6 +268,7 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
       throw SynthesisException("Parsing failed: more than one goal is provided.")
     }
     val goal = goals.last
+    println(s"******* programSUS: ${goals} *********")
     Program(ps, syns, fs, goal)
   }
 
@@ -271,7 +281,7 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
     }
     val goal = fs.last
     val funs = fs.take(fs.length - 1)
-    Program(ps, syns, funs, GoalContainer(goal, Hole))
+    Program(ps, syns, funs, GoalContainer(goal, Hole, None))
   }
 
   def parse[T](p: Parser[T])(input: String): ParseResult[T] = p(new lexical.Scanner(input)) match {

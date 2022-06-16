@@ -23,6 +23,9 @@ trait HasAssertions[+A] {
   def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): A
 }
 
+class WithClause(val apps: List[PApp]) {
+}
+
 /**
   * Function to synthesize
   *
@@ -264,9 +267,10 @@ case class Synonym(name: Ident, params: Formals, sigma: SFormula)
 }
 
 
-case class GoalContainer(spec: FunSpec, body: Statement) extends HasAssertions[GoalContainer] {
+case class GoalContainer(spec: FunSpec, body: Statement, withClause: Option[WithClause]) extends HasAssertions[GoalContainer] {
   def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): GoalContainer = {
-    GoalContainer(spec.visitAssertions(f, g), body)
+    copy(spec = spec.visitAssertions(f, g))
+    // GoalContainer(spec.visitAssertions(f, g), body)
   }
 }
 
