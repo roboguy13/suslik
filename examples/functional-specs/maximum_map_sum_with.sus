@@ -7,9 +7,9 @@ void maximum_fn(loc x, loc y)
   { x :-> r ** maximum(y, r, s) }
 
 void max_map_sum(loc x, loc y, loc z)
-  { x :-> a ** list_of_lists(a, s) ** y :-> 0 ** z :-> 0 }
-  { x :-> a ** y :-> b }
-    with [maximum_fn(map_sum_fn(x), z)]
+  { y :-> a ** list_of_lists(a, s) ** z :-> 0 ** x :-> 0 }
+  { y :-> a ** z :-> b }
+    with [maximum_fn(x, map_sum_fn(y))]
 { ?? }
 
 ###
