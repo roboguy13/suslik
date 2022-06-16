@@ -137,7 +137,7 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
     }
 
   def composedPureApp: Parser[PApp] =
-    ident ~ ("(" ~> rep1sep(atom | composedPureApp, ",") <~ ")") ^^ {
+    ident ~ ("(" ~> rep1sep(composedPureApp | atom, ",") <~ ")") ^^ {
       case fName ~ args => PApp(fName, args)
     }
     
