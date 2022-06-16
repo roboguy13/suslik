@@ -7,7 +7,7 @@ import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic._
 
 import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.Queue
+import scala.collection.mutable.Set
 
 // | This is essentially an ANF transformation
 class CompileWith {
@@ -26,7 +26,7 @@ class CompileWith {
 
     // val roseTree = makeRoseTreeRoot(new FreshVarGen(freeVars), withClause.apps.head)
 
-    val (newApp, generated) = transformAndGenerate(new FreshVarGen(freeVars), withClause.apps.head)
+    val (newApp, generated) = transformAndGenerate(new FreshVarGen(freeVars.to[Set]), withClause.apps.head)
 
     generated.map(((app, xs) => genCall(app, xs)).tupled) ++ List(Call(Var(newApp.fName), newApp.args, None))
 
@@ -133,20 +133,23 @@ class CompileWith {
 
   private class FreshVarGen(usedVars: Set[Var]) {
     private var uniq: Int = 0
-    private val ident: String = "inter"
+    private val ident: String = "__inter"
 
-    uniq = genUniq(0)
+    // uniq = genUniq(0)
 
-    private def genUniq(n: Int): Int =
-      if (usedVars.contains(Var(ident ++ n.toString))) {
-        genUniq(n + 1)
-      } else {
-        n
-      }
+    private def toVar(n: Int): Var = Var(ident ++ n.toString)
+
+    // private def genUniq(n: Int): Int =
+    //   if (usedVars.contains(toVar(n))) {
+    //     genUniq(n + 1)
+    //   } else {
+    //     n
+    //   }
 
     def genVar: Var = {
-      val curr = Var(ident ++ uniq.toString)
-      uniq = genUniq(uniq)
+      val curr = toVar(uniq)
+      // uniq = genUniq(uniq)
+      uniq += 1
       curr
     }
   }
