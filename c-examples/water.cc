@@ -15,12 +15,12 @@
                  h)
   */
 
-int water(List* h) {
-  List* left_max = NULL;
-  List* right_max = NULL;
+int water(List<int>* h) {
+  List<int>* left_max = NULL;
+  List<int>* right_max = NULL;
 
-  List* zipWith_min_list = NULL;
-  List* zipWith_sub_list = NULL;
+  List<int>* zipWith_min_list = NULL;
+  List<int>* zipWith_sub_list = NULL;
 
   scanl1(max, h, &left_max);
   scanr1(max, h, &right_max);
@@ -33,7 +33,7 @@ int water(List* h) {
 
 int main() {
   int arr[] = {2,5,1,2,3,4,7,7,6};
-  List* h = to_int_list(arr, 9);
+  List<int>* h = to_int_list(arr, 9);
 
   print_int_list(h);
 
