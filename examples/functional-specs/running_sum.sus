@@ -2,7 +2,7 @@
 
 void running_sum(loc x, loc y, loc z)
   { x :-> a ** sll(a, preS) ** y :-> 0 ** z :-> 0 }
-  { s == {acc} ++ postS ; x :-> a ** y :-> r ** z :-> acc **
+  { x :-> a ** y :-> r ** z :-> acc **
     sll(r,
            // {acc} ++     // <- Does not work with this
       postS) **
