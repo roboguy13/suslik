@@ -293,39 +293,39 @@ predicate height_bin_tree(loc x, set s, int height) {
   }
 }
 
-predicate height_leaf_tree(loc x, set s, int height) {
-| x == 0 => { height == 0 && s =i {} ; emp }
-| not (x == 0) => {
-    height =i (heightLeft <= heightRight ? heightRight : heightLeft) + 1 &&
-    s =i sLeft ++ sRight
-      ;
-    [x, 2] **
-    x :-> left **
-    (x+1) :-> right **
-    height_leaf_tree(left, sLeft, heightLeft) **
-    height_leaf_tree(right, sRight, heightRight)
-  }
-}
-
-predicate wrapped_height_leaf_tree(loc x, set s) {
-| true => { x :-> height ** height_leaf_tree(x, s, height) }
-}
-
-predicate minHeight(loc x, set s, int height) {
-| x == 0 => { height == 0 && s =i {} ; emp }
-| not (x == 0) => {
-    height =i (heightHere <= heightThere ? heightHere : heightThere)
-    && r == (heightHere <= heightThere ? x1 : nxt)
-    // && b == (heightHere <= heightThere ? 1 : 0)
-      ;
-    [x, 2] **
-    x :-> r **
-    (x+1) :-> nxt **
-    // cond(r, b, x1, nxt) **   // <- This violates the "separation condition"?
-    height_leaf_tree(x1, s, heightHere) **
-    minHeight(nxt, s, heightThere)
-  }
-}
+// predicate height_leaf_tree(loc x, set s, int height) {
+// | x == 0 => { height == 0 && s =i {} ; emp }
+// | not (x == 0) => {
+//     height =i (heightLeft <= heightRight ? heightRight : heightLeft) + 1 &&
+//     s =i sLeft ++ sRight
+//       ;
+//     [x, 2] **
+//     x :-> left **
+//     (x+1) :-> right **
+//     height_leaf_tree(left, sLeft, heightLeft) **
+//     height_leaf_tree(right, sRight, heightRight)
+//   }
+// }
+// 
+// predicate wrapped_height_leaf_tree(loc x, set s) {
+// | true => { x :-> height ** height_leaf_tree(x, s, height) }
+// }
+// 
+// predicate minHeight(loc x, set s, int height) {
+// | x == 0 => { height == 0 && s =i {} ; emp }
+// | not (x == 0) => {
+//     height =i (heightHere <= heightThere ? heightHere : heightThere)
+//     && r == (heightHere <= heightThere ? x1 : nxt)
+//     // && b == (heightHere <= heightThere ? 1 : 0)
+//       ;
+//     [x, 2] **
+//     x :-> r **
+//     (x+1) :-> nxt **
+//     // cond(r, b, x1, nxt) **   // <- This violates the "separation condition"?
+//     height_leaf_tree(x1, s, heightHere) **
+//     minHeight(nxt, s, heightThere)
+//   }
+// }
 
 predicate cond(loc res, int c, loc t, loc f) {
 | c == 0 => { res :-> f }
@@ -359,16 +359,17 @@ predicate duplicate(loc r, loc x) {
 }
 
 // map (x:) xss
-predicate cons_map(int x, loc xs) {
+predicate cons_map(loc vPtr, loc xs) {
 | xs == null => { emp }
 | not (xs == null) => {
-    s1 =i {x} ++ s
+    s1 =i {v} ++ s
       ;
+    vPtr :-> v **
     sll(head, s1) **
     [xs, 2] **
     xs :-> head **
     (xs+1) :-> nxt **
-    cons_map(x, nxt)
+    cons_map(vPtr, nxt)
   }
 }
 

@@ -1,0 +1,11 @@
+
+void sumScanr(loc x, loc y, loc z, loc w)
+  { x :-> a ** sll(a, s) ** y :-> 0 ** z :-> 0 ** w :-> 0 }
+  { x :-> a ** y :-> inter ** z :-> r ** w :-> scratch **
+    transformation_list(inter, s, postS, pred(v, new) => new == 2*v) **
+    foldI(scratch, s, r, 0, pred(currAcc, v, acc1) => currAcc == v+acc1)
+  }
+{ ?? }
+
+###
+
