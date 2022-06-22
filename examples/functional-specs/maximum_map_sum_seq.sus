@@ -1,0 +1,21 @@
+void map_sum_fn(loc x, loc y)
+  { x :-> 0 ** y :-> a ** list_of_lists(a, s) }
+  { x :-> r ** y :-> a ** map_sum(a, r, s, sumSet) }
+
+void maximum_fn(loc x, loc y)
+  { x :-> 0 ** sll(y, s) }
+  { x :-> r ** maximum(y, r, s) }
+
+void max_map_sum(loc x, loc y, loc z, loc interPtr1, loc interPtr2)
+  { y :-> a ** list_of_lists(a, s) ** z :-> 0 ** x :-> 0 ** interPtr1 :-> 0 ** interPtr2 :-> 0 }
+  { y :-> a ** z :-> b ** x :-> 0 ** interPtr1 :-> inter1 ** interPtr2 :-> inter2 **
+    map_sum(a, inter1, s, sumSet) **
+    maximum(inter2, b, sumSet)
+  }
+
+    // with [maximum_fn(x, map_sum_fn(y))]
+
+{ ?? }
+
+###
+

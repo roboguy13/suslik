@@ -463,7 +463,7 @@ predicate deref_maximum(loc x, int m, set s) {
 }
 
 predicate maximum(loc x, int m, set s) {
-| x == null => { m == 0 ; emp }
+| x == null => { m == 0 && s =i {} ; emp }
 | not (x == null) => {
     m == (m1 <= head ? head : m1) &&
     s =i {head} ++ s1
@@ -561,21 +561,20 @@ predicate scanr(loc x, int acc, int z, set preS, set postS, pred p) {
   }
 }
 
-/*
 predicate scanl(loc x, int acc, int z, set preS, set postS, pred p) {
-| x == null => { preS =i {} && postS =i {} && acc == z ; emp}
+| x == null => { preS =i {} && postS =i {} && result == acc ; emp}
 | not (x == null) => {
     preS =i {v} ++ preS1 &&
-    p(v, acc, r) &&
-    postS =i {r} ++ postS1
+    p(v, acc, nextAcc) &&
+    postS =i {acc} ++ postS1
       ;
     [x, 2] **
-    x :-> v **
+    x :-> acc **
     (x+1) :-> nxt **
 
-    scanl(nxt, r, z, preS1, postS1, p)
+    scanl(nxt, acc, nextAcc, preS1, postS1, p)
+  }
 }
-*/
 
 predicate zipWith(loc x, loc y, set xS, set yS, set zS, pred p) {
 | x == null || y == null => { xS =i {} && yS =i {} && zS =i {} ; emp }
