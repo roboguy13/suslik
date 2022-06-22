@@ -1,0 +1,8 @@
+
+void to_height_bin_tree(loc x, loc y, loc z)
+  { sll(x, s) ** y :-> 0 ** z :-> 0 }
+  { y :-> a ** z :-> height ** height_bin_tree(a, s, height) }
+{ ?? }
+
+###
+
