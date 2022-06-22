@@ -274,6 +274,25 @@ predicate reify(loc x, int i) {
 | true => { [x, 1] ** x :-> i }
 }
 
+// predicate wrapped_height_bin_tree(loc x, set s) {
+// | true => { x :-> height ** height_bin_tree(x, s, height) }
+// }
+
+predicate height_bin_tree(loc x, set s, int height) {
+| x == 0 => { height == 0 && s =i {} ; emp }
+| not (x == 0) => {
+    height == 1 + (heightL <= heightR ? heightR : heightL)
+    && s =i {v} ++ sL ++ sR
+      ;
+    [x, 3] **
+    x :-> v **
+    (x+1) :-> left **
+    (x+2) :-> right **
+    height_bin_tree(left, sL, heightL) **
+    height_bin_tree(right, sR, heightR)
+  }
+}
+
 predicate height_leaf_tree(loc x, set s, int height) {
 | x == 0 => { height == 0 && s =i {} ; emp }
 | not (x == 0) => {
@@ -399,6 +418,16 @@ predicate replicate(int payload, int len, loc x) {
     x :-> payload **
     (x+1) :-> nxt **
     replicate(payload, len1, nxt)
+  }
+}
+
+predicate peano_replicate(int payload, loc x) {
+| x == null => { emp }
+| not (x == null) => {
+    [x, 2] **
+    x :-> payload **
+    (x+1) :-> nxt **
+    peano_replicate(payload, nxt)
   }
 }
 
@@ -530,6 +559,22 @@ predicate scanr(loc x, int acc, int z, set preS, set postS, pred p) {
     scanr(nxt, r, z, preS1, postS1, p)
   }
 }
+
+/*
+predicate scanl(loc x, int acc, int z, set preS, set postS, pred p) {
+| x == null => { preS =i {} && postS =i {} && acc == z ; emp}
+| not (x == null) => {
+    preS =i {v} ++ preS1 &&
+    p(v, acc, r) &&
+    postS =i {r} ++ postS1
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+
+    scanl(nxt, r, z, preS1, postS1, p)
+}
+*/
 
 predicate zipWith(loc x, loc y, set xS, set yS, set zS, pred p) {
 | x == null || y == null => { xS =i {} && yS =i {} && zS =i {} ; emp }
