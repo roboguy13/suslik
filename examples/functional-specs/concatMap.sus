@@ -1,0 +1,8 @@
+
+void concatMap(loc x, loc y)
+  { list_of_lists(x, s) ** y :-> 0 }
+  { y :-> a ** transformation_list(a, s, postS, pred(v, r) => r == 2*v) }
+{ ?? }
+
+###
+
