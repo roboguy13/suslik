@@ -284,8 +284,8 @@ predicate filter_set_gt_7(loc x, set preS, set postS) {
 
     /* && ((v in postS && v > 7) || not (v > 7)) */
 
-    && (not (v > 7)) ==> not (v in postS)
-    && (v > 7)       ==>     (v in postS)
+    && ((not (v > 7)) ==> (not (v in postS)))
+    && ((v > 7)       ==>      (v in postS))
 
     && preS =i {v} ++ preS1
       ;
