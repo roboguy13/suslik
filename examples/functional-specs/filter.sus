@@ -1,6 +1,10 @@
-void filter(loc x)
-  { x :-> w ** unconstrained(w, s) }
-  { x :-> w ** filter_gt_7(w, s, postS) }
+void filter(loc x, loc y)
+  { unconstrained(x, s) ** y :-> 0 }
+  { y :-> r **
+    filter_set_gt_7(x, s, postS) **
+    unconstrained(r, postS)
+  }
 { ?? }
 
 ###
+
