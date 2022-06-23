@@ -73,7 +73,7 @@ object Preprocessor extends SepLogicUtils {
 
     // println(s"newPreds: ${newPreds.map(_.pp)}")
     println(s"done preprocessing for ${goal.spec.pp}")
-    println(s"preds = ${newPreds.map(_.pp)}")
+    // println(s"preds = ${newPreds.map(_.pp)}")
     (List(goal.spec), predMap, funMap, goal.body)
   }
 

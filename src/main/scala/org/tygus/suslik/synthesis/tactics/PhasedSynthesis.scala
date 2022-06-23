@@ -72,7 +72,7 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
     SymbolicExecutionRules.GuidedAlloc,
     SymbolicExecutionRules.GuidedFree,
     SymbolicExecutionRules.Conditional,
-//    SymbolicExecutionRules.GuidedCall, // TODO: Fix this later with new call rule
+   // SymbolicExecutionRules.GuidedCall, // TODO: Fix this later with new call rule
   )
 
   protected def unfoldingPhaseRules: List[SynthesisRule] = List(

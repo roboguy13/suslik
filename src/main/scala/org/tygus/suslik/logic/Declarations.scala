@@ -68,6 +68,19 @@ case class FunSpec(name: Ident, rType: SSLType, params: Formals,
     gamma
   }
 
+  /**
+    * Renames existentials so they wouldn't capture the parameters and `vars`
+    *
+    * @param vars additional contextual variables that can be captures
+    * @return inductive predicate and substitution used
+    */
+  def refreshExistentials(vars: Set[Var], suffix: String = ""): (FunSpec, SubstVar) = {
+    val bound = Set(selfCardVar) ++ vars ++ params.map(_._1).toSet
+    val sbst = refreshVars(existentials.toList, bound, suffix)
+    (this.copy(pre = this.pre.subst(sbst), post = this.post.subst(sbst)), sbst)
+    // (this.copy(clauses = this.clauses.map(c => InductiveClause(c.selector.subst(sbst), c.asn.subst(sbst)))), sbst)
+  }
+
   def existentials() : List[Var] = {
     val params = this.params.map(_._1).toSet
     val formal_params = pre.ghosts(params)
