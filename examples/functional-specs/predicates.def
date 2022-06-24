@@ -280,12 +280,13 @@ predicate filter_set_gt_7(loc x, set preS, set postS) {
 | x == null => { preS =i {} && postS =i {} ; emp }
 | not (x == null) => {
 
-    postS =i (v > 7 ? ({v} ++ postS1) : postS1)
+    /* postS =i (v > 7 ? ({v} ++ postS1) : postS1) */
 
     /* && ((v in postS && v > 7) || not (v > 7)) */
 
-    && ((not (v > 7)) ==> (not (v in postS)))
-    && ((v > 7)       ==>      (v in postS))
+       ((not (v > 7)) ==> (not (v in postS)))
+    && (     (v > 7)  ==>      (v in postS))
+    && (postS <= postS1)
 
     && preS =i {v} ++ preS1
       ;

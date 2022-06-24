@@ -1,0 +1,27 @@
+
+// // map (x:) xss ++ xss
+// void spatial_fold_fn(loc x, loc xss, loc result, loc interPtr)
+//   { x :-> head ** xss -> a ** list_of_lists(xss, s) ** result :-> 0 ** interPtr :-> 0 }
+//   { x :-> head ** xss -> a ** list_of_lists(xss, s) ** result :-> r ** interPtr :-> 0 **
+//     cons_map(
+
+
+
+
+
+
+// (x : xs) ++ ys
+void spatial_fold_fn(loc x, loc xs, loc ys, loc z)
+  { x :-> head ** sll(head, headS) ** xs :-> a ** list_of_lists(a, xS) ** ys :-> b ** list_of_lists(b, yS) ** z :-> 0 }
+  { x :-> head ** xs :-> a ** ys :-> b ** z :-> r **
+    list_of_lists(r, (headS ++ sX) ++ sY) }
+{ ?? }
+
+
+// void spatial_fold_fn(loc x, loc y)
+//   { x :-> a ** sll(a, s) ** y :-> 0 }
+//   { x :-> a ** y :-> r ** spatial_fold_app(a, r, s, acc, {}) }
+// { ?? }
+
+###
+
