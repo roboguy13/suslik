@@ -1,0 +1,8 @@
+should be able to initialize a linked list
+###
+
+{ sll(x, s) }
+  void sll_init(loc x, int v)
+{ s1 <=i {v} ; sll(x, s1) }
+
+###

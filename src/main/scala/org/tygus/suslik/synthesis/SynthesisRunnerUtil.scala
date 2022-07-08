@@ -152,7 +152,6 @@ trait SynthesisRunnerUtil {
     env.stats.start()
     val sresult = synthesizer.synthesizeProc(spec, env, body)
     val duration = env.stats.duration
-
     SynStatUtil.log(testName, duration, params, spec, sresult._1, sresult._2)
 
     def printHotNode(hotNode: AndNode, descs: Int): String =

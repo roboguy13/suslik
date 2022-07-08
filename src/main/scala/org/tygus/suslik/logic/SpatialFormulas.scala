@@ -21,6 +21,9 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
         args.foldLeft(acc)((a, e) => a ++ e.collect(p)) ++
           // [Cardinality] add the cardinality variable
           card.collect(p)
+      case FuncApp(_, args) => 
+        args.foldLeft(acc)((a, e) => a ++ e.collect(p))
+
     }
 
     collector(Set.empty)(this)
@@ -53,6 +56,7 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
     case PointsTo(loc, _, value) => 1 + loc.size + value.size
     case Block(loc, _) => 1 + loc.size
     case SApp(_, args, _, _) => args.map(_.size).sum
+    case FuncApp(_, args) => args.map(_.size).sum
   }
 
   def cost: Int = this match {
@@ -123,6 +127,33 @@ case class Block(loc: Expr, sz: Int) extends Heaplet {
 
   override def unify(that: Heaplet): Option[ExprSubst] = that match {
     case Block(l, s) if sz == s => Some(Map(loc -> l))
+    case _ => None
+  }
+}
+
+/**
+  * func(f(args..))
+  */
+case class FuncApp(fname: Ident, args: Seq[Expr]) extends Heaplet {
+
+  override def resolveOverloading(gamma: Gamma): Heaplet = this.copy(args = args.map(_.resolveOverloading(gamma)))
+
+  override def pp: Ident = {
+    s"[Func, $fname(${args.map(_.pp)})]"
+  }
+
+  def subst(sigma: Map[Var, Expr]): Heaplet = {
+    val newArgs = args.map(_.subst(sigma))
+    this.copy(args = newArgs)
+  }
+
+  //todo: type checking
+  def resolve(gamma: Gamma, env: Environment): Option[Gamma] = Some(gamma)
+
+  override def compare(that: Heaplet) = 1
+
+  override def unify(that: Heaplet): Option[ExprSubst] = that match {
+    case FuncApp(n, a) if n == fname => Some(args.zip(a).toMap)
     case _ => None
   }
 }
@@ -212,8 +243,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
 
   override def pp: Ident = if (chunks.isEmpty) "emp" else {
     def pt(l: List[Heaplet]) = l.map(_.pp).sortBy(x => x)
-
-    List(ptss, apps, blocks).flatMap(pt).mkString(" ** ")
+    List(helper_funcs, ptss, apps, blocks).flatMap(pt).mkString(" ** ")
   }
 
   def blocks: List[Block] = for (b@Block(_, _) <- chunks) yield b
@@ -221,6 +251,8 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
   def apps: List[SApp] = for (b@SApp(_, _, _, _) <- chunks) yield b
 
   def ptss: List[PointsTo] = for (b@PointsTo(_, _, _) <- chunks) yield b
+  
+  def helper_funcs :List[FuncApp] = for (b@FuncApp(_,_) <- chunks) yield b
 
   def subst(sigma: Map[Var, Expr]): SFormula = SFormula(chunks.map(_.subst(sigma)))
 
@@ -268,7 +300,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
   lazy val profile: SProfile = {
     val appProfile = apps.groupBy(_.pred).mapValues(_.length)
     val blockProfile = blocks.groupBy(_.sz).mapValues(_.length)
-    val ptsProfile = ptss.groupBy(_.offset).mapValues(_.length)
+    val ptsProfile = List.concat(ptss,helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
     SProfile(appProfile, blockProfile, ptsProfile)
   }
 

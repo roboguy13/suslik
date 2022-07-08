@@ -1,14 +1,15 @@
-
-predicate foldrose(loc x, set s, int acc, int z, pred p) {
+predicate foldrose_1(loc x, set s, int acc, int z) {
 |  x == null => { acc == z; emp }
 |  not (x == null) => {
-    p(acc, v, acc1) && s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> b ** foldbuds(b, s1, acc1, z, p) }
+    acc == v + acc1 && s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> b ** foldbuds_1(b, s1, acc1, z) }
 }
-predicate foldbuds(loc x, set s, int acc, int z, pred p) {
+predicate foldbuds_1(loc x, set s, int acc, int z) {
 |  x == null => { acc == z; emp }
-|  not (x == null) => { p(acc, acc1, acc2) && s == s1 ++ s2 ;
-[x, 2] ** x :-> r ** foldrose(r, s1, acc1, z, p) ** (x + 1) :-> nxt ** foldbuds(nxt, s2, acc2, z, p) }
+|  not (x == null) => { acc == acc1 + acc2 && s == s1 ++ s2 ;
+[x, 2] ** x :-> r ** foldrose_1(r, s1, acc1, z) ** (x + 1) :-> nxt ** foldbuds_1(nxt, s2, acc2, z) }
 }
+
+
 
 
 predicate rose_tree(loc x, set s) {

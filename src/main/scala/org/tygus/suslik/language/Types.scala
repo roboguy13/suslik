@@ -37,6 +37,11 @@ case object PredType extends SSLType {
 
 }
 
+case object FuncType extends SSLType {
+  override def pp: String = "func"
+
+}
+
 case object BoolType extends SSLType {
   override def pp: String = "bool"
 

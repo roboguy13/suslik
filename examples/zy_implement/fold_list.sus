@@ -1,0 +1,8 @@
+# -o 2 -c 2
+
+void foldArg(loc x, loc y, loc z)
+  { x :-> x1 ** y :-> 0 ** unconstrained(x1, s) ** z :-> 1}
+  { x :-> x1 ** y :-> y1 ** fold_list(x1, s, y1, z) }
+{ ?? }
+
+###

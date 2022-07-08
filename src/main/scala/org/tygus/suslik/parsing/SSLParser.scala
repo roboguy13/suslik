@@ -40,6 +40,7 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
       | "set" ^^^ IntSetType
       | "interval" ^^^ IntervalType
       | "pred" ^^^ PredType
+      | "func" ^^^ FuncType
       | "void" ^^^ VoidType)
 
   def formal: Parser[(Var, SSLType)] = typeParser ~ ident ^^ { case a ~ b => (Var(b), a) }
@@ -152,6 +153,9 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
 
   def heaplet: Parser[Heaplet] = (
     (identWithOffset <~ ":->") ~ expr ^^ { case (a, o) ~ b => PointsTo(Var(a), o, b) }
+      ||| "func" ~> ident ~ ("(" ~> rep1sep(expr, ",") <~ ")") ^^ {
+        case name ~ args => FuncApp(name, args)
+      }
       ||| "[" ~> (ident ~ ("," ~> numericLit)) <~ "]" ^^ { case a ~ s => Block(Var(a), Integer.parseInt(s)) }
       ||| ident ~ ("(" ~> rep1sep(purePredAbstraction ||| spatialPredAbstraction ||| expr, ",") <~ ")") ~ opt("<" ~> expr <~ ">") ^^ {
       case name ~ args ~ v => SApp(name, args, PTag(), v.getOrElse(Var(getTotallyFreshName(cardinalityPrefix))))

@@ -1,6 +1,6 @@
 void iterN1(loc x, loc y)
   {unconstrained(x,S) ** y :-> seed0  }
-  {iterN(x, S1, seedn, pred(v1, v) => v1 + 1 == v) ** y :-> seedn}
+  {iterN(x, S1, seedn, pred(v1, v) => v1 * 2 == v) ** y :-> seedn}
 { ?? }
 
 ###

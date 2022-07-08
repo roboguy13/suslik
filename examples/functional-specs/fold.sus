@@ -3,9 +3,9 @@
 
 
 
-void foldArg(loc x)
-  { x :-> x1 ** (x+1) :-> 0 ** unconstrained(x1, s) }
-  { x :-> x1 ** (x+1) :-> acc ** foldI(x1, s, acc, 0, pred(currAcc, v, acc1) => currAcc == (acc1+v)) }
+void foldArg(loc x, loc y)
+  {y :-> 0 ** unconstrained(x, s) }
+  {y :-> acc ** foldI(x, s, acc, 2, pred(currAcc, v, acc1) => currAcc == (acc1+v+1)) }
 { ?? }
 
 ###

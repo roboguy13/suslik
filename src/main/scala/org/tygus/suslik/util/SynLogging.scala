@@ -209,6 +209,7 @@ object SynStatUtil {
       case Statements.Free(_) => 1
       case Statements.Load(_,_,_,_) => 1
       case Statements.Store(_,_,_) => 1
+      case Statements.Func_Call(_,_) => 1
       case Statements.Call(_,_,_) => 1
       case Statements.SeqComp(s1, s2) => countInner(s1) + countInner(s2)
       case Statements.If(_, tb, eb) => 1 + countInner(tb) + countInner(eb)

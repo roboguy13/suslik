@@ -1,0 +1,10 @@
+#
+
+
+void foldArg(loc x, loc result, loc start)
+{x :-> x0 ** result :-> 0 ** unconstrained(x0, s)}
+{x :-> x0 ** result :-> result0 ** fold_loc(x0, s, result0, start) }
+
+{ ?? }
+
+###

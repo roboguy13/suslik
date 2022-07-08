@@ -43,6 +43,10 @@ object Statements {
             val f = if (off <= 0) from.pp else s"(${from.pp} + $off)"
             // Do not print the type annotation
             builder.append(s"let ${to.pp} = *$f;\n")
+          case Func_Call(f, args) => 
+            builder.append(mkSpaces(offset))
+            val function_call = s"${f}(${args.map(_.pp).mkString(", ")});\n"
+            builder.append(function_call)
           case Call(fun, args, _) =>
             builder.append(mkSpaces(offset))
             val function_call = s"${fun.pp}(${args.map(_.pp).mkString(", ")});\n"
@@ -84,6 +88,8 @@ object Statements {
           acc
         case Free(x) =>
           acc ++ x.collect(p)
+        case Func_Call(f, args) => 
+          acc ++ args.flatMap(_.collect(p)).toSet
         case Call(fun, args, _) =>
           acc ++ fun.collect(p) ++ args.flatMap(_.collect(p)).toSet
         case SeqComp(s1,s2) =>
@@ -117,6 +123,7 @@ object Statements {
         assert(!sigma.keySet.contains(x) || sigma(x).isInstanceOf[Var])
         Free(x.subst(sigma).asInstanceOf[Var])
       }
+      case Func_Call(f, args) => Func_Call(f, args.map(_.subst(sigma)))
       case Call(fun, args, companion) => Call(fun, args.map(_.subst(sigma)), companion)
       case SeqComp(s1, s2) => SeqComp(s1.subst(sigma), s2.subst(sigma))
       case If(cond, tb, eb) => If(cond.subst(sigma), tb.subst(sigma), eb.subst(sigma))
@@ -133,6 +140,7 @@ object Statements {
       case Load(to, _, from, _) => 1 + to.size + from.size
       case Malloc(to, _, _) => 1 + to.size
       case Free(x) => 1 + x.size
+      case Func_Call(_, args) => 1 + args.map(_.size).sum
       case Call(_, args, _) => 1 + args.map(_.size).sum
       case SeqComp(s1,s2) => s1.size + s2.size
       case If(cond, tb, eb) => 1 + cond.size + tb.size + eb.size
@@ -209,6 +217,7 @@ object Statements {
         body.resolveOverloading(gamma)
       )
       case cmd:Store => cmd.copy(e = cmd.e.resolveOverloading(gamma))
+      case cmd:Func_Call => cmd.copy(args = cmd.args.map({e => e.resolveOverloading(gamma)}))
       case cmd:Call => cmd.copy(args = cmd.args.map({e => e.resolveOverloading(gamma)}))
       case other => other
     }
@@ -245,6 +254,9 @@ object Statements {
 
   // *to.offset = e
   case class Store(to: Var, offset: Int, e: Expr) extends Statement
+
+  // f(args) --helper function
+  case class Func_Call(f: Ident, args: Seq[Expr]) extends Statement
 
   // f(args)
   case class Call(fun: Var, args: Seq[Expr], companion: Option[GoalLabel]) extends Statement

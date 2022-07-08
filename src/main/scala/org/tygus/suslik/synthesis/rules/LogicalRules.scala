@@ -141,13 +141,21 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
     }
   }
 
-  object FrameUnfolding extends Frame with UnfoldingPhase
+  object FrameUnfolding extends Frame with UnfoldingPhase{
+    override def toString: String = "FrameUnfolding"
+  }
 
-  object FrameUnfoldingFinal extends Frame with UnfoldingPhase with InvertibleRule
+  object FrameUnfoldingFinal extends Frame with UnfoldingPhase with InvertibleRule{
+    override def toString: String = "FrameUnfoldingFinal"
+  }
 
-  object FrameBlock extends Frame with BlockPhase with InvertibleRule
+  object FrameBlock extends Frame with BlockPhase with InvertibleRule{
+    override def toString: String = "FrameBlock"
+  }
 
-  object FrameFlat extends Frame with FlatPhase with InvertibleRule
+  object FrameFlat extends Frame with FlatPhase with InvertibleRule{
+    override def toString: String = "FrameFlat"
+  }
 
 
   /*

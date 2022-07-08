@@ -50,6 +50,45 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
           val newPost = Assertion(post.phi, goal.post.sigma - hr)
           val subGoal = goal.spawnChild(newPre, newPost)
           val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl, hr)) =>
+          ruleAssert(assertion = false, s"Write rule matched unexpected heaplets ${hl.pp} and ${hr.pp}")
+          Nil
+      }
+    }
+
+  }
+
+  object FuncCall extends SynthesisRule with GeneratesCode with InvertibleRule {
+
+    override def toString: Ident = "FuncCall"
+
+    def apply(goal: Goal): Seq[RuleResult] = {
+      val pre = goal.pre
+      val post = goal.post
+
+      // Heaplets have no ghosts zytodo: check
+      def noGhosts: Heaplet => Boolean = {
+        case FuncApp(_, init :+ last) => !goal.isGhost(last.asInstanceOf[Var]) && init.forall(e => e.vars.forall(v => !goal.isGhost(v)))
+        case _ => false
+      }
+
+      // When do two heaplets match
+      def isMatch(hl: Heaplet, hr: Heaplet) = callable(hl)(hr) && noGhosts(hr)
+
+      findMatchingHeaplets(_ => true, isMatch, goal.pre.sigma, goal.post.sigma) match {
+        case None => Nil
+        case Some((hl@PointsTo(_,_,_), hr@FuncApp(f,args))) =>
+          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
+          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val subGoal = goal.spawnChild(newPre, newPost)
+          val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl@FuncApp(_,_), hr@FuncApp(f,args))) =>
+          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
+          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val subGoal = goal.spawnChild(newPre, newPost)
+          val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
 
           List(RuleResult(List(subGoal), kont, this, goal))
         case Some((hl, hr)) =>

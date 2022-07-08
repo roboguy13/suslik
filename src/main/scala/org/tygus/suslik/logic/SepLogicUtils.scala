@@ -72,6 +72,20 @@ trait SepLogicUtils extends PureLogicUtils {
     }
   }
 
+  def callable(hl: Heaplet): Heaplet => Boolean = hr => {
+    hl match {
+      case PointsTo(xl, 0, _) => hr match {
+        case FuncApp(_, initr :+ lastr) => lastr == xl
+        case _ => false
+      }
+      case FuncApp(_, initl :+ lastl) => hr match {
+        case FuncApp(_, initr :+ lastr) => lastr == lastl
+        case _ => false
+      }
+      case _ => false
+    }
+  }
+
 
   /**
     * Find a block satisfying a predicate, and all matching chunks.
@@ -84,7 +98,7 @@ trait SepLogicUtils extends PureLogicUtils {
       case None => None
       case Some(h@Block(x@Var(_), sz)) =>
         val ptsMb = for (off <- 0 until sz) yield
-          findHeaplet(h => sameLhs(PointsTo(x, off, IntConst(0)))(h) && pPts(h), sigma)
+          findHeaplet(h => (sameLhs(PointsTo(x, off, IntConst(0)))(h) || callable(PointsTo(x, off, IntConst(0)))(h) ) && pPts(h), sigma)
 //        Some((h, pts.flatten))
         val pts = ptsMb.flatten
         if (pts.length == sz) Some((h, pts))
@@ -174,6 +188,7 @@ trait SepLogicUtils extends PureLogicUtils {
           _pred == pred && args.length == _args.length
         case _ => false
       }
+      //zytodo
     }
 
     def goFind(lil: List[Heaplet], larg: List[Heaplet], acc: List[List[Heaplet]]): List[List[Heaplet]] = lil match {

@@ -37,3 +37,11 @@ predicate zip(loc a, loc b, loc ret, set aS, set bS, set S){
 }
 
 }
+
+predicate fold_list(loc x, set s, loc store, loc z, pred p) {
+|  x == null => { acc == vz; store :-> acc ** (store + 1) :-> null ** z :-> vz }
+|  not (x == null) => {
+    p(acc, v) && s =i {v} ++ s1
+      ; store :-> acc ** (store + 1) :-> store_nxt **
+    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** fold_list(nxt, s1, store_nxt, z, p) }
+}

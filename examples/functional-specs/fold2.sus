@@ -1,0 +1,7 @@
+
+void foldArg(loc x, loc y)
+  { y :-> 0 ** foldI(x, s, acc, 2, pred(currAcc, v, acc1) => currAcc == (acc1+v+1)) }
+  { y :-> acc }
+{ ?? }
+
+###

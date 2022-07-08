@@ -179,6 +179,14 @@ predicate foldI(loc x, set s, int acc, int z, pred p) {
     [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldI(nxt, s1, acc1, z, p) }
 }
 
+predicate foldi(loc x, set s, int acc, loc z, pred p) {
+|  x == null => { acc == vz; z :-> vz }
+|  not (x == null) => {
+    p(acc, v, acc1) && s =i {v} ++ s1
+      ;
+    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldi(nxt, s1, acc1, z, p) }
+}
+
 predicate foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
 |  x == null       => { acc == z && s =i {} ; emp }
 |  not (x == null) => {
