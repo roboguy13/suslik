@@ -1,0 +1,13 @@
+// *** New thing: Uses scanr
+
+void running_sum(loc x, loc y, loc z)
+  { x :-> a ** sll(a, preS) ** y :-> 0 ** z :-> 0 }
+  { x :-> a ** y :-> r ** z :-> acc **
+    sll(r,
+           // {acc} ++     // <- Does not work with this
+      postS) **
+    scanr(a, acc, 0, preS, postS, pred(v, acc, next) => acc == v+next) }
+{ ?? }
+
+###
+

@@ -114,7 +114,8 @@ class LambdaLiftGoalContainer(goal: GoalContainer) {
 
     val newSpec = lambdaLiftFunSpec.transform()
 
-    (new GoalContainer(newSpec, goal.body), lambdaLiftFunSpec.freeVarMap)
+    (goal.copy(spec = newSpec), lambdaLiftFunSpec.freeVarMap)
+    // (new GoalContainer(newSpec, goal.body), lambdaLiftFunSpec.freeVarMap)
   }
 }
 

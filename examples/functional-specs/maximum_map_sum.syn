@@ -1,0 +1,9 @@
+
+###
+
+{ x :-> a ** list_of_lists(a, s) ** y :-> 0 }
+void maximum_map_sum_fn(loc x, loc y)
+{ x :-> a ** y :-> r ** maximum_map_sum(a, s, r) }
+
+###
+

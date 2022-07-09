@@ -1,0 +1,9 @@
+
+###
+
+{ sll(x, s) ** y :-> 0 }
+void maximum_fn(loc x, loc y)
+{ y :-> r ** maximum(x, r, s) }
+
+###
+

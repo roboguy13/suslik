@@ -1,0 +1,13 @@
+// A very simplified version of filter
+
+// ys = if x > 7 then x:xs else xs
+void conditional_cons(loc x, loc xs, loc ys)
+  { x :-> v ** xs :-> a ** sll(a, s) ** ys :-> 0 }
+  { newS =i ((v > 7) ? ({v} + s) : s)
+      ;
+    x :-> v ** xs :-> a ** ys :-> b **
+    sll(b, newS) }
+{ ?? }
+
+###
+

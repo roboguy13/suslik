@@ -1,13 +1,25 @@
-void mapTimes2(loc x, loc y, loc intermediateArg)
-  { x :-> w1 ** unconstrained(w1, preS) }
-  { x :-> w1 ** constrained_list(w1, preS, pred(v, r) => r == 2*v) }
-{
-  let w = *x;
-  if (w == 0) {
-  } else {
-    ??
-  }
-}
+    void mapTimes2(loc x, loc y)
+      { x :-> w1 ** sll(w1, preS) }
+      { x :-> w1 ** constrained_list(w1, preS, pred(v, r) => r == 2*v) }
+    {
+      let w = *x;
+      if (w == 0) {
+      } else {
+        ??
+      }
+    }
 
 ###
+
+    void list_sum(loc x, loc y)
+      { x :-> a ** y :-> 0 ** unconstrained(a, s) }
+      { x :-> a ** y :-> acc ** foldI(a, s, acc, 0, pred(currAcc, v, acc1) => currAcc == (acc1+v)) }
+    { ?? }
+
+    void times2ThenSum(loc x, loc y, loc z)
+      { x :-> a ** sll(a, s) ** y :-> 0 ** z :-> 0 }
+      { x :-> a ** z :-> r ** constrained_list(a, s, pred(new, old) => new == old*v) **
+        list_sum(y, z)
+      }
+    { ?? }
 

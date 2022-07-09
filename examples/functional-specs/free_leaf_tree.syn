@@ -1,0 +1,10 @@
+# -o 2
+
+###
+
+{ wrapped_leaf_tree(x, s) }
+void free_leaf_tree(loc x)
+{ emp }
+
+###
+

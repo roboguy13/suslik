@@ -1,0 +1,24 @@
+
+// void running_sum(loc x, loc y, loc z)
+//   { x :-> a ** sll(a, preS) ** y :-> 0 ** z :-> 0 }
+//   { x :-> a ** y :-> r ** z :-> acc **
+//     sll(r, postS) **
+//     scanr(a, acc, 0, preS, postS, pred(v, newAcc, next) => newAcc == v+next) }
+// 
+// void foldArg(loc x)
+//   { x :-> x1 ** (x+1) :-> 0 ** unconstrained(x1, s) }
+//   { x :-> x1 ** (x+1) :-> acc **
+//     foldI(x1, s, acc, 0, pred(currAcc, v, acc1) => currAcc == (acc1+v)) }
+
+void sumScanr(loc x, loc y, loc z, loc w, loc p)
+  { x :-> a ** sll(a, s) ** y :-> 0 ** z :-> 0 ** w :-> 0 ** p :-> 0 }
+  { x :-> a ** y :-> inter ** z :-> 0 ** w :-> scratch ** p :-> acc **
+    scanr(a, inter, 0, s, postS, pred(v, currAcc, acc1) => currAcc == v+acc1) **
+    foldI(scratch, postS, acc, 0, pred(currAcc, v, acc1) => currAcc == v+acc1)
+  }
+
+
+{ ?? }
+
+###
+

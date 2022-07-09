@@ -1,0 +1,70 @@
+// void maximum_fn(loc x, loc y)
+// { sll(x, s) ** y :-> 0 }
+// { y :-> r ** maximum(x, r, s) }
+
+
+void maximum_fn(loc x, loc y)
+  { sll(x, s) ** y :-> 0 }
+  { y :-> r ** maximum(x, r, s) }
+{
+  if (x == 0) {
+  } else {
+    let v = *x;
+    let n = *(x + 1);
+    maximum_fn(n, y);
+    ??
+  }
+}
+
+//    void add_one(loc x, loc y)
+//      { x :-> a ** y :-> y0 }
+//      { x :-> a ** y :-> (a+1) }
+//      // { b == a + 1 ; x :-> a ** y :-> b }
+//
+//
+//   void get_odd(loc x, loc y, loc z)
+//     { x :-> a ** y :-> y0 ** z :-> z0 }
+//     { b == a*2 && c == b + 1 ; x :-> a ** y :-> b ** z :-> c }
+//   {
+//     ??
+//
+//     // inlined add_one(y, z):
+//     let temp = *y;
+//     *x = temp + 1;
+//    ??
+//   }
+
+###
+
+//    void add_one(loc x, loc y)
+//      { x :-> a ** y :-> y0 }
+//      { x :-> a ** y :-> (a+1) }
+//    { ?? }
+//      // { b == a + 1 ; x :-> a ** y :-> b }
+
+
+   void get_odd(loc x, loc y, loc z)
+     { x :-> a ** y :-> y0 ** z :-> z0 }
+     { b == a*2 && c == b + 1 ; x :-> a ** y :-> b ** z :-> c }
+   {
+     let w = *x;
+     *y = w * 2;
+
+     // inlined add_one(y, z):
+     let temp = *y;
+     *x = temp + 1;
+    // ??
+   }
+
+// {
+//   
+//   add_one(y, z);
+// }
+
+###
+
+    void get_odd(loc x, loc y, loc z)
+      { x :-> a ** y :-> 0 ** z :-> 0 }
+      { b == 2*a ; x :-> a ** y :-> b ** add_one(y, z) }
+    { ?? }
+

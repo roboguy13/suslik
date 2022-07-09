@@ -14,6 +14,8 @@ import org.tygus.suslik.language.PredType
 
 import org.tygus.suslik.synonym.ExpandSynonyms
 
+import org.tygus.suslik.compile._
+
 import scala.collection.immutable.Set
 import scala.collection.mutable.ListBuffer
 
@@ -45,7 +47,11 @@ object Preprocessor extends SepLogicUtils {
 
     val goalElimAbs = new GoalContainerEliminateAbstractions()
 
-    val (goal, generatedPreds) = goalElimAbs.transform(goal0, predMap0)
+    val (goal1, generatedPreds) = goalElimAbs.transform(goal0, predMap0)
+
+    val goal = new CompileWith().compileWith(goal1)
+
+    println(s"Compiled goal body:\n{\n${goal.body.pp}\n}")
 
     val funSpecElimAbs = new EliminateAbstractions[FunSpec, FunSpec, FunSpec](new SpecializationLists())
 
@@ -67,7 +73,7 @@ object Preprocessor extends SepLogicUtils {
 
     // println(s"newPreds: ${newPreds.map(_.pp)}")
     println(s"done preprocessing for ${goal.spec.pp}")
-    println(s"preds = ${newPreds.map(_.pp)}")
+    // println(s"preds = ${newPreds.map(_.pp)}")
     (List(goal.spec), predMap, funMap, goal.body)
   }
 

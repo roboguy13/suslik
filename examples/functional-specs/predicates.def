@@ -49,6 +49,19 @@ predicate sll(loc x, set s) {
   }
 }
 
+predicate sll_len(loc x, set s, int len) {
+| x == 0 => { s =i {} && len == 0 ; emp }
+| not (x == 0) => {
+    s =i {v} + s1 &&
+    len == 1 + len1
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    sll_len(nxt, s1, len1)
+  }
+}
+
 predicate snoc_list(loc x, set s) {
 | x == null => { s =i {} ; emp }
 | not (x == null) => { s =i {v} ++ s1 ; [x, 2] ** x :-> nxt ** (x+1) :-> v ** snoc_list(nxt, s1) }
@@ -101,9 +114,10 @@ predicate subsets(loc x, set inS, set outS) {
 }
 
 predicate take(int n, loc x, set s) {
-| n == 0 || x == null => { s =i {} ; emp }
-| not (n == 0 || x == null) => { s =i {v} ++ s1
-    ;
+| n == 0 => { s =i {} ; emp }
+| not (n == 0) => {
+    s =i {v} ++ s1
+      ;
     [x, 2] **
     x :-> v **
     (x+1) :-> nxt **
@@ -179,12 +193,19 @@ predicate foldI(loc x, set s, int acc, int z, pred p) {
     [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldI(nxt, s1, acc1, z, p) }
 }
 
-predicate foldi(loc x, set s, int acc, loc z, pred p) {
-|  x == null => { acc == vz; z :-> vz }
-|  not (x == null) => {
-    p(acc, v, acc1) && s =i {v} ++ s1
+predicate spatial_fold_app(loc x, loc result, set s, set acc, set z) {
+| x == null => { acc =i {} ; emp }
+| not (x == null) => {
+    acc =i {v} ++ acc1 && s =i {v} ++ s1
       ;
-    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldi(nxt, s1, acc1, z, p) }
+    [x, 2] **
+    x :-> v **
+    (x + 1) :-> nxt **
+
+    list_of_lists(result, s1) **
+
+    spatial_fold_app(nxt, resultNxt, s1, acc1, z)
+  }
 }
 
 predicate foldMap(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
@@ -224,12 +245,56 @@ predicate zipped(loc x, loc y, loc r, set lefts, set rights) {
   }
 }
 
+/*
 predicate filter_gt_7(loc x, set preS, set postS) {
 | x == null => { preS =i {} && postS =i {} ; emp }
-| not (x == null) && preS =i {v} ++ preS1 && postS =i {v} ++ postS1 && v > 7 => { 
+| not (x == null) && preS =i {v} ++ preS1 && postS =i {v} ++ postS1 && v > 7 =>
+  { 
     [x, 2] ** x :-> v ** (x+1) :-> nxt ** filter_gt_7(nxt, preS1, postS1)
-    }
-| not (x == null) && preS =i {v} ++ preS1 && not (v > 7) => { [x, 1] ** x :-> nxt ** filter_gt_7(nxt, preS1, postS) }
+  }
+| not (x == null) && preS =i {v} ++ preS1 && not (v > 7) =>
+  {
+    filter_gt_7(x, preS1, postS)
+  }
+}
+*/
+
+/*
+predicate filter_set_gt_7(loc x, set preS, set postS) {
+| x == null => { preS =i {} && postS =i {} ; emp }
+| not (x == null) => {
+    postS =i (v > 7 ? ({v} ++ postS1) : postS1)
+    // (v in postS) == (v > 7)
+    // && postS1 <= postS
+    && preS =i {v} ++ preS1
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    filter_set_gt_7(nxt, preS1, postS1)
+  }
+}
+*/
+
+predicate filter_set_gt_7(loc x, set preS, set postS) {
+| x == null => { preS =i {} && postS =i {} ; emp }
+| not (x == null) => {
+
+    /* postS =i (v > 7 ? ({v} ++ postS1) : postS1) */
+
+    /* && ((v in postS && v > 7) || not (v > 7)) */
+
+       ((not (v > 7)) ==> (not (v in postS)))
+    && (     (v > 7)  ==>      (v in postS))
+    && (postS <= postS1)
+
+    && preS =i {v} ++ preS1
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    filter_set_gt_7(nxt, preS1, postS1)
+  }
 }
 
 // synonym foldMap2(loc x, set s, int acc, int z, pred mapFn, pred foldFn) {
@@ -282,38 +347,58 @@ predicate reify(loc x, int i) {
 | true => { [x, 1] ** x :-> i }
 }
 
-predicate height_leaf_tree(loc x, set s, int height) {
+// predicate wrapped_height_bin_tree(loc x, set s) {
+// | true => { x :-> height ** height_bin_tree(x, s, height) }
+// }
+
+predicate height_bin_tree(loc x, set s, int height) {
 | x == 0 => { height == 0 && s =i {} ; emp }
 | not (x == 0) => {
-    height =i (heightLeft <= heightRight ? heightRight : heightLeft) + 1 &&
-    s =i sLeft ++ sRight
+    height == 1 + (heightL <= heightR ? heightR : heightL)
+    && s =i {v} ++ sL ++ sR
       ;
-    [x, 2] **
-    x :-> left **
-    (x+1) :-> right **
-    height_leaf_tree(left, sLeft, heightLeft) **
-    height_leaf_tree(right, sRight, heightRight)
+    [x, 3] **
+    x :-> v **
+    (x+1) :-> left **
+    (x+2) :-> right **
+    height_bin_tree(left, sL, heightL) **
+    height_bin_tree(right, sR, heightR)
   }
 }
 
-predicate wrapped_height_leaf_tree(loc x, set s) {
-| true => { x :-> height ** height_leaf_tree(x, s, height) }
-}
-
-predicate minHeight(loc x, set s, int height) {
-| x == 0 => { height == 0 && s =i {} ; emp }
-| not (x == 0) => {
-    height =i (heightHere <= heightThere ? heightHere : heightThere)
-    && b == (heightHere <= heightThere ? 1 : 0)
-      ;
-    [x, 2] **
-    x :-> r **
-    (x+1) :-> nxt **
-    // cond(r, b, x1, nxt) **   // <- This violates the "separation condition"
-    height_leaf_tree(x1, s, heightHere) **
-    minHeight(nxt, s, heightThere)
-  }
-}
+// predicate height_leaf_tree(loc x, set s, int height) {
+// | x == 0 => { height == 0 && s =i {} ; emp }
+// | not (x == 0) => {
+//     height =i (heightLeft <= heightRight ? heightRight : heightLeft) + 1 &&
+//     s =i sLeft ++ sRight
+//       ;
+//     [x, 2] **
+//     x :-> left **
+//     (x+1) :-> right **
+//     height_leaf_tree(left, sLeft, heightLeft) **
+//     height_leaf_tree(right, sRight, heightRight)
+//   }
+// }
+// 
+// predicate wrapped_height_leaf_tree(loc x, set s) {
+// | true => { x :-> height ** height_leaf_tree(x, s, height) }
+// }
+// 
+// predicate minHeight(loc x, set s, int height) {
+// | x == 0 => { height == 0 && s =i {} ; emp }
+// | not (x == 0) => {
+//     height =i (heightHere <= heightThere ? heightHere : heightThere)
+//     && r == (heightHere <= heightThere ? x1 : nxt)
+//     // && b == (heightHere <= heightThere ? 1 : 0)
+//       ;
+//     [x, 2] **
+//     x :-> r **
+//     (x+1) :-> nxt **
+//     // cond(r, b, x1, nxt) **   // <- This violates the "separation condition"?
+//     height_leaf_tree(x1, s, heightHere) **
+//     minHeight(nxt, s, heightThere)
+//   }
+// }
 
 predicate cond(loc res, int c, loc t, loc f) {
 | c == 0 => { res :-> f }
@@ -347,16 +432,20 @@ predicate duplicate(loc r, loc x) {
 }
 
 // map (x:) xss
-predicate cons_map(int x, loc xs) {
+predicate cons_map(loc vPtr, loc xs, int v) {
 | xs == null => { emp }
 | not (xs == null) => {
-    s1 =i {x} ++ s
+    s1 =i {v} ++ s
       ;
+    vPtr :-> v **
+
     sll(head, s1) **
+
     [xs, 2] **
     xs :-> head **
     (xs+1) :-> nxt **
-    cons_map(x, nxt)
+
+    cons_map(vPtr, nxt, v)
   }
 }
 
@@ -409,10 +498,22 @@ predicate replicate(int payload, int len, loc x) {
   }
 }
 
-predicate map_sum(loc x, loc r, set resultSet) {
-| x == null => { r == null ; emp }
+predicate peano_replicate(int payload, loc x) {
+| x == null => { emp }
 | not (x == null) => {
-    resultSet =i {a} + resultSet1
+    [x, 2] **
+    x :-> payload **
+    (x+1) :-> nxt **
+    peano_replicate(payload, nxt)
+  }
+}
+
+// map sum xss
+predicate map_sum(loc x, loc r, set fullS, set sumSet) {
+| x == null => { r == null && fullS =i {} && sumSet =i {} ; emp }
+| not (x == null) => {
+    fullS =i s ++ fullS1 &&
+    sumSet =i {a} ++ sumSet1
       ;
     [x, 2] **
     x :-> head **
@@ -424,7 +525,45 @@ predicate map_sum(loc x, loc r, set resultSet) {
 
     list_sum(head, s, a, 0) **
 
-    map_sum(tail, nxt, resultSet1)
+    map_sum(tail, nxt, fullS1, sumSet1)
+  }
+}
+
+// sum (head xss)
+predicate sum_head(loc x, loc r, set s) {
+| true => { emp }
+}
+
+predicate deref_maximum(loc x, int m, set s) {
+| true => { x :-> y ** maximum(y, m, s) }
+}
+
+predicate maximum(loc x, int m, set s) {
+| x == null => { m == 0 && s =i {} ; emp }
+| not (x == null) => {
+    m == (m1 <= head ? head : m1) &&
+    s =i {head} ++ s1
+      ;
+    [x, 2] **
+    x :-> head **
+    (x+1) :-> tail **
+    maximum(tail, m1, s1)
+  }
+}
+
+predicate maximum_map_sum(loc x, set fullSet, int m) {
+| x == null => { m == 0 && fullSet =i {} ; emp }
+| not (x == null) => {
+    fullSet =i s ++ fullSet1 &&
+    m == (m1 <= a ? a : m1)
+      ;
+    [x, 2] **
+    x :-> head **
+    (x+1) :-> tail **
+
+    list_sum(head, s, a, 0) **
+
+    maximum_map_sum(tail, fullSet, m1)
   }
 }
 
@@ -480,6 +619,80 @@ predicate spatial_append(loc r, loc x, loc y) {
     sll(x, xS_internal) **
     sll(y, yS_internal) **
     sll(r, xS_internal ++ yS_internal)
+  }
+}
+
+predicate scanr(loc x, int acc, int z, set preS, set postS, pred p) {
+| x == null => { preS =i {} && postS =i {} && acc == z ; emp}
+| not (x == null) => {
+    preS =i {v} ++ preS1 &&
+    p(v, acc, r) &&
+    postS =i {r} ++ postS1
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+
+    scanr(nxt, r, z, preS1, postS1, p)
+  }
+}
+
+predicate scanl(loc x, int acc, int z, set preS, set postS, pred p) {
+| x == null => { preS =i {} && postS =i {} && result == acc ; emp}
+| not (x == null) => {
+    preS =i {v} ++ preS1 &&
+    p(v, acc, nextAcc) &&
+    postS =i {acc} ++ postS1
+      ;
+    [x, 2] **
+    x :-> acc **
+    (x+1) :-> nxt **
+
+    scanl(nxt, acc, nextAcc, preS1, postS1, p)
+  }
+}
+
+/* predicate zipWith(loc result, set xS, set yS, set resultSet, pred p) { */
+/* | result == null => { xS =i {} && yS =i {} && resultSet =i {} ; emp } */
+/* | not (result == null) => { */
+/*     xS  */
+/*   } */
+/* } */
+/*  */
+
+predicate zipWith(loc x, set xS, set yS, set zS) {
+| x == null => { xS =i {} && yS =i {} && zS =i {} ; emp }
+| not (x == null) => {
+    xS =i {xV} ++ xS1 &&
+    yS =i {yV} ++ yS1 &&
+    zS =i {xV + yV} ++ zS1
+
+    // zV == xV + yV
+    // p(xV, yV, zV)
+      ;
+    [x, 2] **
+    x :-> zV **
+    (x+1) :-> xNxt **
+
+    zipWith(xNxt, xS1, yS1, zS1)
+  }
+}
+
+// map (:[])
+predicate map_single(loc x, set s) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i {v} ++ s1
+      ;
+    [x, 2] **
+    x :-> head **
+    (x+1) :-> nxt **
+
+    [head, 2] **
+    head :-> v **
+    (head+1) :-> 0 **
+
+    map_single(nxt, s1)
   }
 }
 

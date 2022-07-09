@@ -64,6 +64,8 @@ object SMTSolving extends Core
 
   def emptySetSymbol = SimpleQId(SymbolId(SSymbol("empty")))
 
+  // def iteSymbol = IfThenElseTerm
+
   def setInsertSymbol = SimpleQId(SymbolId(SSymbol("insert")))
 
   def setUnionSymbol = SimpleQId(SymbolId(SSymbol("union")))
@@ -190,6 +192,13 @@ object SMTSolving extends Core
       val l = convertSetExpr(left)
       val r = convertSetExpr(right)
       new TypedTerm[SetTerm, Term](l.typeDefs ++ r.typeDefs, QIdAndTermsTerm(setIntersectSymbol, List(l.termDef, r.termDef)))
+    }
+    case IfThenElse(cond, left, right) => {
+      val c = convertBoolExpr(cond)
+      val l = convertSetExpr(left)
+      val r = convertSetExpr(right)
+      c.ite(l, r)
+      // new TypedTerm[SetTerm, Term](l.typeDefs ++ r.typeDefs, QIdAndTermsTerm(iteSymbol, List(l.termDef, r.termDef)))
     }
     case _ => throw SMTUnsupportedExpr(e)
   }

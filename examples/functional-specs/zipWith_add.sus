@@ -1,0 +1,8 @@
+void zipWith_sum(loc x, loc y, loc z)
+  { x :-> a ** y :-> b ** z :-> 0 ** sll(a, xS) ** sll(b, yS) }
+  { x :-> a ** y :-> b ** z :-> c **
+    zipWith(c, xS, yS, zS)
+    /* sll(c, zS) */
+  }
+{ ?? }
+

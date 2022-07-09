@@ -23,6 +23,9 @@ trait HasAssertions[+A] {
   def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): A
 }
 
+class WithClause(val apps: List[PApp]) {
+}
+
 /**
   * Function to synthesize
   *
@@ -63,6 +66,19 @@ case class FunSpec(name: Ident, rType: SSLType, params: Formals,
     val gamma0 = params.toMap // initial environment: derived from the formals
     val gamma = resolvePrePost(gamma0, env, pre, post)
     gamma
+  }
+
+  /**
+    * Renames existentials so they wouldn't capture the parameters and `vars`
+    *
+    * @param vars additional contextual variables that can be captures
+    * @return inductive predicate and substitution used
+    */
+  def refreshExistentials(vars: Set[Var], suffix: String = ""): (FunSpec, SubstVar) = {
+    val bound = Set(selfCardVar) ++ vars ++ params.map(_._1).toSet
+    val sbst = refreshVars(existentials.toList, bound, suffix)
+    (this.copy(pre = this.pre.subst(sbst), post = this.post.subst(sbst)), sbst)
+    // (this.copy(clauses = this.clauses.map(c => InductiveClause(c.selector.subst(sbst), c.asn.subst(sbst)))), sbst)
   }
 
   def existentials() : List[Var] = {
@@ -264,9 +280,10 @@ case class Synonym(name: Ident, params: Formals, sigma: SFormula)
 }
 
 
-case class GoalContainer(spec: FunSpec, body: Statement) extends HasAssertions[GoalContainer] {
+case class GoalContainer(spec: FunSpec, body: Statement, withClause: Option[WithClause]) extends HasAssertions[GoalContainer] {
   def visitAssertions(f: Expr => Expr, g: Heaplet => Seq[Heaplet]): GoalContainer = {
-    GoalContainer(spec.visitAssertions(f, g), body)
+    copy(spec = spec.visitAssertions(f, g))
+    // GoalContainer(spec.visitAssertions(f, g), body)
   }
 }
 

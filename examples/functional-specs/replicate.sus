@@ -1,6 +1,6 @@
 void replicate_fn(loc x, int val, int n)
   { x :-> 0 }
-  { x :-> r ** replicate(val, 2, r) }
+  { x :-> r ** replicate(val, n, r) }
 { ?? }
 
 ###
