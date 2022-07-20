@@ -1,0 +1,8 @@
+
+void mkSingleton(loc x, int i)
+  { x :-> 0 }
+  { x :-> list ** sll(list, {i}) }
+{ ?? }
+
+###
+
