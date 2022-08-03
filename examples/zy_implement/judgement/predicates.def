@@ -1,0 +1,9 @@
+predicate base(loc x, loc y){
+| x == 0 => {y == 2 ; emp}
+| not (x == 0)   => { true ; x :-> tag ** inner(x, y, tag)}
+}
+
+predicate inner(loc x, loc y, int tag){
+|    tag < 1 => {y == 1 ; emp}
+|    not (tag < 1) => { y == 0 ; emp}
+}

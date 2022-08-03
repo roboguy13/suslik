@@ -10,7 +10,7 @@ class InteractiveSynthesis(config: SynConfig, stats: SynStats) extends PhasedSyn
   override def filterExpansions(allExpansions: Seq[Rules.RuleResult]): Seq[Rules.RuleResult] = {
     // Interactive mode: ask user to pick an expansion
     for(i <- allExpansions.indices){
-      println(s"choices:${i}\n ${allExpansions(i).rule.toString()}")
+      println(s"choices:${i + 1}\n ${allExpansions(i).rule.toString()}")
       for (j <- allExpansions(i).subgoals){
         println(s"${j.pp}")
       }

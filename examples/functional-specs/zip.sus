@@ -1,7 +1,8 @@
+# -o 2
 
 void zip(loc x, loc y, loc z)
-  { x :-> x1 ** y :-> y1 ** z :-> 0 ** unconstrained(x1, lefts) ** unconstrained(y1, rights) }
-  { x :-> x1 ** y :-> y1 ** z :-> w ** unconstrained(x1, lefts) ** unconstrained(y1, rights) ** zipped(x1, y1, w, lefts, rights) }
+  { z :-> 0 ** sll(x, lefts) ** sll(y, rights) }
+  { z :-> w ** zipped(x, y, w, lefts, rights) }
 { ?? }
 
 ###

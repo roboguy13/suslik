@@ -1,0 +1,8 @@
+
+void cons (loc fst, loc rst, loc ret)
+{rst :-> input ** sll(input, s) ** ret :-> a}
+{rst :-> input ** cons(v, input, y, s) ** ret :-> y }
+
+{ ?? }
+
+###

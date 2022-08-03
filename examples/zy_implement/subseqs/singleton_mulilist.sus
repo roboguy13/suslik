@@ -1,0 +1,6 @@
+# -c 3
+
+void mkList(loc x)
+  { x :-> a }
+  { x :-> list ** multilist_len(list, {}, 1) }
+{ ?? }

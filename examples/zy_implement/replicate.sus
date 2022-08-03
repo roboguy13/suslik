@@ -1,0 +1,6 @@
+# -c 6
+
+void mkList(loc x, int i)
+  { x :-> a }
+  { x :-> list ** sll_len(list, {i}, 5) }
+{ ?? }

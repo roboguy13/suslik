@@ -1,8 +1,8 @@
+# -c 2
 
-void zip1 (loc x1, loc x2, loc ret)
-    {true ; unconstrained(x1, s1) ** unconstrained(x2, s2) ** ret :-> a}
-    {true ; zip(ret, x1, x2, s1, s2)}
-
+void zip(loc x, loc y, loc z)
+  { z :-> 0 ** sll(x, lefts) ** sll(y, rights) }
+  { z :-> w ** zipped(x, y, w, lefts, rights) }
 { ?? }
 
 ###

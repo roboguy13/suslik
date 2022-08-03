@@ -1,0 +1,24 @@
+predicate sll(loc x, set s) {
+| x == null => { s =i {} ; emp }
+| not (x == null) => {
+    s =i {v} ++ s1
+      ;
+    [x, 2] ** x :-> v ** (x+1) :-> nxt **
+    sll(nxt, s1)
+  }
+}
+
+predicate scanr(loc x, int acc, int z, set preS, set postS, pred p) {
+| x == null => { preS =i {} && postS =i {} && acc == z ; emp}
+| not (x == null) => {
+    preS =i {v} ++ preS1 &&
+    p(v, acc, r) &&
+    postS =i {r} ++ postS1
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+
+    scanr(nxt, r, z, preS1, postS1, p)
+  }
+}

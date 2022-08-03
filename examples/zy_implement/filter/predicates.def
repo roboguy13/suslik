@@ -1,0 +1,24 @@
+predicate base(loc x, loc y, set ys, int vv){
+| y == 0 => {ys == {} && x == 0 ; emp}
+| not (y == 0)   => { ys == {vy} ++ ys1 ; [y,2] ** y :-> vy ** (y + 1) :-> y1 ** inner(x, y1, ys1, vy, vv)}
+}
+
+predicate inner(loc x, loc y, set ys, int vy, int vv){
+|    vy < vv => {base(x, y, ys, vv)}
+|    not (vy < vv) => {
+    [x, 2] ** x :-> vy ** (x + 1) :-> xnxt ** base(xnxt, y, ys, vv)}
+}
+
+predicate constrained_list(loc x, set s, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+}
+
+synonym unconstrained(loc x, set s) {
+  constrained_list(x, s, pred(u, v) => u == v)
+}
+
+predicate sll(loc x, set s) {
+|  x == 0        => { s == {} ; emp }
+|  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
+}

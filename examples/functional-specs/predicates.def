@@ -234,14 +234,14 @@ predicate pair(loc x, int a, int b) {
 }
 
 predicate zipped(loc x, loc y, loc r, set lefts, set rights) {
-| x == 0 || y == 0 => { lefts =i {} && rights =i {} ; emp }
-| not (x == 0 || y == 0) => {
+| x == 0 || y == 0 => { r == null ; emp }
+| (not (x == 0 || y == 0)) => {
     lefts =i {a} ++ lefts1 &&
-    rights =i {b} ++ rights1
+    rights =i {b} ++ rights1 
       ;
-    x :-> a ** (x+1) :-> nxtX **
-    y :-> b ** (y+1) :-> nxtY **
-    [r, 2] ** pair(p, a, b) ** r :-> p ** (r+1) :-> nxtR ** zipped(nxtX, nxtY, nxtR, lefts1, rights1)
+    [x, 2] ** x :-> a ** (x+1) :-> nxtX **
+    [y, 2] ** y :-> b ** (y+1) :-> nxtY **
+    [r, 2] ** func f(a, b, r) ** (r+1) :-> nxtR ** zipped(nxtX, nxtY, nxtR, lefts1, rights1)
   }
 }
 

@@ -1,0 +1,8 @@
+# -c 2
+
+void f_concat(loc x, loc xs, loc ret)
+{ x :-> x0 ** multilist(xs, s) ** z :-> 0 }
+  {multimap(x0, xs, y, s) ** concat(x, y, ret) ** z :-> ret }
+{
+  ??
+}

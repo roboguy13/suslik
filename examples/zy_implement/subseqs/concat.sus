@@ -1,0 +1,8 @@
+# -c 2
+
+void concat(loc x, loc y, loc z)
+{ multilist(x, xs) ** multilist(y, ys) ** z :-> 0 }
+  {concat(x,  y, ret) ** z :-> ret }
+{
+  ??
+}

@@ -1,0 +1,67 @@
+predicate sll(loc x, set s) {
+|  x == 0        => { s == {} ; emp }
+|  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
+}
+
+predicate constrained_list(loc x, set s, pred p) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1 && p(v, r) ; [x, 2] ** x :-> r ** (x + 1) :-> nxt ** constrained_list(nxt, s1, p) }
+}
+
+synonym unconstrained(loc x, set s) {
+  constrained_list(x, s, pred(u, v) => u == v)
+}
+
+predicate fold_loc(loc x, set s, loc result, loc start) {
+|  x == null => { s == {} && result == start;emp}
+|  not (x == null) => {
+    s =i {v} ++ s1
+      ;
+    [result,2] ** func f_concat(x,(result+1),result) ** (result+1) :-> result_nxt ** [x, 2] ** x :-> v ** (x + 1) :-> nxt ** fold_loc(nxt, s1, result_nxt, start) }
+}
+
+predicate multilist(loc x, set s) {
+|  x == 0        => { s == {} ; emp }
+|  not (x == 0)  => { s == s1 ++ s2 ;
+                      [x, 2] ** x :-> h ** (x + 1) :-> x1 ** sll(h, s1) ** multilist(x1, s2) }
+}
+
+predicate multimap(loc x, loc xs, loc y, set s) {
+|  xs == 0        => { s == {} ; emp }
+|  not (xs == 0)  => { s == s1 ++ s2 ;
+                      [xs, 2] ** xs :-> h ** (xs + 1) :-> x1 ** sll(h, s1) ** [y, 2] ** func cons(x, h, y) ** (y + 1) :-> y1 ** multimap(x, x1, y1, s2) }
+}
+
+predicate cons(loc v, loc input, loc output, set s){
+| true => {[output, 2] ** output :-> v ** (output + 1) :-> input ** sll(input, s)}
+}
+
+predicate concat(loc x, loc y, loc ret){
+| x == 0 && y == 0 => {ret == null ; emp }
+| y == 0 && not (x == 0) => { ret == x ; multilist(x, xs) }
+| x == 0 && not (y == 0) => { ret == y ; multilist(y, ys) }
+| (not (x == 0)) && (not (y == 0)) => {
+  [x, 2] ** x :-> h ** (x + 1) :-> x1 ** sll(h, xs1) ** [ret, 2] ** ret :-> h ** (ret + 1) :-> ret1 ** concat(x1,y,ret1)
+}
+}
+
+predicate sll_len(loc x, set s, int len) {
+| x == 0 => { s =i {} && len == 0 ; emp }
+| not (x == 0) => {
+    s =i {v} + s1 &&
+    len == 1 + len1
+      ;
+    [x, 2] **
+    x :-> v **
+    (x+1) :-> nxt **
+    sll_len(nxt, s1, len1)
+  }
+}
+
+
+predicate multilist_len(loc x, set s, int len) {
+|  x == 0        => { s == {} && len == 0 ; emp }
+|  not (x == 0)  => { s == s1 ++ s2 && len == 1 + len1 + len2;
+                      [x, 2] ** x :-> h ** (x + 1) :-> x1 ** sll_len(h, s1, len1) ** multilist_len(x1, s2, len2) }
+}
+
