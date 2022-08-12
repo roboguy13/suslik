@@ -1,0 +1,11 @@
+# -c 2 -b true
+
+
+void filter (loc y, loc ret, loc v)
+{sll(y, s) ** ret :-> a ** v :-> vv}
+{base(ret0, y, s, vv) ** ret :-> ret0 ** v :-> vv }
+{
+    ??
+}
+
+#####

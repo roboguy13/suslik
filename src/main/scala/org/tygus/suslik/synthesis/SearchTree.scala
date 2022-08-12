@@ -155,8 +155,14 @@ object SearchTree {
         }
     }
 
-    lazy val cost: Int = {
-      goal.cost.max(extraCost)
+    lazy val cost: Int = { //ZYTODO
+      // goal.cost.max(extraCost)
+      goal.cost + extraCost
+      // val tmpcost = goal.cost
+      // if(tmpcost > extraCost)
+      //   tmpcost
+      // else 
+      //   tmpcost + extraCost
     }
 
     override def equals(obj: Any): Boolean = obj.isInstanceOf[OrNode] && (obj.asInstanceOf[OrNode].id == this.id)

@@ -76,16 +76,94 @@ object BranchRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
   object AbduceBranch extends SynthesisRule with GeneratesCode with InvertibleRule {
     override def toString: String = "AbduceBranch"
 
-    def atomCandidates(goal: Goal): Seq[Expr] = //ZYTODO: add value?
+    // def atomCandidates(goal: Goal): Seq[Expr] = //ZYTODO: add value?
+    //   for {
+    //     lhs <- goal.programVars.filter(goal.post.phi.vars.contains)
+    //     rhs <- goal.programVars.filter(goal.post.phi.vars.contains)
+    //     if lhs != rhs
+    //     if goal.getType(lhs) == IntType && goal.getType(rhs) == IntType
+    //   } yield lhs |<=| rhs
+
+    def VarCondidates(goal: Goal): Seq[Var] = {
       for {
-        lhs <- goal.programVars.filter(goal.post.phi.vars.contains)
-        rhs <- goal.programVars.filter(goal.post.phi.vars.contains)
+        tmpvar <- goal.programVars.filter(goal.post.phi.vars.contains)
+        if goal.getType(tmpvar) == IntType
+      } yield tmpvar
+    }
+
+    def BiVarCandidates(goal: Goal): Seq[Expr] = {
+      val Varset = VarCondidates(goal)
+      for{
+        lhs <- Varset
+        rhs <- Varset
         if lhs != rhs
-        if goal.getType(lhs) == IntType && goal.getType(rhs) == IntType
       } yield lhs |<=| rhs
+    }
+    // def BiVarCandidates1(goal: Goal): Seq[Expr] = {
+    //   val Varset = VarCondidates(goal)
+    //   for{
+    //     lhs <- 0 to Varset.length - 2
+    //     rhs <- lhs to Varset.length - 1
+    //     if Varset(lhs) != Varset(rhs)
+    //   } yield Varset(lhs) |=| Varset(rhs)
+    // }
+
+    // def BiVarCandidates2(goal: Goal): Seq[Expr] = {
+    //   val Varset = VarCondidates(goal)
+    //   for{
+    //     lhs <- 0 to Varset.length - 2
+    //     rhs <- lhs to Varset.length - 1
+    //     if Varset(lhs) != Varset(rhs)
+    //   } yield Varset(lhs) |/=| Varset(rhs)
+    // }
+
+    // def BiVarCandidates3(goal: Goal): Seq[Expr] = {
+    //   val Varset = VarCondidates(goal)
+    //   for{
+    //     lhs <- 0 to Varset.length - 2
+    //     rhs <- lhs to Varset.length - 1
+    //     if Varset(lhs) != Varset(rhs)
+    //   } yield Varset(lhs) |<| Varset(rhs)
+    // }
+    // def BiVarCandidates4(goal: Goal): Seq[Expr] = {
+    //   val Varset = VarCondidates(goal)
+    //   for{
+    //     rhs <- 0 to Varset.length - 2
+    //     lhs <- rhs to Varset.length - 1
+    //     if Varset(lhs) != Varset(rhs)
+    //   } yield Varset(lhs) |<| Varset(rhs)
+    // }
+    
+    def VarConstCandidates1(goal: Goal): Seq[Expr] = {
+      for{
+        lhs <- VarCondidates(goal)
+        rhs <- goal.post.phi.intconstant //- Expressions.IntConst(0)
+      } yield lhs |<| rhs
+    }
+
+    def VarConstCandidates2(goal: Goal): Seq[Expr] = {
+      for{
+        rhs <- VarCondidates(goal)
+        lhs <- goal.post.phi.intconstant //- Expressions.IntConst(0)
+      } yield lhs |<| rhs
+    }
+
+    def VarConstCandidates3(goal: Goal): Seq[Expr] = {
+      for{
+        lhs <- VarCondidates(goal)
+        rhs <- goal.post.phi.intconstant //- Expressions.IntConst(0)
+      } yield lhs |=| rhs
+    }
+
+    def VarConstCandidates4(goal: Goal): Seq[Expr] = {
+      for{
+        lhs <- VarCondidates(goal)
+        rhs <- goal.post.phi.intconstant //- Expressions.IntConst(0)
+      } yield lhs |/=| rhs
+    }
 
     def condCandidates(goal: Goal): Seq[Expr] = {
-      val atoms = atomCandidates(goal)
+      val atoms = BiVarCandidates(goal) ++ VarConstCandidates1(goal) ++ VarConstCandidates2(goal) ++ VarConstCandidates3(goal) ++ VarConstCandidates4(goal)
       // Toggle this to enable abduction of conjunctions
       // (without branch pruning, produces too many branches)
       //      atoms
@@ -116,7 +194,9 @@ object BranchRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
         if (guarded.isEmpty)
         // Abduction failed
           List(RuleResult(List(goal.unsolvableChild), IdProducer, this, goal)) // pre doesn't imply post: goal is unsolvable
-        else guarded.take(1) // TODO: try several incomparable conditions, but filter out subsumed ones?
+        else { 
+          guarded.take(1) // TODO: try several incomparable conditions, but filter out subsumed ones?
+        }
       }
     }
   }

@@ -9,9 +9,9 @@ predicate sll(loc x, set s) {
 }
 
 predicate take(loc input, loc x, int n, set s){
-| (x == null) && (input == null) => { s =i {}; emp }
-| (x == null) && (not (input == null)) => { true; sll(input, s) }
-| (not (x == null)) && (not (input == null)) =>{
+| (input == null) => { s =i {} && x == null; emp }
+| (n == 0) && (not (input == null)) => { x == null; sll(input, s) }
+| (not (n == 0)) && (not (input == null)) =>{
     s =i {v} ++ s1 && n == n1 + 1;
     [input, 2] ** input :-> v ** (input + 1) :-> inputnxt **
     [x, 2] ** x :-> v  ** (x + 1) :-> xnxt ** take(inputnxt, xnxt, n1, s1)

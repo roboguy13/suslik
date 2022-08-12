@@ -1,8 +1,10 @@
-# -c 3 -o 2
+# -c 3 -o 2 -b true
 
 void take_fn(loc x, loc y, int n)
     { x :-> a ** sll(a, s) ** y :-> 0 }
     { x :-> a ** y :-> r ** take(a, r, n, s) }
-{ ?? }
+{
+    ??
+}
 
 ###

@@ -1,0 +1,11 @@
+# -c 2 -b true
+
+
+void append_self (loc input, loc ret, loc v)
+{x :-> x0 ** sll(x0, s) ** ret :-> a ** v :-> times}
+{append_self(x0, x0, ret0, times, s, s) ** ret :-> ret0 ** v :-> times }
+{
+    ??
+}
+
+#####

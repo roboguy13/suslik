@@ -13,3 +13,12 @@ predicate sll(loc x, set s) {
 |  x == 0        => { s == {} ; emp }
 |  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
 }
+
+predicate filter(loc x, loc y, set ys){
+| y == 0 => {ys == {} && x == 0 ; emp}
+| not (y == 0) && vy < 9   => { ys == {vy} ++ ys1 ; [y,2] ** y :-> vy ** (y + 1) :-> y1 ** filter(x, y1, ys1)}
+| not (y == 0) && not (vy < 9)   => { 
+    ys == {vy} ++ ys1 ; [y,2] ** y :-> vy ** (y + 1) :-> y1 **
+    [x, 2] ** x :-> vy ** (x + 1) :-> xnxt **
+    filter(xnxt, y1, ys1)}
+}

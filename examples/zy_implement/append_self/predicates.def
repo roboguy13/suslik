@@ -1,0 +1,19 @@
+predicate append_self(loc input, loc oinput, loc output, int times, set os, set tmps){
+| input == 0 && times == 1 => {
+    output == null ; emp
+}
+| input == 0 && not (times == 1) => {
+    times == times1 + 1; append_self(oinput, oinput, output, times1, os, os)
+} 
+| not( input == 0) =>{
+    tmps == {v} + tmps1 ;
+    [input, 2] ** input :-> v ** (input + 1) :-> inputnxt ** 
+    [output, 2] ** output :-> v ** (output + 1) :-> outputnxt **
+    append_self(inputnxt, oinput, outputnxt, times, os, tmps1)
+}
+}
+
+predicate sll(loc x, set s) {
+|  x == 0        => { s == {} ; emp }
+|  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
+}
