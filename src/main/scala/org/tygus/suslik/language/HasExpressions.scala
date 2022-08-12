@@ -21,5 +21,6 @@ trait HasExpressions[+A] {
   def collect[R <: Expr](p: Expr => Boolean): Set[R]
 
   def vars: Set[Var] = collect(_.isInstanceOf[Var])
+  def intconstant: Set[IntConst] = collect(_.isInstanceOf[IntConst])
   def freeVars: Set[Var] = vars
 }
