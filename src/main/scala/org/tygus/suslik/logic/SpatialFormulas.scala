@@ -15,6 +15,9 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
       case PointsTo(v, offset, value) =>
         val acc1 = if (p(v)) acc + v.asInstanceOf[R] else acc
         acc1 ++ value.collect(p)
+      case ConstPointsTo(v, offset, value) =>
+        val acc1 = if (p(v)) acc + v.asInstanceOf[R] else acc
+        acc1 ++ value.collect(p)
       case Block(v, _) =>
         if (p(v)) acc + v.asInstanceOf[R] else acc
       case SApp(_, args, _, card) =>
@@ -42,7 +45,10 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
   def setTag(t: PTag): Heaplet = this
 
   def eqModTags(other: Heaplet): Boolean = {
-    this.setTag(PTag()) == other.setTag(PTag())
+    this match {
+      case ConstPointsTo(loc, offset, value) => PointsTo(loc, offset, value).setTag(PTag()) == other.setTag(PTag())
+      case _ => this.setTag(PTag()) == other.setTag(PTag())
+    }
   }
 
   // If this is a predicate instance, assume that from is too and copy its tag
@@ -54,6 +60,7 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
   // Size of the heaplet (in AST nodes)
   def size: Int = this match {
     case PointsTo(loc, _, value) => 1 + loc.size + value.size
+    case ConstPointsTo(loc, _, value) => 1 + loc.size + value.size
     case Block(loc, _) => 1 + loc.size
     case SApp(_, args, _, _) => args.map(_.size).sum
     case FuncApp(_, args) => args.map(_.size).sum
@@ -99,6 +106,43 @@ case class PointsTo(loc: Expr, offset: Int = 0, value: Expr) extends Heaplet {
   // This only unifies the rhs of the points-to, because lhss are unified by a separate rule
   override def unify(that: Heaplet): Option[ExprSubst] = that match {
     case PointsTo(l, o, v) if l == loc && o == offset => Some(Map(value -> v))
+    case _ => None
+  }
+}
+
+/**
+  * var + offset :=> value
+  */
+case class ConstPointsTo(loc: Expr, offset: Int = 0, value: Expr) extends Heaplet {
+
+  override def resolveOverloading(gamma: Gamma): Heaplet =
+    this.copy(loc = loc.resolveOverloading(gamma), value = value.resolveOverloading(gamma))
+
+  override def pp: Ident = {
+    val head = if (offset <= 0) loc.pp else s"(${loc.pp} + $offset)"
+    s"$head :=> ${value.pp}"
+  }
+
+  def subst(sigma: Map[Var, Expr]): Heaplet = loc.subst(sigma) match {
+    case BinaryExpr(OpPlus, l, IntConst(off)) => ConstPointsTo(l, offset + off, value.subst (sigma))
+    case _ => ConstPointsTo (loc.subst (sigma), offset, value.subst (sigma) )
+  }
+
+  def resolve(gamma: Gamma, env: Environment): Option[Gamma] = {
+    for {
+      gamma1 <- loc.resolve(gamma, Some(LocType))
+      gamma2 <- value.resolve(gamma1, Some(LocType))
+    } yield gamma2
+  }
+
+  override def compare(that: Heaplet) = that match {
+    case SApp(pred, args, tag, card) => -1
+    case _ => super.compare(that)
+  }
+
+  // This only unifies the rhs of the points-to, because lhss are unified by a separate rule
+  override def unify(that: Heaplet): Option[ExprSubst] = that match {
+    case ConstPointsTo(l, o, v) if l == loc && o == offset => Some(Map(value -> v))
     case _ => None
   }
 }
@@ -243,7 +287,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
 
   override def pp: Ident = if (chunks.isEmpty) "emp" else {
     def pt(l: List[Heaplet]) = l.map(_.pp).sortBy(x => x)
-    List(helper_funcs, ptss, apps, blocks).flatMap(pt).mkString(" ** ")
+    List(helper_funcs, cptss ,ptss, apps, blocks).flatMap(pt).mkString(" ** ")
   }
 
   def blocks: List[Block] = for (b@Block(_, _) <- chunks) yield b
@@ -251,7 +295,9 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
   def apps: List[SApp] = for (b@SApp(_, _, _, _) <- chunks) yield b
 
   def ptss: List[PointsTo] = for (b@PointsTo(_, _, _) <- chunks) yield b
-  
+
+  def cptss: List[ConstPointsTo] = for (b@ConstPointsTo(x, y, z) <- chunks) yield b
+
   def helper_funcs :List[FuncApp] = for (b@FuncApp(_,_) <- chunks) yield b
 
   def subst(sigma: Map[Var, Expr]): SFormula = SFormula(chunks.map(_.subst(sigma)))
@@ -300,7 +346,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
   lazy val profile: SProfile = {
     val appProfile = apps.groupBy(_.pred).mapValues(_.length)
     val blockProfile = blocks.groupBy(_.sz).mapValues(_.length)
-    val ptsProfile = List.concat(ptss,helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
+    val ptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}),helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
     SProfile(appProfile, blockProfile, ptsProfile)
   }
 

@@ -99,6 +99,48 @@ object SpatialUnification extends SepLogicUtils with PureLogicUtils {
           }
           sbst.toList
         }
+      case (ConstPointsTo(x@Var(_), o1, y), PointsTo(a@Var(_), o2, b)) =>
+        if (o1 != o2) Nil else {
+          assert(cantBeSubstituted.contains(x))
+          assert(y.vars.forall(cantBeSubstituted.contains))
+          val sbst = for {
+            m1 <- genSubst(x, a, cantBeSubstituted)
+            _v2 = b.subst(m1)
+            m2 <- genSubst(y, _v2, cantBeSubstituted)
+          } yield {
+            assertNoOverlap(m1, m2)
+            m1 ++ m2
+          }
+          sbst.toList
+        }
+      case (PointsTo(x@Var(_), o1, y), ConstPointsTo(a@Var(_), o2, b)) =>
+        if (o1 != o2) Nil else {
+          assert(cantBeSubstituted.contains(x))
+          assert(y.vars.forall(cantBeSubstituted.contains))
+          val sbst = for {
+            m1 <- genSubst(x, a, cantBeSubstituted)
+            _v2 = b.subst(m1)
+            m2 <- genSubst(y, _v2, cantBeSubstituted)
+          } yield {
+            assertNoOverlap(m1, m2)
+            m1 ++ m2
+          }
+          sbst.toList
+        }
+      case (ConstPointsTo(x@Var(_), o1, y), ConstPointsTo(a@Var(_), o2, b)) =>
+        if (o1 != o2) Nil else {
+          assert(cantBeSubstituted.contains(x))
+          assert(y.vars.forall(cantBeSubstituted.contains))
+          val sbst = for {
+            m1 <- genSubst(x, a, cantBeSubstituted)
+            _v2 = b.subst(m1)
+            m2 <- genSubst(y, _v2, cantBeSubstituted)
+          } yield {
+            assertNoOverlap(m1, m2)
+            m1 ++ m2
+          }
+          sbst.toList
+        }
       case (Block(x1@Var(_), s1), Block(x2@Var(_), s2)) =>
         if (s1 != s2) Nil else {
           assert(cantBeSubstituted.contains(x1))
@@ -143,7 +185,7 @@ object SpatialUnification extends SepLogicUtils with PureLogicUtils {
     * Check that two lists of heaplets have a chance to be unified
     */
   protected def checkShapesMatch(cs1: List[UAtom], cs2: List[UAtom]): Boolean = {
-    val (ps1, ps2) = (cs1.filter(_.isInstanceOf[PointsTo]), cs2.filter(_.isInstanceOf[PointsTo]))
+    val (ps1, ps2) = (cs1.filter(Instance_of_PT(_)), cs2.filter(Instance_of_PT(_)))
     val (bs1, bs2) = (cs1.filter(_.isInstanceOf[Block]), cs2.filter(_.isInstanceOf[Block]))
     val (as1, as2) = (cs1.filter(_.isInstanceOf[SApp]), cs2.filter(_.isInstanceOf[SApp]))
 

@@ -39,9 +39,13 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
         case PointsTo(x@Var(_), _, e) => !goal.isGhost(x) && e.vars.forall(v => !goal.isGhost(v))
         case _ => false
       }
+      def notConst: Heaplet => Boolean = {
+        case PointsTo(_,_,_) => true
+        case _ => false
+      }
 
       // When do two heaplets match
-      def isMatch(hl: Heaplet, hr: Heaplet) = sameLhs(hl)(hr) && !sameRhs(hl)(hr) && noGhosts(hr)
+      def isMatch(hl: Heaplet, hr: Heaplet) = sameLhs(hl)(hr) && !sameRhs(hl)(hr) && noGhosts(hr) && notConst(hl)
 
       findMatchingHeaplets(_ => true, isMatch, goal.pre.sigma, goal.post.sigma) match {
         case None => Nil
@@ -117,6 +121,8 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
       def isGhostPoints: Heaplet => Boolean = {
         case PointsTo(x@Var(_), _, e) =>
            !goal.isGhost(x) && e.vars.intersect(goal.ghosts).nonEmpty
+        case ConstPointsTo(x@Var(_), _, e) =>
+           !goal.isGhost(x) && e.vars.intersect(goal.ghosts).nonEmpty
         case _ => false
       }
 
@@ -127,6 +133,19 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
           val tpy = e.getType(goal.gamma).get
           val newPhi = phi && (y |=| e)
           val newSigma = (sigma - pts) ** PointsTo(x, offset, y)
+          val subGoal = goal.spawnChild(pre = Assertion(newPhi, newSigma),
+                                        gamma = goal.gamma + (y -> tpy),
+                                        programVars = y :: goal.programVars)
+          val kont: StmtProducer = e match {
+            case a:Var => SubstVarProducer(a, y) >> PrependProducer(Load(y, tpy, x, offset)) >> ExtractHelper(goal)
+            case _ => PrependProducer(Load(y, tpy, x, offset)) >> ExtractHelper(goal)
+          }
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some(pts@ConstPointsTo(x@Var(_), offset, e)) =>
+          val y = freshVar(goal.vars, e.pp)
+          val tpy = e.getType(goal.gamma).get
+          val newPhi = phi && (y |=| e)
+          val newSigma = (sigma - pts) ** ConstPointsTo(x, offset, y)
           val subGoal = goal.spawnChild(pre = Assertion(newPhi, newSigma),
                                         gamma = goal.gamma + (y -> tpy),
                                         programVars = y :: goal.programVars)

@@ -88,6 +88,7 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
       val kont = IdProducer >> ExtractHelper(goal)
       goal.post.sigma.chunks.find {
         case h@PointsTo(_, _, IfThenElse(_, _, _)) => h.vars.forall(v => !goal.isGhost(v))
+        case h@ConstPointsTo(_, _, IfThenElse(_, _, _)) => h.vars.forall(v => !goal.isGhost(v))
         case _ => false
       } match {
         case None => Nil
@@ -99,6 +100,18 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
             List(RuleResult(List(thenGoal), kont, this, goal))
           } else if (SMTSolving.valid(goal.pre.phi ==> (c.not || (t |=| e)))) {
             val elseSigma = (goal.post.sigma - h) ** PointsTo(l, o, e)
+            val elsePhi = goal.post.phi // && c.not
+            val elseGoal = goal.spawnChild(post = Assertion(elsePhi, elseSigma))
+            List(RuleResult(List(elseGoal), kont, this, goal))
+          } else Nil
+        case Some(h@ConstPointsTo(l, o, IfThenElse(c, t, e))) =>
+          if (SMTSolving.valid(goal.pre.phi ==> (c || (t |=| e)))) {
+            val thenSigma = (goal.post.sigma - h) ** ConstPointsTo(l, o, t)
+            val thenPhi = goal.post.phi // && c
+            val thenGoal = goal.spawnChild(post = Assertion(thenPhi, thenSigma))
+            List(RuleResult(List(thenGoal), kont, this, goal))
+          } else if (SMTSolving.valid(goal.pre.phi ==> (c.not || (t |=| e)))) {
+            val elseSigma = (goal.post.sigma - h) ** ConstPointsTo(l, o, e)
             val elsePhi = goal.post.phi // && c.not
             val elseGoal = goal.spawnChild(post = Assertion(elsePhi, elseSigma))
             List(RuleResult(List(elseGoal), kont, this, goal))
@@ -174,7 +187,7 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
       // Find pointers in `a` that are not yet known to be non-null
       def findPointers(p: PFormula, s: SFormula): Set[Expr] = {
         // All pointers
-        val allPointers = (for (PointsTo(l, _, _) <- s.chunks) yield l).toSet
+        val allPointers = (for (PointsTo(l, _, _) <- s.chunks) yield l).++(for (ConstPointsTo(l, _, _) <- s.chunks) yield l).toSet
         allPointers.filter(
           x => !p.conjuncts.contains(x |/=| NilPtr) && !p.conjuncts.contains(NilPtr |/=| x)
         )
@@ -212,7 +225,7 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
     override def toString: String = "*Partial"
 
     def extendPure(p: PFormula, s: SFormula): PFormula = {
-      val ptrs = (for (PointsTo(x, o, _) <- s.chunks) yield (o, x)).groupBy(_._1).mapValues(_.map(_._2))
+      val ptrs = (for (PointsTo(x, o, _) <- s.chunks) yield (o, x)).++((for (ConstPointsTo(x, o, _) <- s.chunks) yield (o, x))).groupBy(_._1).mapValues(_.map(_._2))
       // All pairs of pointers
       val pairs = for (o <- ptrs.keySet; x <- ptrs(o); y <- ptrs(o) if x != y) yield (x, y)
       val newPairs = pairs.filter {

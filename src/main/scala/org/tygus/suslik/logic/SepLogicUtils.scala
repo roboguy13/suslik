@@ -53,6 +53,12 @@ trait SepLogicUtils extends PureLogicUtils {
     hl match {
       case PointsTo(xl, ol, _) => hr match {
         case PointsTo(xr, or, _) => xl == xr && ol == or
+        case ConstPointsTo(xr, or, _) => xl == xr && ol == or
+        case _ => false
+      }
+      case ConstPointsTo(xl, ol, _) => hr match {
+        case PointsTo(xr, or, _) => xl == xr && ol == or
+        case ConstPointsTo(xr, or, _) => xl == xr && ol == or
         case _ => false
       }
       case _ => false
@@ -66,6 +72,12 @@ trait SepLogicUtils extends PureLogicUtils {
     hl match {
       case PointsTo(_, _, el) => hr match {
         case PointsTo(_, _, er) => el == er
+        case ConstPointsTo(_, _, er) => el == er
+        case _ => false
+      }
+      case ConstPointsTo(_, _, el) => hr match {
+        case PointsTo(_, _, er) => el == er
+        case ConstPointsTo(_, _, er) => el == er
         case _ => false
       }
       case _ => false
@@ -85,7 +97,9 @@ trait SepLogicUtils extends PureLogicUtils {
       case _ => false
     }
   }
-
+  def Instance_of_PT: Heaplet => Boolean = h => {
+    h.isInstanceOf[PointsTo] || h.isInstanceOf[ConstPointsTo]
+  }
 
   /**
     * Find a block satisfying a predicate, and all matching chunks.
@@ -115,7 +129,7 @@ trait SepLogicUtils extends PureLogicUtils {
   def heapCardinality(sigma: SFormula): (Int, Expr) = {
     val heaplets = sigma.chunks
     val ptsCount = heaplets.count {
-      _.isInstanceOf[PointsTo]
+      Instance_of_PT(_)
     }
     val cardinalities = for (SApp(_, _, _, c) <- heaplets) yield c
     if (cardinalities.isEmpty) return (ptsCount, IntConst(ptsCount))

@@ -69,23 +69,52 @@ object UnificationRules extends PureLogicUtils with SepLogicUtils with RuleUtils
 
   object HeapUnifyPointer extends HeapUnify with FlatPhase with InvertibleRule {
     override def toString: String = "UnifyLHS"
-
+    // zytodo
     override def apply(goal: Goal): Seq[RuleResult] = {
       val pre = goal.pre
       val post = goal.post
       val prePtss = pre.sigma.ptss
       val postPtss = post.sigma.ptss
+      val preCPtss = pre.sigma.cptss
+      val postCPtss = post.sigma.cptss
 
       def lcpLen(s1: String, s2: String): Int = s1.zip(s2).takeWhile(Function.tupled(_ == _)).length
 
-      val alternatives = for {
+      val alternatives = (for {
         PointsTo(y, oy, _) <- postPtss
         if y.vars.exists(goal.isExistential)
         t@PointsTo(x, ox, _) <- prePtss
 //        if post.sigma.block_size(y) == pre.sigma.block_size(x)
         if ox == oy
         if !postPtss.exists(sameLhs(t))
-      } yield (y -> x)
+      } yield (y -> x)).++(
+        (for {
+        PointsTo(y, oy, _) <- postPtss
+        if y.vars.exists(goal.isExistential)
+        t@ConstPointsTo(x, ox, _) <- preCPtss
+//        if post.sigma.block_size(y) == pre.sigma.block_size(x)
+        if ox == oy
+        if !postPtss.exists(sameLhs(t))
+      } yield (y -> x))
+      ).++(
+        (for {
+        ConstPointsTo(y, oy, _) <- postCPtss
+        if y.vars.exists(goal.isExistential)
+        t@PointsTo(x, ox, _) <- prePtss
+//        if post.sigma.block_size(y) == pre.sigma.block_size(x)
+        if ox == oy
+        if !postPtss.exists(sameLhs(t))
+      } yield (y -> x))
+      ).++(
+        (for {
+        ConstPointsTo(y, oy, _) <- postCPtss
+        if y.vars.exists(goal.isExistential)
+        t@ConstPointsTo(x, ox, _) <- preCPtss
+//        if post.sigma.block_size(y) == pre.sigma.block_size(x)
+        if ox == oy
+        if !postPtss.exists(sameLhs(t))
+      } yield (y -> x))
+      )
 
       alternatives.sortBy{ case (e1, e2) => -lcpLen(e1.pp, e2.pp) }.headOption match {
         case None => Nil
