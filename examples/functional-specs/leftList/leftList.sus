@@ -1,0 +1,8 @@
+
+void leftList(loc x, loc y)
+  { tree(x) ** y :-> 0 }
+  { y :-> r ** leftList_base(x, r) }
+{ ?? }
+
+###
+

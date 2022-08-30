@@ -1,0 +1,14 @@
+predicate sll(loc x) {
+| x == 0 => { emp }
+| not (x == 0) => { [x, 2] ** x :-> v ** (x+1) :-> nxt ** sll(nxt) }
+}
+
+predicate map_add1(loc x, loc r) {
+| x == 0 => { x == 0 ; emp }
+| not (x == 0) => {
+    [x, 2] ** x :-> v ** (x+1) :-> xNxt **
+    [r, 2] ** r :-> (v+1) ** (r+1) :-> rNxt **
+    map_add1(xNxt, rNxt)
+  }
+}
+

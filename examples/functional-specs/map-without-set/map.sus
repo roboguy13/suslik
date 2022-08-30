@@ -1,0 +1,8 @@
+
+void map_add1(loc x, loc y)
+  { sll(x) ** y :-> 0 }
+  { y :-> r ** map_add1(x, r) }
+{ ?? }
+
+###
+
