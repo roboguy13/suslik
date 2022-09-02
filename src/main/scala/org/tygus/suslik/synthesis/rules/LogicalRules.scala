@@ -116,6 +116,18 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
             val elseGoal = goal.spawnChild(post = Assertion(elsePhi, elseSigma))
             List(RuleResult(List(elseGoal), kont, this, goal))
           } else Nil
+        case Some(h@TempPointsTo(l, o, IfThenElse(c, t, e))) =>
+          if (SMTSolving.valid(goal.pre.phi ==> (c || (t |=| e)))) {
+            val thenSigma = (goal.post.sigma - h) ** TempPointsTo(l, o, t)
+            val thenPhi = goal.post.phi // && c
+            val thenGoal = goal.spawnChild(post = Assertion(thenPhi, thenSigma))
+            List(RuleResult(List(thenGoal), kont, this, goal))
+          } else if (SMTSolving.valid(goal.pre.phi ==> (c.not || (t |=| e)))) {
+            val elseSigma = (goal.post.sigma - h) ** TempPointsTo(l, o, e)
+            val elsePhi = goal.post.phi // && c.not
+            val elseGoal = goal.spawnChild(post = Assertion(elsePhi, elseSigma))
+            List(RuleResult(List(elseGoal), kont, this, goal))
+          } else Nil
         case Some(h) => throw SynthesisException(s"SimplifyConditional does not support ${h.getClass.getName}")
       }
     }
@@ -187,7 +199,7 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
       // Find pointers in `a` that are not yet known to be non-null
       def findPointers(p: PFormula, s: SFormula): Set[Expr] = {
         // All pointers
-        val allPointers = (for (PointsTo(l, _, _) <- s.chunks) yield l).++(for (ConstPointsTo(l, _, _) <- s.chunks) yield l).toSet
+        val allPointers = (for (PointsTo(l, _, _) <- s.chunks) yield l).++(for (ConstPointsTo(l, _, _) <- s.chunks) yield l).++(for (TempPointsTo(l, _, _) <- s.chunks) yield l).toSet
         allPointers.filter(
           x => !p.conjuncts.contains(x |/=| NilPtr) && !p.conjuncts.contains(NilPtr |/=| x)
         )
@@ -332,6 +344,58 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
       }
     }
 
+  }
+
+  object TempFrame extends SynthesisRule {
+    def TempFilter(h: Heaplet): Boolean = {
+      h.isInstanceOf[TempPointsTo]
+    }
+    def noRhs(tpt: TempPointsTo, sigma:SFormula): Boolean = {
+      sigma.chunks.forall(sameLhs(tpt))
+    }
+
+    override def toString: String = "TempFrame"
+
+
+    def apply(goal: Goal): Seq[RuleResult] = {
+      val pre = goal.pre
+      val post = goal.post
+
+      findHeaplet(TempFilter, pre.sigma) match {
+        case None => Nil
+        case Some(value) => value match {
+          case tpt@TempPointsTo(loc, offset, value) => {
+            if (noRhs(tpt, post.sigma)){
+              Nil
+            }
+            else{
+              val newPreSigma = pre.sigma - tpt
+              val newPre = Assertion(pre.phi, newPreSigma)
+              val newGoal = goal.spawnChild(pre = newPre)
+              val kont = IdProducer >> ExtractHelper(goal)
+              List(RuleResult(List(newGoal), kont, this, goal))
+            }
+          }
+          case _ => Nil
+        }
+      }
+      // if (!profilesMatch(pre.sigma, post.sigma, goal.callGoal.isEmpty)) return Nil
+
+      // def isMatch(hPre: Heaplet, hPost: Heaplet): Boolean = hPre.eqModTags(hPost) && heapletFilter(hPost)
+
+      // findMatchingHeaplets(_ => true, isMatch, pre.sigma, post.sigma) match {
+      //   case None => Nil
+      //   case Some((hPre, hPost)) => {
+      //     val newPreSigma = pre.sigma - hPre
+      //     val newPostSigma = post.sigma - hPost
+      //     val newPre = Assertion(pre.phi, newPreSigma)
+      //     val newPost = Assertion(post.phi, newPostSigma)
+      //     val newGoal = goal.spawnChild(newPre, newPost)
+      //     val kont = IdProducer >> ExtractHelper(goal)
+      //     List(RuleResult(List(newGoal), kont, this, goal))
+      //   }
+      // }
+    }
   }
 
 }

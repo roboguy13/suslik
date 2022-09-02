@@ -1,0 +1,11 @@
+#
+
+
+void temp (loc x, loc y)
+{x :-> x0 ** sll_n(x0) ** y :-> a}
+{x :-> x0 ** temptest(x0, y)}
+{
+    ??
+}
+
+#####

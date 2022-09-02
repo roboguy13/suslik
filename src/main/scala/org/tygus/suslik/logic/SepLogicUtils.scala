@@ -54,11 +54,37 @@ trait SepLogicUtils extends PureLogicUtils {
       case PointsTo(xl, ol, _) => hr match {
         case PointsTo(xr, or, _) => xl == xr && ol == or
         case ConstPointsTo(xr, or, _) => xl == xr && ol == or
+        case TempPointsTo(xr, or, _) => xl == xr && ol == or
         case _ => false
       }
       case ConstPointsTo(xl, ol, _) => hr match {
         case PointsTo(xr, or, _) => xl == xr && ol == or
         case ConstPointsTo(xr, or, _) => xl == xr && ol == or
+        case TempPointsTo(xr, or, _) => xl == xr && ol == or
+        case _ => false
+      }
+      case TempPointsTo(xl, ol, _) => hr match {
+        case PointsTo(xr, or, _) => xl == xr && ol == or
+        case ConstPointsTo(xr, or, _) => xl == xr && ol == or
+        case TempPointsTo(xr, or, _) => xl == xr && ol == or
+        case _ => false
+      }
+      case _ => false
+    }
+  }
+
+  /**
+    * Are two heaplets both points-to with the same LHS? (For TempWrite and FinalWrite)
+    */
+  def sameLhs_Temp(hl: Heaplet): Heaplet => Boolean = hr => {
+    hl match {
+      case PointsTo(xl, ol, _) => hr match {
+        case TempPointsTo(xr, or, _) => xl == xr && ol == or
+        case _ => false
+      }
+      case TempPointsTo(xl, ol, _) => hr match {
+        case PointsTo(xr, or, _) => xl == xr && ol == or
+        case TempPointsTo(xr, or, _) => xl == xr && ol == or
         case _ => false
       }
       case _ => false
@@ -73,11 +99,19 @@ trait SepLogicUtils extends PureLogicUtils {
       case PointsTo(_, _, el) => hr match {
         case PointsTo(_, _, er) => el == er
         case ConstPointsTo(_, _, er) => el == er
+        case TempPointsTo(_, _, er) => el == er
         case _ => false
       }
       case ConstPointsTo(_, _, el) => hr match {
         case PointsTo(_, _, er) => el == er
         case ConstPointsTo(_, _, er) => el == er
+        case TempPointsTo(_, _, er) => el == er
+        case _ => false
+      }
+      case TempPointsTo(_, _, el) => hr match {
+        case PointsTo(_, _, er) => el == er
+        case ConstPointsTo(_, _, er) => el == er
+        case TempPointsTo(_, _, er) => el == er
         case _ => false
       }
       case _ => false

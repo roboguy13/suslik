@@ -121,9 +121,11 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
           UnificationRules.PickCard,
           LogicalRules.GhostWrite,
           UnificationRules.HeapUnifyPure,
+          UnificationRules.HeapUnifyforTemp,
           LogicalRules.SimplifyConditional,
           OperationalRules.FuncCall,
           OperationalRules.WriteRule,
+          OperationalRules.TempWriteRule,
 //          DelegatePureSynthesis.PureSynthesisNonfinal
           UnificationRules.Pick
           ))
@@ -160,9 +162,12 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
       UnificationRules.PickCard,
       LogicalRules.GhostWrite,
       UnificationRules.HeapUnifyPure,
+      // UnificationRules.HeapUnifyforTemp,
       LogicalRules.SimplifyConditional,
       OperationalRules.WriteRule,
+      OperationalRules.TempWriteRule,
       OperationalRules.FuncCall,
+      LogicalRules.TempFrame,
       if (config.delegatePure) DelegatePureSynthesis.PureSynthesisFinal else UnificationRules.Pick)
 //    ++
 //    (if (config.branchAbduction) List(UnificationRules.Pick) else List())

@@ -224,6 +224,7 @@ object Specifications extends SepLogicUtils {
     def hasExistentialPointers: Boolean = post.sigma.chunks.exists {
       case PointsTo(x@Var(_), _, _) => isExistential(x)
       case ConstPointsTo(x@Var(_), _, _) => isExistential(x)
+      case TempPointsTo(x@Var(_), _, _) => isExistential(x)
       case _ => false
     }
 

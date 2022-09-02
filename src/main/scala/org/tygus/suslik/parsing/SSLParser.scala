@@ -160,6 +160,8 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
   def heaplet: Parser[Heaplet] = (
     (identWithOffset <~ ":->") ~ expr ^^ { case (a, o) ~ b => PointsTo(Var(a), o, b) }
       |||
+    (identWithOffset <~ ":~>") ~ expr ^^ { case (a, o) ~ b => TempPointsTo(Var(a), o, b) }
+      |||
     (identWithOffset <~ ":=>") ~ expr ^^ { case (a, o) ~ b => ConstPointsTo(Var(a), o, b) }
       ||| "func" ~> ident ~ ("(" ~> rep1sep(expr, ",") <~ ")") ^^ {
         case name ~ args => FuncApp(name, args)

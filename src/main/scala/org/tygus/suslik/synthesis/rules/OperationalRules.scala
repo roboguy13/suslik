@@ -63,6 +63,70 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
 
   }
 
+
+  /*
+  TempWrite rule: create a new write from where it's possible
+
+  Γ ; {φ ; x.f ~> l' * P} ; {ψ ; Q} ---> S   GV(l) = GV(l') = Ø
+  ------------------------------------------------------------------------- [Tempwrite]
+  Γ ; {φ ; x.f ->/~> l * P} ; {ψ ; x.f ~> l' * Q} ---> *x.f := l' ; S
+
+  Γ ; {φ ; P} ; {ψ ; Q} ---> S   GV(l) = GV(l') = Ø
+  ------------------------------------------------------------------------- [Finalwrite]
+  Γ ; {φ ; x.f ~> l * P} ; {ψ ; x.f -> l' * Q} ---> *x.f := l' ; S
+
+  */
+  object TempWriteRule extends SynthesisRule with GeneratesCode with InvertibleRule {
+
+    override def toString: Ident = "TempWrite"
+
+    def apply(goal: Goal): Seq[RuleResult] = {
+      val pre = goal.pre
+      val post = goal.post
+
+      // Heaplets have no ghosts
+      def noGhosts: Heaplet => Boolean = {
+        case PointsTo(x@Var(_), _, e) => !goal.isGhost(x) && e.vars.forall(v => !goal.isGhost(v))
+        case TempPointsTo(x@Var(_), _, e) => !goal.isGhost(x) && e.vars.forall(v => !goal.isGhost(v))
+        case _ => false
+      }
+      def notConst: Heaplet => Boolean = {
+        case PointsTo(_,_,_) => true
+        case TempPointsTo(_,_,_) => true
+        case _ => false
+      }
+
+      // When do two heaplets match
+      def isMatch(hl: Heaplet, hr: Heaplet) = sameLhs_Temp(hl)(hr) && noGhosts(hr) && notConst(hl) //&& !sameRhs(hl)(hr) zytodo: avoid unnecessary write
+
+      findMatchingHeaplets(_ => true, isMatch, goal.pre.sigma, goal.post.sigma) match {
+        case None => Nil
+        case Some((hl@PointsTo(x@Var(_), offset, e1), hr@TempPointsTo(_, _, e2))) =>
+          val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** hr)
+          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val subGoal = goal.spawnChild(newPre, newPost)
+          val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl@TempPointsTo(x@Var(_), offset, e1), hr@TempPointsTo(_, _, e2))) =>
+          val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** hr)
+          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val subGoal = goal.spawnChild(newPre, newPost)
+          val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl@TempPointsTo(x@Var(_), offset, e1), hr@PointsTo(_, _, e2))) => //FinalWrite
+          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
+          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val subGoal = goal.spawnChild(newPre, newPost)
+          val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl, hr)) =>
+          ruleAssert(assertion = false, s"Write rule matched unexpected heaplets ${hl.pp} and ${hr.pp}")
+          Nil
+      }
+    }
+
+  }
+
   object FuncCall extends SynthesisRule with GeneratesCode with InvertibleRule {
 
     override def toString: Ident = "FuncCall"

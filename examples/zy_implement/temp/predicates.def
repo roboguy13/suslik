@@ -1,0 +1,11 @@
+predicate sll_n(loc x) {
+|  x == 0        => { emp }
+|  not (x == 0)  => { [x, 2] ** x :=> v ** (x + 1) :-> nxt ** sll_n(nxt) }
+}
+
+predicate temptest(loc x, loc y){
+|   x == 0 => {y :-> 0}
+|   not (x == 0) => {
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** y :-> 1 ** temptest(xnxt, y)
+}
+}

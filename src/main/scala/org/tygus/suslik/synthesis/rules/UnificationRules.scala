@@ -63,9 +63,13 @@ object UnificationRules extends PureLogicUtils with SepLogicUtils with RuleUtils
   }
 
 
-  object HeapUnifyUnfolding extends HeapUnify with UnfoldingPhase
+  object HeapUnifyUnfolding extends HeapUnify with UnfoldingPhase {
+    override def toString: String = "HeapUnifyUnfolding"
+  }
 
-  object HeapUnifyBlock extends HeapUnify with BlockPhase
+  object HeapUnifyBlock extends HeapUnify with BlockPhase {
+    override def toString: String = "HeapUnifyBlock"
+  }
 
   object HeapUnifyPointer extends HeapUnify with FlatPhase with InvertibleRule {
     override def toString: String = "UnifyLHS"
@@ -133,7 +137,45 @@ object UnificationRules extends PureLogicUtils with SepLogicUtils with RuleUtils
     }
   }
 
-  object HeapUnifyPure extends HeapUnify with FlatPhase
+  object HeapUnifyPure extends HeapUnify with FlatPhase {
+    override def toString: String = "HeapUnifyPure" 
+  }
+
+  object HeapUnifyforTemp extends HeapUnify with FlatPhase {
+    override def toString: String = "HeapUnifyforTemp" 
+
+    override def apply(goal: Goal): Seq[RuleResult] = {
+      val pre = goal.pre
+      val post = goal.post
+      if (goal.callGoal.isEmpty) return Nil
+      if (!profilesMatch(pre.sigma, post.sigma, false)) return Nil
+      val postCandidates = post.sigma.chunks.filter(p => heapletFilter(p))
+
+      val alternatives = for {
+        s <- postCandidates.take(1) // DANGER: in block phase this relies on alloc and unify discovering existential heaplets in the same order
+        t <- pre.sigma.chunks
+        if !s.eqModTags(t)
+        sub <- t.unify(s)
+        subExpr = goal.substToFormula(sub)
+        val newPostSigma = (post.sigma - s)
+        if newPostSigma.chunks.distinct.size == newPostSigma.chunks.size // discard substitution if is produces duplicate chunks in the post
+      } yield {
+        val newt = t match{
+          case PointsTo(v, offset, value) => TempPointsTo(v, offset, value)
+          case _ => t
+        }   
+        val newPreSigma = (pre.sigma - t) ** newt
+        val newPost = Assertion(post.phi && subExpr, newPostSigma)
+        val newPre = Assertion(pre.phi, newPreSigma)
+        val newGoal = goal.spawnChild(pre=newPre, post = newPost)
+        val kont = UnificationProducer(t, s, sub) >> IdProducer >> ExtractHelper(goal)
+        RuleResult(List(newGoal), kont, this, goal)
+      }
+      nubBy[RuleResult, Assertion](alternatives, sub => sub.subgoals.head.post)
+//      val derivations = nubBy[RuleResult, Assertion](alternatives, sub => sub.subgoals.head.post)
+//      derivations.sortBy(s => -s.subgoals.head.similarity)
+    }
+  }
 
   /*
     X ∈ GV(post) / GV (pre)

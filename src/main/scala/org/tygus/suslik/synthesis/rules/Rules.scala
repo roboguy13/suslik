@@ -83,7 +83,7 @@ object Rules {
     def heapletFilter(h: Heaplet): Boolean = true
 
     def profilesMatch(pre: SFormula, post: SFormula, exact: Boolean): Boolean = {
-      if (exact) pre.profile.ptss == post.profile.ptss else multiSubset(post.profile.ptss, pre.profile.ptss)
+      if (exact) pre.tempprofile.ptss == post.tempprofile.ptss else multiSubset(post.profile.ptss, pre.profile.ptss)
     }
   }
 

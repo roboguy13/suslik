@@ -15,6 +15,9 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
       case PointsTo(v, offset, value) =>
         val acc1 = if (p(v)) acc + v.asInstanceOf[R] else acc
         acc1 ++ value.collect(p)
+      case TempPointsTo(v, offset, value) =>
+        val acc1 = if (p(v)) acc + v.asInstanceOf[R] else acc
+        acc1 ++ value.collect(p)
       case ConstPointsTo(v, offset, value) =>
         val acc1 = if (p(v)) acc + v.asInstanceOf[R] else acc
         acc1 ++ value.collect(p)
@@ -60,6 +63,7 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
   // Size of the heaplet (in AST nodes)
   def size: Int = this match {
     case PointsTo(loc, _, value) => 1 + loc.size + value.size
+    case TempPointsTo(loc, _, value) => 1 + loc.size + value.size
     case ConstPointsTo(loc, _, value) => 1 + loc.size + value.size
     case Block(loc, _) => 1 + loc.size
     case SApp(_, args, _, _) => args.map(_.size).sum
@@ -106,6 +110,43 @@ case class PointsTo(loc: Expr, offset: Int = 0, value: Expr) extends Heaplet {
   // This only unifies the rhs of the points-to, because lhss are unified by a separate rule
   override def unify(that: Heaplet): Option[ExprSubst] = that match {
     case PointsTo(l, o, v) if l == loc && o == offset => Some(Map(value -> v))
+    case _ => None
+  }
+}
+
+/**
+  * var + offset :~> value
+  */
+case class TempPointsTo(loc: Expr, offset: Int = 0, value: Expr) extends Heaplet {
+
+  override def resolveOverloading(gamma: Gamma): Heaplet =
+    this.copy(loc = loc.resolveOverloading(gamma), value = value.resolveOverloading(gamma))
+
+  override def pp: Ident = {
+    val head = if (offset <= 0) loc.pp else s"(${loc.pp} + $offset)"
+    s"$head :~> ${value.pp}"
+  }
+
+  def subst(sigma: Map[Var, Expr]): Heaplet = loc.subst(sigma) match {
+    case BinaryExpr(OpPlus, l, IntConst(off)) => TempPointsTo(l, offset + off, value.subst (sigma))
+    case _ => TempPointsTo (loc.subst (sigma), offset, value.subst (sigma) )
+  }
+
+  def resolve(gamma: Gamma, env: Environment): Option[Gamma] = {
+    for {
+      gamma1 <- loc.resolve(gamma, Some(LocType))
+      gamma2 <- value.resolve(gamma1, Some(LocType))
+    } yield gamma2
+  }
+
+  override def compare(that: Heaplet) = that match {
+    case SApp(pred, args, tag, card) => -1
+    case _ => super.compare(that)
+  }
+
+  // This only unifies the rhs of the points-to, because lhss are unified by a separate rule
+  override def unify(that: Heaplet): Option[ExprSubst] = that match {
+    case TempPointsTo(l, o, v) if l == loc && o == offset => Some(Map(value -> v))
     case _ => None
   }
 }
@@ -287,7 +328,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
 
   override def pp: Ident = if (chunks.isEmpty) "emp" else {
     def pt(l: List[Heaplet]) = l.map(_.pp).sortBy(x => x)
-    List(helper_funcs, cptss ,ptss, apps, blocks).flatMap(pt).mkString(" ** ")
+    List(helper_funcs, tptss, cptss ,ptss, apps, blocks).flatMap(pt).mkString(" ** ")
   }
 
   def blocks: List[Block] = for (b@Block(_, _) <- chunks) yield b
@@ -296,7 +337,9 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
 
   def ptss: List[PointsTo] = for (b@PointsTo(_, _, _) <- chunks) yield b
 
-  def cptss: List[ConstPointsTo] = for (b@ConstPointsTo(x, y, z) <- chunks) yield b
+  def cptss: List[ConstPointsTo] = for (b@ConstPointsTo(_, _, _) <- chunks) yield b
+
+  def tptss: List[TempPointsTo] = for (b@TempPointsTo(_, _, _) <- chunks) yield b
 
   def helper_funcs :List[FuncApp] = for (b@FuncApp(_,_) <- chunks) yield b
 
@@ -347,6 +390,12 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
     val appProfile = apps.groupBy(_.pred).mapValues(_.length)
     val blockProfile = blocks.groupBy(_.sz).mapValues(_.length)
     val ptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}),helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
+    SProfile(appProfile, blockProfile, ptsProfile)
+  }
+  lazy val tempprofile: SProfile = {
+    val appProfile = apps.groupBy(_.pred).mapValues(_.length)
+    val blockProfile = blocks.groupBy(_.sz).mapValues(_.length)
+    val ptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}), tptss.map(_ match {case TempPointsTo(a,b,c) => PointsTo(a,b,c)}), helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
     SProfile(appProfile, blockProfile, ptsProfile)
   }
 
