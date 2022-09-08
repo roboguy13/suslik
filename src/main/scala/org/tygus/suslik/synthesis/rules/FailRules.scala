@@ -79,6 +79,12 @@ object FailRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
               case _ => false
             }
           }
+          case fcall@TempFuncApp(_, init :+ last) => {
+            last match{
+              case v@Var(_) => true
+              case _ => false
+            }
+          }
           case other@_ => false
         }) // or has a heaplet in pre with the same LHS
         Nil

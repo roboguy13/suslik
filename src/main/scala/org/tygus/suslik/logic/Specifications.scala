@@ -221,7 +221,7 @@ object Specifications extends SepLogicUtils {
 
     def hasBlocks: Boolean = pre.hasBlocks || post.hasBlocks
 
-    def hasExistentialPointers: Boolean = post.sigma.chunks.exists {
+    def hasExistentialPointers: Boolean = post.sigma.chunks.exists { //zytodo: Func?
       case PointsTo(x@Var(_), _, _) => isExistential(x)
       case ConstPointsTo(x@Var(_), _, _) => isExistential(x)
       case TempPointsTo(x@Var(_), _, _) => isExistential(x)

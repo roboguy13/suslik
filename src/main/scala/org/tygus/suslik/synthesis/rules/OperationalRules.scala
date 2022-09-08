@@ -127,7 +127,7 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
 
   }
 
-  object FuncCall extends SynthesisRule with GeneratesCode with InvertibleRule {
+  object FuncCall extends SynthesisRule with GeneratesCode {
 
     override def toString: Ident = "FuncCall"
 
@@ -153,6 +153,13 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
           val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
           List(RuleResult(List(subGoal), kont, this, goal))
         case Some((hl@FuncApp(_,_), hr@FuncApp(f,args))) =>
+          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
+          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val subGoal = goal.spawnChild(newPre, newPost)
+          val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
+
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl@SApp(_,_,_,_), hr@FuncApp(f,args))) =>
           val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
           val newPost = Assertion(post.phi, goal.post.sigma - hr)
           val subGoal = goal.spawnChild(newPre, newPost)

@@ -29,6 +29,8 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
           card.collect(p)
       case FuncApp(_, args) => 
         args.foldLeft(acc)((a, e) => a ++ e.collect(p))
+      case TempFuncApp(_, args) => 
+        args.foldLeft(acc)((a, e) => a ++ e.collect(p))
 
     }
 
@@ -68,6 +70,7 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
     case Block(loc, _) => 1 + loc.size
     case SApp(_, args, _, _) => args.map(_.size).sum
     case FuncApp(_, args) => args.map(_.size).sum
+    case TempFuncApp(_, args) => args.map(_.size).sum
   }
 
   def cost: Int = this match {
@@ -243,6 +246,33 @@ case class FuncApp(fname: Ident, args: Seq[Expr]) extends Heaplet {
   }
 }
 
+/**
+  * tempfunc f(args..)
+  */
+case class TempFuncApp(fname: Ident, args: Seq[Expr]) extends Heaplet {
+
+  override def resolveOverloading(gamma: Gamma): Heaplet = this.copy(args = args.map(_.resolveOverloading(gamma)))
+
+  override def pp: Ident = {
+    s"[TempFunc, $fname(${args.map(_.pp)})]"
+  }
+
+  def subst(sigma: Map[Var, Expr]): Heaplet = {
+    val newArgs = args.map(_.subst(sigma))
+    this.copy(args = newArgs)
+  }
+
+  //todo: type checking
+  def resolve(gamma: Gamma, env: Environment): Option[Gamma] = Some(gamma)
+
+  override def compare(that: Heaplet) = 1
+
+  override def unify(that: Heaplet): Option[ExprSubst] = that match {
+    case TempFuncApp(n, a) if n == fname => Some(args.zip(a).toMap)
+    case _ => None
+  }
+}
+
 case class PTag(calls: Int = 0, unrolls: Int = 0) extends PrettyPrinting {
   override def pp: String = this match {
     case PTag(0, 0) => "" // Default tag
@@ -328,7 +358,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
 
   override def pp: Ident = if (chunks.isEmpty) "emp" else {
     def pt(l: List[Heaplet]) = l.map(_.pp).sortBy(x => x)
-    List(helper_funcs, tptss, cptss ,ptss, apps, blocks).flatMap(pt).mkString(" ** ")
+    List(helper_funcs, temp_helper_funcs, tptss, cptss ,ptss, apps, blocks).flatMap(pt).mkString(" ** ")
   }
 
   def blocks: List[Block] = for (b@Block(_, _) <- chunks) yield b
@@ -342,6 +372,8 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
   def tptss: List[TempPointsTo] = for (b@TempPointsTo(_, _, _) <- chunks) yield b
 
   def helper_funcs :List[FuncApp] = for (b@FuncApp(_,_) <- chunks) yield b
+
+  def temp_helper_funcs :List[TempFuncApp] = for (b@TempFuncApp(_,_) <- chunks) yield b
 
   def subst(sigma: Map[Var, Expr]): SFormula = SFormula(chunks.map(_.subst(sigma)))
 
@@ -395,7 +427,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
   lazy val tempprofile: SProfile = {
     val appProfile = apps.groupBy(_.pred).mapValues(_.length)
     val blockProfile = blocks.groupBy(_.sz).mapValues(_.length)
-    val ptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}), tptss.map(_ match {case TempPointsTo(a,b,c) => PointsTo(a,b,c)}), helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
+    val ptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}), tptss.map(_ match {case TempPointsTo(a,b,c) => PointsTo(a,b,c)}), temp_helper_funcs.map(_ match {case TempFuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))}), helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
     SProfile(appProfile, blockProfile, ptsProfile)
   }
 

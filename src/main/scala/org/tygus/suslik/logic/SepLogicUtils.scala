@@ -128,6 +128,10 @@ trait SepLogicUtils extends PureLogicUtils {
         case FuncApp(_, initr :+ lastr) => lastr == lastl
         case _ => false
       }
+      case SApp(_, a::b , _, _) => hr match {
+        case FuncApp(_, initr :+ lastr) => lastr == a
+        case _ => false
+      }
       case _ => false
     }
   }

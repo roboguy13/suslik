@@ -166,6 +166,9 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
       ||| "func" ~> ident ~ ("(" ~> rep1sep(expr, ",") <~ ")") ^^ {
         case name ~ args => FuncApp(name, args)
       }
+      ||| "tempfunc" ~> ident ~ ("(" ~> rep1sep(expr, ",") <~ ")") ^^ {
+        case name ~ args => TempFuncApp(name, args)
+      }
       ||| "[" ~> (ident ~ ("," ~> numericLit)) <~ "]" ^^ { case a ~ s => Block(Var(a), Integer.parseInt(s)) }
       ||| ident ~ ("(" ~> rep1sep(purePredAbstraction ||| spatialPredAbstraction ||| expr, ",") <~ ")") ~ opt("<" ~> expr <~ ">") ^^ {
       case name ~ args ~ v => SApp(name, args, PTag(), v.getOrElse(Var(getTotallyFreshName(cardinalityPrefix))))
