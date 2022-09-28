@@ -51,7 +51,7 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
 
   def eqModTags(other: Heaplet): Boolean = {
     this match {
-      case ConstPointsTo(loc, offset, value) => PointsTo(loc, offset, value).setTag(PTag()) == other.setTag(PTag())
+      case ConstPointsTo(loc, offset, value) => ((this.setTag(PTag()) == other.setTag(PTag())) || (PointsTo(loc, offset, value).setTag(PTag()) == other.setTag(PTag())))
       case _ => this.setTag(PTag()) == other.setTag(PTag())
     }
   }
