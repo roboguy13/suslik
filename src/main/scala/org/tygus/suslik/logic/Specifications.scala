@@ -243,6 +243,8 @@ object Specifications extends SepLogicUtils {
     // Determine whether `x` is a ghost variable wrt. given spec and gamma
     def isGhost(x: Var): Boolean = ghosts.contains(x)
 
+    def unAllocedTemp(x: Var): Boolean = post.sigma.tempvars.contains(x)
+
     // Determine whether x is in the context
     def isProgramVar(x: Var): Boolean = programVars.contains(x)
 
@@ -311,7 +313,7 @@ object Specifications extends SepLogicUtils {
     val gamma = resolvePrePost(gamma0, env, pre, post)
     val pre1 = pre.resolveOverloading(gamma)
     val post1 = post.resolveOverloading(gamma)
-    val formalNames = formals.map(_._1)
+    val formalNames = formals.map(_._1) ++ post1.sigma.tempvars
     val ghostUniversals = pre1.vars -- formalNames
     Goal(pre1, post1,
       gamma, formalNames, ghostUniversals,

@@ -46,6 +46,35 @@ trait SepLogicUtils extends PureLogicUtils {
           hr <- post.chunks.toStream if pr(hl, hr)} yield (hl, hr)).headOption
   }
 
+  def findTemp(post: SFormula): Option[Heaplet] = {
+    def HasTemp: Heaplet => Boolean = {
+        case TempVar(loc, false) => true
+        case _ => false
+    }
+    // def TempAlloced(temp: Heaplet): Heaplet => Boolean = {
+    //     case PointsTo(l, 0, _) => TempVar(l) == temp.asInstanceOf[TempVar]
+    //     case ConstPointsTo(l, 0, _) => TempVar(l) == temp.asInstanceOf[TempVar]
+    //     case TempPointsTo(l, 0, _) => TempVar(l) == temp.asInstanceOf[TempVar]
+    //     case _ => false
+    // }
+    // (for {
+    //     hl <- pre.chunks.toStream if (HasTemp(hl) && (post.chunks.filter(TempAlloced(hl)).size == 0))
+    //   } yield hl).headOption
+    (for{
+      hr <- post.chunks.toStream if HasTemp(hr)
+    } yield hr).headOption
+  }
+
+  def findTempforFree(post: SFormula): Option[Heaplet] = {
+    def HasAlloced: Heaplet => Boolean = {
+        case TempVar(loc, true) => true
+        case _ => false
+    }
+    (for{
+      hr <- post.chunks.toStream if (HasAlloced(hr) && !((post - hr).vars.contains(hr.asInstanceOf[TempVar].name.asInstanceOf[Var])))
+    } yield hr).headOption
+  }
+
   /**
     * Are two heaplets both points-to with the same LHS?
     */
@@ -124,14 +153,18 @@ trait SepLogicUtils extends PureLogicUtils {
         case FuncApp(_, initr :+ lastr) => lastr == xl
         case _ => false
       }
+      case TempPointsTo(xl, 0, _) => hr match {
+        case FuncApp(_, initr :+ lastr) => lastr == xl
+        case _ => false
+      }
       case FuncApp(_, initl :+ lastl) => hr match {
         case FuncApp(_, initr :+ lastr) => lastr == lastl
         case _ => false
       }
-      case SApp(_, a::b , _, _) => hr match {
-        case FuncApp(_, initr :+ lastr) => lastr == a
-        case _ => false
-      }
+      // case SApp(_, a::b , _, _) => hr match {
+      //   case FuncApp(_, initr :+ lastr) => lastr == a
+      //   case _ => false
+      // }
       case _ => false
     }
   }

@@ -1,0 +1,11 @@
+#
+
+
+void tempfunc (loc x, loc y, loc ret)
+{x :-> x0  ** y :-> y0 ** ret :-> a}
+{x :-> x0  ** y :-> y0 ** temploc tmp1 ** temploc tmp2 ** func f1(x, y, tmp1) ** func f2(x, y, tmp2) ** func f(tmp1, tmp2, ret)}
+{
+    ??
+}
+
+#####

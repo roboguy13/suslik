@@ -63,6 +63,7 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
     UnificationRules.SubstRight,
 //    LogicalRules.WeakenPre,
     OperationalRules.ReadRule,
+    OperationalRules.AllocTemp,
     BranchRules.Branch)
 
   protected def symbolicExecutionRules: List[SynthesisRule] = List(
@@ -127,7 +128,7 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
           LogicalRules.SimplifyConditional,
           OperationalRules.FuncCall,
           OperationalRules.WriteRule,
-          OperationalRules.TempWriteRule,
+          // OperationalRules.TempWriteRule,
 //          DelegatePureSynthesis.PureSynthesisNonfinal
           UnificationRules.Pick
           ))
@@ -167,9 +168,10 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
       // UnificationRules.HeapUnifyforTemp,
       LogicalRules.SimplifyConditional,
       OperationalRules.WriteRule,
-      OperationalRules.TempWriteRule,
+      // OperationalRules.TempWriteRule,
       OperationalRules.FuncCall,
-      LogicalRules.TempFrame,
+      OperationalRules.FreeTemp,
+      // LogicalRules.TempFrame,
       if (config.delegatePure) DelegatePureSynthesis.PureSynthesisFinal else UnificationRules.Pick)
 //    ++
 //    (if (config.branchAbduction) List(UnificationRules.Pick) else List())

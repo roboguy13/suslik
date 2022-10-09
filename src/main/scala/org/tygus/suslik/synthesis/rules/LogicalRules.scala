@@ -346,56 +346,56 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
 
   }
 
-  object TempFrame extends SynthesisRule {
-    def TempFilter(h: Heaplet): Boolean = {
-      h.isInstanceOf[TempPointsTo]
-    }
-    def noRhs(tpt: TempPointsTo, sigma:SFormula): Boolean = {
-      sigma.chunks.forall(sameLhs(tpt))
-    }
+  // object TempFrame extends SynthesisRule {
+  //   def TempFilter(h: Heaplet): Boolean = {
+  //     h.isInstanceOf[TempPointsTo]
+  //   }
+  //   def noRhs(tpt: TempPointsTo, sigma:SFormula): Boolean = {
+  //     sigma.chunks.forall(sameLhs(tpt))
+  //   }
 
-    override def toString: String = "TempFrame"
+  //   override def toString: String = "TempFrame"
 
 
-    def apply(goal: Goal): Seq[RuleResult] = {
-      val pre = goal.pre
-      val post = goal.post
+  //   def apply(goal: Goal): Seq[RuleResult] = {
+  //     val pre = goal.pre
+  //     val post = goal.post
 
-      findHeaplet(TempFilter, pre.sigma) match {
-        case None => Nil
-        case Some(value) => value match {
-          case tpt@TempPointsTo(loc, offset, value) => {
-            if (noRhs(tpt, post.sigma)){
-              Nil
-            }
-            else{
-              val newPreSigma = pre.sigma - tpt
-              val newPre = Assertion(pre.phi, newPreSigma)
-              val newGoal = goal.spawnChild(pre = newPre)
-              val kont = IdProducer >> ExtractHelper(goal)
-              List(RuleResult(List(newGoal), kont, this, goal))
-            }
-          }
-          case _ => Nil
-        }
-      }
-      // if (!profilesMatch(pre.sigma, post.sigma, goal.callGoal.isEmpty)) return Nil
+  //     findHeaplet(TempFilter, pre.sigma) match {
+  //       case None => Nil
+  //       case Some(value) => value match {
+  //         case tpt@TempPointsTo(loc, offset, value) => {
+  //           if (noRhs(tpt, post.sigma)){
+  //             Nil
+  //           }
+  //           else{
+  //             val newPreSigma = pre.sigma - tpt
+  //             val newPre = Assertion(pre.phi, newPreSigma)
+  //             val newGoal = goal.spawnChild(pre = newPre)
+  //             val kont = IdProducer >> ExtractHelper(goal)
+  //             List(RuleResult(List(newGoal), kont, this, goal))
+  //           }
+  //         }
+  //         case _ => Nil
+  //       }
+  //     }
+  //     // if (!profilesMatch(pre.sigma, post.sigma, goal.callGoal.isEmpty)) return Nil
 
-      // def isMatch(hPre: Heaplet, hPost: Heaplet): Boolean = hPre.eqModTags(hPost) && heapletFilter(hPost)
+  //     // def isMatch(hPre: Heaplet, hPost: Heaplet): Boolean = hPre.eqModTags(hPost) && heapletFilter(hPost)
 
-      // findMatchingHeaplets(_ => true, isMatch, pre.sigma, post.sigma) match {
-      //   case None => Nil
-      //   case Some((hPre, hPost)) => {
-      //     val newPreSigma = pre.sigma - hPre
-      //     val newPostSigma = post.sigma - hPost
-      //     val newPre = Assertion(pre.phi, newPreSigma)
-      //     val newPost = Assertion(post.phi, newPostSigma)
-      //     val newGoal = goal.spawnChild(newPre, newPost)
-      //     val kont = IdProducer >> ExtractHelper(goal)
-      //     List(RuleResult(List(newGoal), kont, this, goal))
-      //   }
-      // }
-    }
-  }
+  //     // findMatchingHeaplets(_ => true, isMatch, pre.sigma, post.sigma) match {
+  //     //   case None => Nil
+  //     //   case Some((hPre, hPost)) => {
+  //     //     val newPreSigma = pre.sigma - hPre
+  //     //     val newPostSigma = post.sigma - hPost
+  //     //     val newPre = Assertion(pre.phi, newPreSigma)
+  //     //     val newPost = Assertion(post.phi, newPostSigma)
+  //     //     val newGoal = goal.spawnChild(newPre, newPost)
+  //     //     val kont = IdProducer >> ExtractHelper(goal)
+  //     //     List(RuleResult(List(newGoal), kont, this, goal))
+  //     //   }
+  //     // }
+  //   }
+  // }
 
 }

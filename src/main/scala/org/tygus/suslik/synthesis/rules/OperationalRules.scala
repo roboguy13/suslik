@@ -76,56 +76,56 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
   Γ ; {φ ; x.f ~> l * P} ; {ψ ; x.f -> l' * Q} ---> *x.f := l' ; S
 
   */
-  object TempWriteRule extends SynthesisRule with GeneratesCode with InvertibleRule {
+  // object TempWriteRule extends SynthesisRule with GeneratesCode with InvertibleRule {
 
-    override def toString: Ident = "TempWrite"
+  //   override def toString: Ident = "TempWrite"
 
-    def apply(goal: Goal): Seq[RuleResult] = {
-      val pre = goal.pre
-      val post = goal.post
+  //   def apply(goal: Goal): Seq[RuleResult] = {
+  //     val pre = goal.pre
+  //     val post = goal.post
 
-      // Heaplets have no ghosts
-      def noGhosts: Heaplet => Boolean = {
-        case PointsTo(x@Var(_), _, e) => !goal.isGhost(x) && e.vars.forall(v => !goal.isGhost(v))
-        case TempPointsTo(x@Var(_), _, e) => !goal.isGhost(x) && e.vars.forall(v => !goal.isGhost(v))
-        case _ => false
-      }
-      def notConst: Heaplet => Boolean = {
-        case PointsTo(_,_,_) => true
-        case TempPointsTo(_,_,_) => true
-        case _ => false
-      }
+  //     // Heaplets have no ghosts
+  //     def noGhosts: Heaplet => Boolean = {
+  //       case PointsTo(x@Var(_), _, e) => !goal.isGhost(x) && e.vars.forall(v => !goal.isGhost(v))
+  //       case TempPointsTo(x@Var(_), _, e) => !goal.isGhost(x) && e.vars.forall(v => !goal.isGhost(v))
+  //       case _ => false
+  //     }
+  //     def notConst: Heaplet => Boolean = {
+  //       case PointsTo(_,_,_) => true
+  //       case TempPointsTo(_,_,_) => true
+  //       case _ => false
+  //     }
 
-      // When do two heaplets match
-      def isMatch(hl: Heaplet, hr: Heaplet) = sameLhs_Temp(hl)(hr) && noGhosts(hr) && notConst(hl) //&& !sameRhs(hl)(hr) zytodo: avoid unnecessary write
+  //     // When do two heaplets match
+  //     def isMatch(hl: Heaplet, hr: Heaplet) = sameLhs_Temp(hl)(hr) && noGhosts(hr) && notConst(hl) //&& !sameRhs(hl)(hr) zytodo: avoid unnecessary write
 
-      findMatchingHeaplets(_ => true, isMatch, goal.pre.sigma, goal.post.sigma) match {
-        case None => Nil
-        case Some((hl@PointsTo(x@Var(_), offset, e1), hr@TempPointsTo(_, _, e2))) =>
-          val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** hr)
-          val newPost = Assertion(post.phi, goal.post.sigma - hr)
-          val subGoal = goal.spawnChild(newPre, newPost)
-          val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
-          List(RuleResult(List(subGoal), kont, this, goal))
-        case Some((hl@TempPointsTo(x@Var(_), offset, e1), hr@TempPointsTo(_, _, e2))) =>
-          val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** hr)
-          val newPost = Assertion(post.phi, goal.post.sigma - hr)
-          val subGoal = goal.spawnChild(newPre, newPost)
-          val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
-          List(RuleResult(List(subGoal), kont, this, goal))
-        case Some((hl@TempPointsTo(x@Var(_), offset, e1), hr@PointsTo(_, _, e2))) => //FinalWrite
-          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
-          val newPost = Assertion(post.phi, goal.post.sigma - hr)
-          val subGoal = goal.spawnChild(newPre, newPost)
-          val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
-          List(RuleResult(List(subGoal), kont, this, goal))
-        case Some((hl, hr)) =>
-          ruleAssert(assertion = false, s"Write rule matched unexpected heaplets ${hl.pp} and ${hr.pp}")
-          Nil
-      }
-    }
+  //     findMatchingHeaplets(_ => true, isMatch, goal.pre.sigma, goal.post.sigma) match {
+  //       case None => Nil
+  //       case Some((hl@PointsTo(x@Var(_), offset, e1), hr@TempPointsTo(_, _, e2))) =>
+  //         val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** hr)
+  //         val newPost = Assertion(post.phi, goal.post.sigma - hr)
+  //         val subGoal = goal.spawnChild(newPre, newPost)
+  //         val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
+  //         List(RuleResult(List(subGoal), kont, this, goal))
+  //       case Some((hl@TempPointsTo(x@Var(_), offset, e1), hr@TempPointsTo(_, _, e2))) =>
+  //         val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** hr)
+  //         val newPost = Assertion(post.phi, goal.post.sigma - hr)
+  //         val subGoal = goal.spawnChild(newPre, newPost)
+  //         val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
+  //         List(RuleResult(List(subGoal), kont, this, goal))
+  //       case Some((hl@TempPointsTo(x@Var(_), offset, e1), hr@PointsTo(_, _, e2))) => //FinalWrite
+  //         val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
+  //         val newPost = Assertion(post.phi, goal.post.sigma - hr)
+  //         val subGoal = goal.spawnChild(newPre, newPost)
+  //         val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
+  //         List(RuleResult(List(subGoal), kont, this, goal))
+  //       case Some((hl, hr)) =>
+  //         ruleAssert(assertion = false, s"Write rule matched unexpected heaplets ${hl.pp} and ${hr.pp}")
+  //         Nil
+  //     }
+  //   }
 
-  }
+  // }
 
   object FuncCall extends SynthesisRule with GeneratesCode {
 
@@ -137,7 +137,7 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
 
       // Heaplets have no ghosts zytodo: check
       def noGhosts: Heaplet => Boolean = {
-        case FuncApp(_, init :+ last) => !goal.isGhost(last.asInstanceOf[Var]) && init.forall(e => e.vars.forall(v => !goal.isGhost(v)))
+        case FuncApp(_, init :+ last) => !goal.isGhost(last.asInstanceOf[Var]) && init.forall(e => e.vars.forall(v => !(goal.isGhost(v) || goal.unAllocedTemp(v) || goal.pre.sigma.chunks.contains(TempPointsTo(v, 0, LocConst(666))))))
         case _ => false
       }
 
@@ -147,25 +147,32 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
       findMatchingHeaplets(_ => true, isMatch, goal.pre.sigma, goal.post.sigma) match {
         case None => Nil
         case Some((hl@PointsTo(_,_,_), hr@FuncApp(f,args))) =>
-          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
-          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val newPre = Assertion(pre.phi, goal.pre.sigma)
+          val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** hl)
           val subGoal = goal.spawnChild(newPre, newPost)
           val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
           List(RuleResult(List(subGoal), kont, this, goal))
         case Some((hl@FuncApp(_,_), hr@FuncApp(f,args))) =>
-          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
-          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val newPre = Assertion(pre.phi, goal.pre.sigma)
+          val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** hl)
           val subGoal = goal.spawnChild(newPre, newPost)
           val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
 
           List(RuleResult(List(subGoal), kont, this, goal))
-        case Some((hl@SApp(_,_,_,_), hr@FuncApp(f,args))) =>
-          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
-          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+        case Some((hl@TempPointsTo(l, o, v), hr@FuncApp(f,args))) =>
+          val pts = PointsTo(l, o, v)
+          val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** pts)
+          val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** pts)
           val subGoal = goal.spawnChild(newPre, newPost)
           val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
-
           List(RuleResult(List(subGoal), kont, this, goal))
+        // case Some((hl@SApp(_,_,_,_), hr@FuncApp(f,args))) =>
+        //   val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
+        //   val newPost = Assertion(post.phi, goal.post.sigma - hr)
+        //   val subGoal = goal.spawnChild(newPre, newPost)
+        //   val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
+
+        //   List(RuleResult(List(subGoal), kont, this, goal))
         case Some((hl, hr)) =>
           ruleAssert(assertion = false, s"Write rule matched unexpected heaplets ${hl.pp} and ${hr.pp}")
           Nil
@@ -232,6 +239,36 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
     }
   }
 
+  object AllocTemp extends SynthesisRule with GeneratesCode with InvertibleRule {
+    override def toString(): String = "AllocTemp"
+
+    def apply(goal: Goal): Seq[RuleResult] = {
+      val pre = goal.pre
+      val post = goal.post
+
+      findTemp(goal.post.sigma) match {
+        case None => Nil
+        case Some(TempVar(loc,false)) =>
+          var varname = freshVar(goal.vars, loc.pp)
+          val tp = LocType
+
+          val temppt = TempPointsTo(varname,0,LocConst(666))
+          val newPre = Assertion(pre.phi, mkSFormula(pre.sigma.chunks ++ List(temppt)))
+          val newPost = Assertion(post.phi, (post.sigma - TempVar(loc, false)) ** TempVar(loc, true))
+
+          val subGoal = goal.spawnChild(newPre,
+                                        newPost.subst(Var(loc.pp), varname),
+                                        gamma = goal.gamma + (varname -> tp),
+                                        programVars = varname :: goal.programVars)
+          val kont: StmtProducer = SubstVarProducer(Var(loc.pp),varname) >> PrependProducer(Malloc(varname, tp, 1)) >> ExtractHelper(goal)
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some(h) => 
+          ruleAssert(false, s"AllocTemp Error")
+          Nil
+      }
+    }
+  }
+
   /*
   Alloc rule: allocate memory for an existential block
 
@@ -282,6 +319,37 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
     }
 
   }
+
+
+  object FreeTemp extends SynthesisRule with GeneratesCode {
+
+    override def toString: Ident = "FreeTemp"
+
+    def findTargetHeaplets(goal: Goal): Option[(Block, Seq[Heaplet])] = {
+      // Heaplets have no ghosts
+      def noGhosts(h: Heaplet): Boolean = h.vars.forall(v => goal.isProgramVar(v))
+
+      findBlockAndChunks(noGhosts, _ => true, goal.pre.sigma)
+    }
+
+    def apply(goal: Goal): Seq[RuleResult] = {
+      val post = goal.post
+
+      findTempforFree(goal.post.sigma) match {
+        case None => Nil
+        case Some(t@TempVar(x@Var(_), true)) =>
+          val newPost = Assertion(post.phi, post.sigma - t)
+
+          val subGoal = goal.spawnChild(post = newPost)
+          val kont: StmtProducer = PrependProducer(Free(x)) >> ExtractHelper(goal)
+
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some(_) => Nil
+      }
+    }
+
+  }
+  
 
   /*
   Free rule: free a non-ghost block from the pre-state
