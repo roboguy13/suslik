@@ -41,6 +41,7 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
       }
       def notConst: Heaplet => Boolean = {
         case PointsTo(_,_,_) => true
+        case TempPointsTo(_,_,_) => true
         case _ => false
       }
 
@@ -50,6 +51,12 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
       findMatchingHeaplets(_ => true, isMatch, goal.pre.sigma, goal.post.sigma) match {
         case None => Nil
         case Some((hl@PointsTo(x@Var(_), offset, e1), hr@PointsTo(_, _, e2))) =>
+          val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
+          val newPost = Assertion(post.phi, goal.post.sigma - hr)
+          val subGoal = goal.spawnChild(newPre, newPost)
+          val kont: StmtProducer = PrependProducer(Store(x, offset, e2)) >> ExtractHelper(goal)
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl@TempPointsTo(x@Var(_), offset, e1), hr@PointsTo(_, _, e2))) =>
           val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
           val newPost = Assertion(post.phi, goal.post.sigma - hr)
           val subGoal = goal.spawnChild(newPre, newPost)

@@ -5,6 +5,7 @@ import org.tygus.suslik.language.Statements._
 import org.tygus.suslik.language._
 
 import scala.Ordering.Implicits._
+import org.tygus.suslik.synthesis.rules.OperationalRules
 
 object Specifications extends SepLogicUtils {
 
@@ -225,6 +226,7 @@ object Specifications extends SepLogicUtils {
       case PointsTo(x@Var(_), _, _) => isExistential(x)
       case ConstPointsTo(x@Var(_), _, _) => isExistential(x)
       case TempPointsTo(x@Var(_), _, _) => isExistential(x)
+      case FuncApp(_, init :+ last) => isExistential(last.asInstanceOf[Var])
       case _ => false
     }
 

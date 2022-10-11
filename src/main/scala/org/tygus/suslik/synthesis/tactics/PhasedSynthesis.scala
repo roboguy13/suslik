@@ -55,6 +55,7 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
   }
 
   protected def anyPhaseRules: List[SynthesisRule] = List(
+    OperationalRules.AllocTemp,
     LogicalRules.StarPartial,
     LogicalRules.NilNotLval,
     LogicalRules.Inconsistency,
@@ -63,7 +64,7 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
     UnificationRules.SubstRight,
 //    LogicalRules.WeakenPre,
     OperationalRules.ReadRule,
-    OperationalRules.AllocTemp,
+    
     BranchRules.Branch)
 
   protected def symbolicExecutionRules: List[SynthesisRule] = List(

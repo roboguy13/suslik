@@ -237,7 +237,7 @@ object LogicalRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
     override def toString: String = "*Partial"
 
     def extendPure(p: PFormula, s: SFormula): PFormula = {
-      val ptrs = (for (PointsTo(x, o, _) <- s.chunks) yield (o, x)).++((for (ConstPointsTo(x, o, _) <- s.chunks) yield (o, x))).groupBy(_._1).mapValues(_.map(_._2))
+      val ptrs = (for (PointsTo(x, o, _) <- s.chunks) yield (o, x)).++((for (TempPointsTo(x, o, _) <- s.chunks) yield (o, x))).++((for (ConstPointsTo(x, o, _) <- s.chunks) yield (o, x))).groupBy(_._1).mapValues(_.map(_._2))
       // All pairs of pointers
       val pairs = for (o <- ptrs.keySet; x <- ptrs(o); y <- ptrs(o) if x != y) yield (x, y)
       val newPairs = pairs.filter {
