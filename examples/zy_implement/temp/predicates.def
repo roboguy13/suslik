@@ -9,3 +9,29 @@ predicate temptest(loc x, loc y){
     [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** y :~> 1 ** temptest(xnxt, y)
 }
 }
+
+predicate f(loc x, loc y, loc ret){
+| true => {temploc tmp1 ** func f1(x, y, tmp1) ** func f2(tmp1, y, ret)}
+}
+
+predicate sum(loc x, loc ret){
+|  x == 0 => {ret == 0; emp}
+|  not (x == 0) => {
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** t:-> t0 ** sum(xnxt, t0) ** func f(x, t0, ret) ** [ret, 1]
+}
+}
+
+predicate sum2(loc x, loc ret){
+|  x == 0 => {ret == 2; emp}
+|  not (x == 0) => {
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** 
+    [ret, 2] ** ret + 1 :-> retnxt ** sum2(xnxt, retnxt) ** func f(x, ret + 1, ret)
+}
+}
+
+predicate sum3(loc x, loc ret){
+|  x == 0 => {ret == 0; emp}
+|  not (x == 0) => {
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** sum3(xnxt, t) ** func f(x, t, ret) ** [ret, 1]
+}
+}

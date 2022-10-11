@@ -1,0 +1,11 @@
+#
+
+
+void sum2 (loc x, loc ret)
+{x :-> x0  ** sll_n(x0) ** ret :-> a}
+{x :-> x0  ** sum2(x0, ret0) ** ret :-> ret0}
+{
+    ??
+}
+
+#####
