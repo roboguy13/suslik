@@ -1,0 +1,11 @@
+#
+
+
+void copy (loc x, loc y)
+{sll_n(x) ** y :-> 0}
+{y :-> y0 ** cp(x, y0)}
+{
+    ??
+}
+
+#####

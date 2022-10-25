@@ -226,7 +226,7 @@ case class Block(loc: Expr, sz: Int) extends Heaplet {
 /**
   * tempvar x
   */
-case class TempVar(name: Expr, alloced: Boolean) extends Heaplet {
+case class TempVar(name: Expr, alloced: Int) extends Heaplet {
   override def resolveOverloading(gamma: Gamma): Heaplet =
     this.copy(name = name.resolveOverloading(gamma))
 
@@ -273,32 +273,6 @@ case class FuncApp(fname: Ident, args: Seq[Expr]) extends Heaplet {
   }
 }
 
-// /**
-//   * tempfunc f(args..)
-//   */
-// case class TempFuncApp(fname: Ident, args: Seq[Expr]) extends Heaplet {
-
-//   override def resolveOverloading(gamma: Gamma): Heaplet = this.copy(args = args.map(_.resolveOverloading(gamma)))
-
-//   override def pp: Ident = {
-//     s"[TempFunc, $fname(${args.map(_.pp)})]"
-//   }
-
-//   def subst(sigma: Map[Var, Expr]): Heaplet = {
-//     val newArgs = args.map(_.subst(sigma))
-//     this.copy(args = newArgs)
-//   }
-
-//   //todo: type checking
-//   def resolve(gamma: Gamma, env: Environment): Option[Gamma] = Some(gamma)
-
-//   override def compare(that: Heaplet) = 1
-
-//   override def unify(that: Heaplet): Option[ExprSubst] = that match {
-//     case TempFuncApp(n, a) if n == fname => Some(args.zip(a).toMap)
-//     case _ => None
-//   }
-// }
 
 case class PTag(calls: Int = 0, unrolls: Int = 0) extends PrettyPrinting {
   override def pp: String = this match {
@@ -402,7 +376,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
 
   def temps: List[TempVar] = for (b@TempVar(_,_) <- chunks) yield b
 
-  def tempvars: List[Var] = for (b@TempVar(loc, false) <- chunks) yield loc.asInstanceOf[Var]
+  def tempvars: List[Var] = for (b@TempVar(loc, 0) <- chunks) yield loc.asInstanceOf[Var]
 
   // def temp_helper_funcs :List[TempFuncApp] = for (b@TempFuncApp(_,_) <- chunks) yield b
 

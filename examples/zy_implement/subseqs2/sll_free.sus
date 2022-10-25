@@ -1,0 +1,7 @@
+void sll_free (loc x)
+{sll_free(x)}
+{emp}
+
+{ ?? }
+
+###

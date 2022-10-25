@@ -207,6 +207,7 @@ object SynStatUtil {
       case Statements.Error => 1
       case Statements.Malloc(to, tpe, sz) => 1
       case Statements.Free(_) => 1
+      case Statements.TypeFree(_) => 1
       case Statements.Load(_,_,_,_) => 1
       case Statements.Store(_,_,_) => 1
       case Statements.Func_Call(_,_) => 1

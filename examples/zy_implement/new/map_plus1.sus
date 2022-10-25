@@ -1,0 +1,11 @@
+#
+
+
+void map_inc1 (loc x)
+{sll(x, s)}
+{map_plus1(x, s)}
+{
+    ??
+}
+
+#####

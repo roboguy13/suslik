@@ -1,0 +1,9 @@
+# -c 4
+
+
+void to_sll(loc x, loc result, int which) 
+  { x :-> a ** predD(which, a, s) ** result :-> 0 }
+  { x :-> a ** result :-> r ** D_to_sll(which, a, r, s) }
+{ ?? }
+
+#####

@@ -34,6 +34,9 @@ object Statements {
           case Free(v) =>
             builder.append(mkSpaces(offset))
             builder.append(s"free(${v.pp});\n")
+          case TypeFree(v) =>
+            builder.append(mkSpaces(offset))
+            builder.append(s"typefree(${v.pp});\n")
           case Store(to, off, e) =>
             builder.append(mkSpaces(offset))
             val t = if (off <= 0) to.pp else s"(${to.pp} + $off)"
@@ -88,6 +91,8 @@ object Statements {
           acc
         case Free(x) =>
           acc ++ x.collect(p)
+        case TypeFree(x) =>
+          acc ++ x.collect(p)
         case Func_Call(f, args) => 
           acc ++ args.flatMap(_.collect(p)).toSet
         case Call(fun, args, _) =>
@@ -123,6 +128,10 @@ object Statements {
         assert(!sigma.keySet.contains(x) || sigma(x).isInstanceOf[Var])
         Free(x.subst(sigma).asInstanceOf[Var])
       }
+      case TypeFree(x) => {
+        assert(!sigma.keySet.contains(x) || sigma(x).isInstanceOf[Var])
+        TypeFree(x.subst(sigma).asInstanceOf[Var])
+      }
       case Func_Call(f, args) => Func_Call(f, args.map(_.subst(sigma)))
       case Call(fun, args, companion) => Call(fun, args.map(_.subst(sigma)), companion)
       case SeqComp(s1, s2) => SeqComp(s1.subst(sigma), s2.subst(sigma))
@@ -140,6 +149,7 @@ object Statements {
       case Load(to, _, from, _) => 1 + to.size + from.size
       case Malloc(to, _, _) => 1 + to.size
       case Free(x) => 1 + x.size
+      case TypeFree(x) => 1 + x.size
       case Func_Call(_, args) => 1 + args.map(_.size).sum
       case Call(_, args, _) => 1 + args.map(_.size).sum
       case SeqComp(s1,s2) => s1.size + s2.size
@@ -247,6 +257,8 @@ object Statements {
 
   // free(v)
   case class Free(v: Var) extends Statement
+
+  case class TypeFree(v: Var) extends Statement
 
   // let to = *from.offset
   case class Load(to: Var, tpe: SSLType, from: Var,

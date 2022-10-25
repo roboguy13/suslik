@@ -4,6 +4,9 @@ import org.tygus.suslik.SSLException
 import org.tygus.suslik.language.Expressions._
 import org.tygus.suslik.logic.smt.SMTSolving
 import org.tygus.suslik.synthesis.SynthesisException
+import ujson.Bool
+import org.tygus.suslik.language.Statements
+import org.tygus.suslik.synthesis.rules.OperationalRules
 
 /**
   * Utilities for spatial formulae
@@ -46,9 +49,14 @@ trait SepLogicUtils extends PureLogicUtils {
           hr <- post.chunks.toStream if pr(hl, hr)} yield (hl, hr)).headOption
   }
 
-  def findTemp(post: SFormula): Option[Heaplet] = {
+  def findTemp(post: SFormula): Option[(Heaplet, Heaplet)] = {
     def HasTemp: Heaplet => Boolean = {
-        case TempVar(loc, false) => true
+        case TempVar(loc, 0) => true
+        case _ => false
+    }
+    def TempStruc(e:Expr): Heaplet => Boolean = {
+        case FuncApp(_, init :+ e) => true
+        case SApp(_, init :+ e, _, _) => true
         case _ => false
     }
     // def TempAlloced(temp: Heaplet): Heaplet => Boolean = {
@@ -61,13 +69,15 @@ trait SepLogicUtils extends PureLogicUtils {
     //     hl <- pre.chunks.toStream if (HasTemp(hl) && (post.chunks.filter(TempAlloced(hl)).size == 0))
     //   } yield hl).headOption
     (for{
-      hr <- post.chunks.toStream if HasTemp(hr)
-    } yield hr).headOption
+      hl1 <- post.chunks.toStream if HasTemp(hl1)
+      hl2 <- post.chunks.toStream if TempStruc(hl1.asInstanceOf[TempVar].name)(hl2)
+    } yield (hl1, hl2)).headOption
   }
 
   def findTempforFree(post: SFormula): Option[Heaplet] = {
     def HasAlloced: Heaplet => Boolean = {
-        case TempVar(loc, true) => true
+        case TempVar(loc, 1) => true
+        case TempVar(loc, 2) => true
         case _ => false
     }
     (for{

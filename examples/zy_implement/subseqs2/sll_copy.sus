@@ -1,0 +1,7 @@
+void sll_copy (loc x, loc ret)
+{sll_n(x) ** ret :-> a}
+{sll_eq(x, ret0) ** ret :-> ret0 }
+
+{ ?? }
+
+###

@@ -1,0 +1,11 @@
+#
+
+
+void copy (loc x, loc y)
+{sll(x, s) ** y :-> 0}
+{sll(x, s) ** y :-> y0 ** sll(y0, s)}
+{
+    ??
+}
+
+#####

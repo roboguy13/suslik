@@ -81,17 +81,18 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
     LogicalRules.FrameUnfolding,
     UnificationRules.HeapUnifyUnfolding,
     UnfoldingRules.AbduceCall,
-    OperationalRules.FuncCall,
+    // OperationalRules.FuncCall,
     UnfoldingRules.Open,
     UnfoldingRules.Close,
 //    UnfoldingRules.AbduceCall, // HERE: move AbduceCall here to achieve old behavior
   )
 
   protected def unfoldingPostPhaseRules: List[SynthesisRule] = List(
+    UnfoldingRules.AbduceCall,
     LogicalRules.FrameUnfoldingFinal,
     UnificationRules.HeapUnifyUnfolding,
     UnfoldingRules.Close,
-    OperationalRules.FuncCall,
+    // OperationalRules.FuncCall,
   )
 
   protected def unfoldingNoUnfoldPhaseRules: List[SynthesisRule] = List(
@@ -125,7 +126,7 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
           UnificationRules.PickCard,
           LogicalRules.GhostWrite,
           UnificationRules.HeapUnifyPure,
-          UnificationRules.HeapUnifyforTemp,
+          // UnificationRules.HeapUnifyforTemp,
           LogicalRules.SimplifyConditional,
           OperationalRules.FuncCall,
           OperationalRules.WriteRule,

@@ -1,0 +1,8 @@
+
+void inplace_cons (loc fst, loc rst)
+{fst :-> v ** rst :-> x ** sll_n(x)}
+{fst :-> newlst ** [newlst,2] ** newlst :-> v ** newlst + 1 :-> x ** sll_n(x) ** rst :-> 0 }
+
+{ ?? }
+
+###

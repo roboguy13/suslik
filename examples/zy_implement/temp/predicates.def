@@ -17,7 +17,7 @@ predicate f(loc x, loc y, loc ret){
 predicate sum(loc x, loc ret){
 |  x == 0 => {ret == 0; emp}
 |  not (x == 0) => {
-    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** t:-> t0 ** sum(xnxt, t0) ** func f(x, t0, ret) ** [ret, 1]
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** t:-> t0 ** sum(xnxt, t0) ** func f(x, t, ret) ** [ret, 1]
 }
 }
 
@@ -30,8 +30,15 @@ predicate sum2(loc x, loc ret){
 }
 
 predicate sum3(loc x, loc ret){
-|  x == 0 => {ret == 0; emp}
+|  x == 0 => { r0 == 0 ; ret :-> r0}
 |  not (x == 0) => {
-    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** sum3(xnxt, t) ** func f(x, t, ret) ** [ret, 1]
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** sum3(xnxt, t) ** func f(x, t, ret)
+}
+}
+
+predicate fold(int init, loc x, loc ret){
+|  x == 0 => { ret :-> init}
+|  not (x == 0) => {
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** fold(init, xnxt, t) ** func f(x, t, ret)
 }
 }

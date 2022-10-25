@@ -1,0 +1,81 @@
+predicate base(loc x, loc y, set ys, int vv){
+| y == 0 => {ys == {} && x == 0 ; emp}
+| not (y == 0)   => { ys == {vy} ++ ys1 ; [y,2] ** y :-> vy ** (y + 1) :-> y1 ** inner(x, y1, ys1, vy, vv)}
+}
+
+predicate inner(loc x, loc y, set ys, int vy, int vv){
+|    vy < 9 => {base(x, y, ys, vv)}
+|    not (vy < 9) => {
+    [x, 2] ** x :-> vy ** (x + 1) :-> xnxt ** base(xnxt, y, ys, vv)}
+}
+
+predicate sll(loc x, set s) {
+|  x == 0        => { s == {} ; emp }
+|  not (x == 0)  => { s == {v} ++ s1 ; [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll(nxt, s1) }
+}
+
+predicate filter(loc x, loc y, set ys){
+| y == 0 => {ys == {} && x == 0 ; emp}
+| not (y == 0) && vy < 9   => { ys == {vy} ++ ys1 ; [y,2] ** y :-> vy ** (y + 1) :-> y1 ** filter(x, y1, ys1)}
+| not (y == 0) && not (vy < 9)   => { 
+    ys == {vy} ++ ys1 ; [y,2] ** y :-> vy ** (y + 1) :-> y1 **
+    [x, 2] ** x :-> vy ** (x + 1) :-> xnxt **
+    filter(xnxt, y1, ys1)}
+}
+
+predicate sll_n(loc x) {
+|  x == 0        => { emp }
+|  not (x == 0)  => { [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll_n(nxt) }
+}
+
+predicate sll_c(loc x) {
+|  x == 0        => { emp }
+|  not (x == 0)  => { [x, 2] ** x :-> v ** (x + 1) :-> nxt ** sll_c(nxt) }
+}
+predicate cp(loc x, loc y) {
+|  x == 0        => {y == 0; emp }
+|  not (x == 0)  => {
+    [y, 2] ** y :-> v ** (y + 1) :-> ynxt **
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** cp(xnxt, ynxt) }
+}
+
+predicate temptest(loc x, loc y){
+|   x == 0 => {y :-> 0}
+|   not (x == 0) => {
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** y :~> 1 ** temptest(xnxt, y)
+}
+}
+
+predicate slltemptest(loc x, loc y){
+|   x == 0 => {func f(y)}
+|   not (x == 0) => {
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** slltemptest(xnxt, y)
+}
+}
+
+predicate map_plus1(loc x, set s) {
+|  x == 0        => { s == {} ; emp }
+|  not (x == 0)  => { s == {v} ++ s1 && v1 == v + 1 ; [x, 2] ** x :-> v1 ** (x + 1) :-> nxt ** map_plus1(nxt, s1) }
+}
+
+predicate map_list(loc x, set s) {
+|  x == null        => { s =i {} ; emp }
+|  not (x == null)  => { s =i {v} ++ s1; [x, 2] ** func f(v, x) ** (x + 1) :-> nxt ** map_list(nxt, s1) }
+}
+
+predicate map_list_n(loc x) {
+|  x == null        => {emp }
+|  not (x == null)  => {[x, 2] ** func f(x) ** (x + 1) :-> nxt ** map_list_n(nxt) }
+}
+
+
+/*
+f(x) = x + 1
+*/
+predicate f(loc x, loc y){
+| true =>     {x :-> a ** y :-> a + 1}
+}
+
+predicate cons(loc v, loc input, loc output){
+| true => {[output, 2] ** output :-> v ** (output + 1) :-> input ** sll_n(input)}
+}

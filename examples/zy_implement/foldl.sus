@@ -1,0 +1,8 @@
+#
+
+void foldArg(loc x, loc y, int acc)
+  {y :-> y0 ** unconstrained(x, s)}
+  {foldl(x, s, acc) ** y :-> acc}
+{ ?? }
+
+###

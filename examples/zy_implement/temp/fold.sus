@@ -1,0 +1,11 @@
+#
+
+
+void fold (loc i, loc x, loc ret)
+{x :-> x0 ** sll_n(x0) ** ret :-> a ** i :-> init}
+{x :-> x0 ** fold(init, x0, ret) ** i :-> init }
+{
+    ??
+}
+
+#####

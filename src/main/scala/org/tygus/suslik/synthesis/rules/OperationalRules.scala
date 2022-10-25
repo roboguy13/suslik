@@ -252,16 +252,16 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
     def apply(goal: Goal): Seq[RuleResult] = {
       val pre = goal.pre
       val post = goal.post
-
+      val temp = findTemp(goal.post.sigma)
       findTemp(goal.post.sigma) match {
         case None => Nil
-        case Some(TempVar(loc,false)) =>
+        case Some((hl1@TempVar(loc,0), hl2@FuncApp(name, lst))) =>
           var varname = freshVar(goal.vars, loc.pp)
           val tp = LocType
 
           val temppt = TempPointsTo(varname,0,LocConst(666))
           val newPre = Assertion(pre.phi, mkSFormula(pre.sigma.chunks ++ List(temppt)))
-          val newPost = Assertion(post.phi, (post.sigma - TempVar(loc, false)) ** TempVar(loc, true))
+          val newPost = Assertion(post.phi, (post.sigma - TempVar(loc, 0)) ** TempVar(loc, 1))
 
           val subGoal = goal.spawnChild(newPre,
                                         newPost.subst(Var(loc.pp), varname),
@@ -269,7 +269,35 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
                                         programVars = varname :: goal.programVars)
           val kont: StmtProducer = SubstVarProducer(Var(loc.pp),varname) >> PrependProducer(Malloc(varname, tp, 1)) >> ExtractHelper(goal)
           List(RuleResult(List(subGoal), kont, this, goal))
-        case Some(h) => 
+        case Some((hl1@TempVar(loc,0), hl2@SApp(name, lst, tag, card))) =>
+          // var (varname1,varname2) = fresh2Var(goal.vars, loc.pp)
+          // val tp = LocType
+
+          // // val temppt2 = TempPointsTo(varname2,0,LocConst(666))
+          // val temppt1 = PointsTo(varname1,0,varname2)
+          // val newPre = Assertion(pre.phi, mkSFormula(pre.sigma.chunks ++ List(temppt1)))
+          // val newPost = Assertion(post.phi, (((post.sigma - TempVar(loc, 0) - hl2) ** TempVar(loc, 2)) ** temppt1) ** hl2.subst(Var(loc.pp), varname1))
+
+          // val subGoal = goal.spawnChild(newPre,
+          //                               newPost.subst(Var(loc.pp), varname1),
+          //                               gamma = goal.gamma + (varname1 -> tp) + (varname2 -> tp),
+          //                               programVars = varname1 ::(varname2 :: goal.programVars))
+          // val kont: StmtProducer = SubstVarProducer(Var(loc.pp),varname1) >> PrependProducer(Malloc(varname1, tp, 1)) >> PrependProducer(Malloc(varname2, tp, 1)) >> PrependProducer(Store(varname1, 0, varname2)) >> ExtractHelper(goal)
+          // List(RuleResult(List(subGoal), kont, this, goal))
+          var varname = freshVar(goal.vars, loc.pp)
+          val tp = LocType
+
+          val temppt = PointsTo(varname,0,LocConst(666))
+          val newPre = Assertion(pre.phi, mkSFormula(pre.sigma.chunks ++ List(temppt)))
+          val newPost = Assertion(post.phi, (post.sigma - TempVar(loc, 0)) ** TempVar(loc, 1))
+
+          val subGoal = goal.spawnChild(newPre,
+                                        newPost.subst(Var(loc.pp), varname),
+                                        gamma = goal.gamma + (varname -> tp),
+                                        programVars = varname :: goal.programVars)
+          val kont: StmtProducer = SubstVarProducer(Var(loc.pp),varname) >> PrependProducer(Malloc(varname, tp, 1)) >> ExtractHelper(goal)
+          List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl, hr)) => 
           ruleAssert(false, s"AllocTemp Error")
           Nil
       }
@@ -344,13 +372,21 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
 
       findTempforFree(goal.post.sigma) match {
         case None => Nil
-        case Some(t@TempVar(x@Var(_), true)) =>
+        case Some(t@TempVar(x@Var(_), 1)) =>
+          val y = freshVar(goal.vars, x.pp)
           val newPost = Assertion(post.phi, post.sigma - t)
 
           val subGoal = goal.spawnChild(post = newPost)
-          val kont: StmtProducer = PrependProducer(Free(x)) >> ExtractHelper(goal)
+          val kont: StmtProducer = PrependProducer(Free(x)) >> PrependProducer(TypeFree(y)) >> PrependProducer(Load(y, LocType, x, 0)) >> ExtractHelper(goal)
 
           List(RuleResult(List(subGoal), kont, this, goal))
+        // case Some(t@TempVar(x@Var(_), 2)) =>
+        //   val newPost = Assertion(post.phi, post.sigma - t)
+
+        //   val subGoal = goal.spawnChild(post = newPost)
+        //   val kont: StmtProducer = PrependProducer(Free(x)) >> PrependProducer(TypeFree(x)) >> ExtractHelper(goal)
+
+        //   List(RuleResult(List(subGoal), kont, this, goal))
         case Some(_) => Nil
       }
     }

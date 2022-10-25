@@ -47,22 +47,6 @@ predicate foldI(loc x, set s, int acc, int z, pred p) {
     [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldI(nxt, s1, acc1, z, p) }
 }
 
-predicate foldl(loc x, set s, int start) {
-|  x == null => { emp}
-|  not (x == null) => {s =i {v} ++ s1 && start1 == v + start
-      ;
-    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldl(nxt, s1, start1) }
-}
-
-/*
-predicate foldl_todo(loc x, set s, loc y) {
-|  x == null => { y :-> y1 }
-|  not (x == null) => {s =i {v} ++ s1
-      ; y :~> func f(x, y) **
-    [x, 2] ** x :-> v ** (x + 1) :-> nxt ** foldl_todo(nxt, s1, y) }
-}
-*/
-
 predicate foldBTree(loc x, set s, int acc, int z, pred p) {
 |  x == null => { acc == z; emp }
 |  not (x == null) => {
@@ -168,18 +152,12 @@ predicate fold_loc(loc x, set s, loc result, loc start) {
 |  not (x == null) => {
     s =i {v} ++ s1
       ;
-    [result,2] ** result :-> 3 ** (result+1) :-> result_nxt ** [x, 2] ** x :-> v ** (x + 1) :-> nxt ** fold_loc(nxt, s1, result_nxt, start) }
+    [result,2] ** func f((x + 1),result) ** (result+1) :-> result_nxt ** [x, 2] ** x :-> v ** (x + 1) :-> nxt ** fold_loc(nxt, s1, result_nxt, start) }
 }
 
-predicate sll_len(loc x, set s, int len) {
-| x == 0 => { s =i {} && len == 0 ; emp }
-| not (x == 0) => {
-    s =i {v} + s1 &&
-    len == 1 + len1
-      ;
-    [x, 2] **
-    x :-> v **
-    (x+1) :-> nxt **
-    sll_len(nxt, s1, len1)
-  }
+predicate new_fold(loc v, loc ls, loc output){
+| ls == 0 => {output :-> v}
+| not (ls == 0) => {
+  [ls, 2] ** ls :-> x ** (ls + 1) :-> xs ** loc
+}
 }

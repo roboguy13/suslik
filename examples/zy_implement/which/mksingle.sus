@@ -2,5 +2,7 @@
 
 void mkSingleton(loc x, int i)
   { x :-> 0 }
-  { x :-> list ** sll(list,1, {i}) }
+  { x:-> x0 ** x0 :-> i ** [x0, 1] }
 { ?? }
+
+######

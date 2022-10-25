@@ -1,0 +1,13 @@
+# -c 2
+
+void cons (loc fst, loc rst, loc ret)
+{rst :-> input ** sll_n(input) ** ret :-> a}
+{rst :-> input ** sll_n(input) ** cons_n(fst, input, ret)}
+
+void multi_map(loc x, loc xs, loc ret)
+{xs :-> x0 ** multilist_n(x0) ** ret :-> a}
+{xs :-> x0 ** multimap_n(x, x0, y) ** ret :-> y}
+
+{ ?? }
+
+###

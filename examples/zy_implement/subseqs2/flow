@@ -1,0 +1,8 @@
+subseqs -> f_concat, singleton_multilist
+
+void f_concat(loc x, loc xs, loc ret){
+    multi_map(x, xs, ret1);
+    concat(ret1, xs, ret);
+} -> multi_map, concat
+
+multi_map -> cons

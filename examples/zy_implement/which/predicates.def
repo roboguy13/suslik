@@ -1,0 +1,16 @@
+predicate predD(int which, loc x, set s) { 
+| which == 0 => { s =i {a} ; x :-> which ** (x+1) :-> a }
+| which == 1 => { s =i {b, c} ; x :-> which ** (x+1) :-> b ** (x+2) :-> c }
+}
+
+
+predicate D_to_sll(int which, loc x, loc r, set s) {
+| which == 0 => { s =i {a} ; x :-> which ** (x+1) :-> a ** sll(r, s) }
+| which == 1 => { s =i {b, c} ; x :-> which ** (x+1) :-> b ** (x+2) :-> c ** sll(r, s) }
+}
+
+predicate sll(loc x, set s) {
+| x == 0 => { s =i {} ; emp }
+| not (x == 0) => { s =i {v} ++ s1 ; [x, 2] ** x :-> v ** (x+1) :-> nxt ** sll(nxt, s1) }
+}
+

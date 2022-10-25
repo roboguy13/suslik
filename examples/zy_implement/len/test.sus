@@ -1,0 +1,11 @@
+# -c 2 -b true
+
+
+void len (loc y, loc ret)
+{y :-> y0 ** sll(y0, s) ** ret :-> a}
+{y :-> y0 ** len(y0, ret)}
+{
+    ??
+}
+
+#####

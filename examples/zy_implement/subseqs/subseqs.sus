@@ -1,9 +1,9 @@
 #
 
 
-void subseqs(loc x, loc result, loc start)
-{x :-> x0 ** result :-> 0 ** unconstrained(x0, s) ** multilist_len(start, {}, 1) }
-{x :-> x0 ** result :-> result0 ** fold_loc(x0, s, result0, start) ** multilist_len(start, {}, 1) }
+void fold_f1(loc v, loc xs, loc output)
+{xs :-> x0 ** output :-> 0 ** unconstrained(x0, s) ** multilist_len(v, {}, 1) }
+{xs :-> x0 ** output :-> output0 ** fold_loc(x0, s, output0, v) ** multilist_len(v, {}, 1) }
 
 { ?? }
 

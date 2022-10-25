@@ -1,0 +1,10 @@
+# -c 2
+
+
+void multi_map(loc x, loc mul, loc ret)
+{multilist_n(mul) ** ret :-> a ** x :=> v}
+{x :-> v ** multimap_n(v, mul, y) ** ret :-> y}
+
+{ ?? }
+
+###

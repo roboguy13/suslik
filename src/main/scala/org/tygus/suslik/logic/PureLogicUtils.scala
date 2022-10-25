@@ -181,6 +181,23 @@ trait PureLogicUtils {
     Var(tmpName)
   }
 
+  def fresh2Var(taken: Set[Var], prefix: String): (Var, Var) = {
+    val safePrefix = prefix.filter(c => c.isLetterOrDigit || c == '_').dropWhile(_.isDigit)
+    var count = 1
+    var tmpName1 = safePrefix
+    var tmpName2 = safePrefix
+    while (taken.exists(_.name == tmpName1)) {
+      tmpName1 = safePrefix + count
+      count = count + 1
+    }
+    count = count + 1
+    while (taken.exists(_.name == tmpName2)) {
+      tmpName2 = safePrefix + count
+      count = count + 1
+    }
+    (Var(tmpName1), Var(tmpName2))
+  }
+
   /**
     * @param vs    a list of variables to refresh
     * @param bound identifiers whose names are already taken
