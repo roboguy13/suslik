@@ -73,7 +73,7 @@ object FailRules extends PureLogicUtils with SepLogicUtils with RuleUtils {
             findHeaplet(sameLhs(pts), goal.pre.sigma).isDefined}
           case pts@TempPointsTo(v@Var(_), _, _) => {goal.isExistential(v) || // each post heaplet is either existential pointer
             findHeaplet(sameLhs(pts), goal.pre.sigma).isDefined}
-          case fcall@FuncApp(_, init :+ last) => {
+          case fcall@FuncApp(_, init :+ last, _) => {
             last match{
               case v@Var(_) => true
               case _ => false

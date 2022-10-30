@@ -163,8 +163,10 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
     (identWithOffset <~ ":~>") ~ expr ^^ { case (a, o) ~ b => TempPointsTo(Var(a), o, b) }
       |||
     (identWithOffset <~ ":=>") ~ expr ^^ { case (a, o) ~ b => ConstPointsTo(Var(a), o, b) }
-      ||| "func" ~> ident ~ ("(" ~> rep1sep(expr, ",") <~ ")") ^^ {
-        case name ~ args => FuncApp(name, args)
+      ||| "func" ~> ident ~ ("(" ~> rep1sep(expr, ",") <~ ")") ~ opt("+" ~> numericLit) ^^ {
+        case name ~ args ~ o => 
+          val off = Math.max(Integer.parseInt(o.getOrElse("0")), 0)
+          FuncApp(name, args, off)
       }
       ||| "temploc" ~> ident ^^ {case x => TempVar(Var(x), 0)}
       ||| "[" ~> (ident ~ ("," ~> numericLit)) <~ "]" ^^ { case a ~ s => Block(Var(a), Integer.parseInt(s)) }

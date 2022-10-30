@@ -29,7 +29,7 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
         args.foldLeft(acc)((a, e) => a ++ e.collect(p)) ++
           // [Cardinality] add the cardinality variable
           card.collect(p)
-      case FuncApp(_, args) => 
+      case FuncApp(_, args, _) => 
         args.foldLeft(acc)((a, e) => a ++ e.collect(p))
       // case TempFuncApp(_, args) => 
       //   args.foldLeft(acc)((a, e) => a ++ e.collect(p))
@@ -72,7 +72,7 @@ sealed abstract class Heaplet extends PrettyPrinting with HasExpressions[Heaplet
     case TempVar(_, _) => 0
     case Block(loc, _) => 1 + loc.size
     case SApp(_, args, _, _) => args.map(_.size).sum
-    case FuncApp(_, args) => args.map(_.size).sum
+    case FuncApp(_, args, _) => args.map(_.size).sum
     // case TempFuncApp(_, args) => args.map(_.size).sum
   }
 
@@ -249,12 +249,12 @@ case class TempVar(name: Expr, alloced: Int) extends Heaplet {
 /**
   * func(f(args..))
   */
-case class FuncApp(fname: Ident, args: Seq[Expr]) extends Heaplet {
+case class FuncApp(fname: Ident, args: Seq[Expr], offset: Int = 0) extends Heaplet {
 
   override def resolveOverloading(gamma: Gamma): Heaplet = this.copy(args = args.map(_.resolveOverloading(gamma)))
 
   override def pp: Ident = {
-    s"[Func, $fname(${args.map(_.pp)})]"
+    s"[Func, $fname(${args.map(_.pp)}), + $offset]"
   }
 
   def subst(sigma: Map[Var, Expr]): Heaplet = {
@@ -268,7 +268,7 @@ case class FuncApp(fname: Ident, args: Seq[Expr]) extends Heaplet {
   override def compare(that: Heaplet) = super.compare(that)
 
   override def unify(that: Heaplet): Option[ExprSubst] = that match {
-    case FuncApp(n, a) if n == fname => Some(args.zip(a).toMap)
+    case FuncApp(n, a, o) if (n == fname && o == offset) => Some(args.zip(a).toMap)
     case _ => None
   }
 }
@@ -372,7 +372,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
 
   def tptss: List[TempPointsTo] = for (b@TempPointsTo(_, _, _) <- chunks) yield b
 
-  def helper_funcs :List[FuncApp] = for (b@FuncApp(_,_) <- chunks) yield b
+  def helper_funcs :List[FuncApp] = for (b@FuncApp(_,_,_) <- chunks) yield b
 
   def temps: List[TempVar] = for (b@TempVar(_,_) <- chunks) yield b
 
@@ -426,7 +426,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
   lazy val profile: SProfile = {
     val appProfile = apps.groupBy(_.pred).mapValues(_.length)
     val blockProfile = blocks.groupBy(_.sz).mapValues(_.length)
-    val tempptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}), tptss.map(_ match {case TempPointsTo(a,b,c) => PointsTo(a,b,c)}), helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
+    val tempptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}), tptss.map(_ match {case TempPointsTo(a,b,c) => PointsTo(a,b,c)}), helper_funcs.map(_ match {case FuncApp(_,init :+ last, o) => PointsTo(last,o,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
     if(tempptsProfile.contains(0)){
       val zeronum = tempptsProfile(0)
       val ptsProfile = tempptsProfile - (0) + (0 -> (zeronum-tempvars.size))
@@ -438,7 +438,7 @@ case class SFormula(chunks: List[Heaplet]) extends PrettyPrinting with HasExpres
   lazy val tempprofile: SProfile = {
     val appProfile = apps.groupBy(_.pred).mapValues(_.length)
     val blockProfile = blocks.groupBy(_.sz).mapValues(_.length)
-    val ptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}), tptss.map(_ match {case TempPointsTo(a,b,c) => PointsTo(a,b,c)}), helper_funcs.map(_ match {case FuncApp(_,init :+ last) => PointsTo(last,0,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
+    val ptsProfile = List.concat(ptss, cptss.map(_ match {case ConstPointsTo(a,b,c) => PointsTo(a,b,c)}), tptss.map(_ match {case TempPointsTo(a,b,c) => PointsTo(a,b,c)}), helper_funcs.map(_ match {case FuncApp(_,init :+ last, o) => PointsTo(last,o,IntConst(0))})).groupBy(_.offset).mapValues(_.length)
     SProfile(appProfile, blockProfile, ptsProfile)
   }
 

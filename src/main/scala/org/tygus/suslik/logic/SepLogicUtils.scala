@@ -55,7 +55,7 @@ trait SepLogicUtils extends PureLogicUtils {
         case _ => false
     }
     def TempStruc(e:Expr): Heaplet => Boolean = {
-        case FuncApp(_, init :+ e) => true
+        case FuncApp(_, init :+ e, _) => true
         case SApp(_, init :+ e, _, _) => true
         case _ => false
     }
@@ -159,18 +159,18 @@ trait SepLogicUtils extends PureLogicUtils {
 
   def callable(hl: Heaplet): Heaplet => Boolean = hr => {
     hl match {
-      case PointsTo(xl, 0, _) => hr match {
-        case FuncApp(_, initr :+ lastr) => lastr == xl
+      case PointsTo(xl, ol, _) => hr match {
+        case FuncApp(_, initr :+ lastr, or) => lastr == xl && ol == or
         case _ => false
       }
-      case TempPointsTo(xl, 0, _) => hr match {
-        case FuncApp(_, initr :+ lastr) => lastr == xl
+      case TempPointsTo(xl, ol, _) => hr match {
+        case FuncApp(_, initr :+ lastr, or) => lastr == xl && ol == or
         case _ => false
       }
-      case FuncApp(_, initl :+ lastl) => hr match {
-        case FuncApp(_, initr :+ lastr) => lastr == lastl
-        case _ => false
-      }
+      // case FuncApp(_, initl :+ lastl,) => hr match {
+      //   case FuncApp(_, initr :+ lastr) => lastr == lastl
+      //   case _ => false
+      // }
       // case SApp(_, a::b , _, _) => hr match {
       //   case FuncApp(_, initr :+ lastr) => lastr == a
       //   case _ => false

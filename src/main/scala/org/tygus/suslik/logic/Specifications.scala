@@ -226,7 +226,7 @@ object Specifications extends SepLogicUtils {
       case PointsTo(x@Var(_), _, _) => isExistential(x)
       case ConstPointsTo(x@Var(_), _, _) => isExistential(x)
       case TempPointsTo(x@Var(_), _, _) => isExistential(x)
-      case FuncApp(_, init :+ last) => isExistential(last.asInstanceOf[Var])
+      case FuncApp(_, init :+ last,_) => isExistential(last.asInstanceOf[Var])
       case _ => false
     }
 

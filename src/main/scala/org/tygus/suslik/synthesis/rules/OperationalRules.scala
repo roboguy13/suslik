@@ -144,7 +144,7 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
 
       // Heaplets have no ghosts zytodo: check
       def noGhosts: Heaplet => Boolean = {
-        case FuncApp(_, init :+ last) => !goal.isGhost(last.asInstanceOf[Var]) && init.forall(e => e.vars.forall(v => !(goal.isGhost(v) || goal.unAllocedTemp(v) || goal.pre.sigma.chunks.contains(TempPointsTo(v, 0, LocConst(666))))))
+        case FuncApp(_, init :+ last, _) => !goal.isGhost(last.asInstanceOf[Var]) && init.forall(e => e.vars.forall(v => !(goal.isGhost(v) || goal.unAllocedTemp(v) || goal.pre.sigma.chunks.contains(TempPointsTo(v, 0, LocConst(666))))))
         case _ => false
       }
 
@@ -153,25 +153,25 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
 
       findMatchingHeaplets(_ => true, isMatch, goal.pre.sigma, goal.post.sigma) match {
         case None => Nil
-        case Some((hl@PointsTo(_,_,_), hr@FuncApp(f,args))) =>
+        case Some((hl@PointsTo(_,_,_), hr@FuncApp(f,args, oo))) =>
           val newPre = Assertion(pre.phi, goal.pre.sigma)
           val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** hl)
           val subGoal = goal.spawnChild(newPre, newPost)
-          val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
+          val kont: StmtProducer = PrependProducer(Func_Call(f,args, oo)) >> ExtractHelper(goal)
           List(RuleResult(List(subGoal), kont, this, goal))
-        case Some((hl@FuncApp(_,_), hr@FuncApp(f,args))) =>
-          val newPre = Assertion(pre.phi, goal.pre.sigma)
-          val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** hl)
-          val subGoal = goal.spawnChild(newPre, newPost)
-          val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
+        // case Some((hl@FuncApp(_,_), hr@FuncApp(f,args))) =>
+        //   val newPre = Assertion(pre.phi, goal.pre.sigma)
+        //   val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** hl)
+        //   val subGoal = goal.spawnChild(newPre, newPost)
+        //   val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
 
-          List(RuleResult(List(subGoal), kont, this, goal))
-        case Some((hl@TempPointsTo(l, o, v), hr@FuncApp(f,args))) =>
+        //   List(RuleResult(List(subGoal), kont, this, goal))
+        case Some((hl@TempPointsTo(l, o, v), hr@FuncApp(f,args,oo))) =>
           val pts = PointsTo(l, o, v)
           val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** pts)
           val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** pts)
           val subGoal = goal.spawnChild(newPre, newPost)
-          val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
+          val kont: StmtProducer = PrependProducer(Func_Call(f,args, oo)) >> ExtractHelper(goal)
           List(RuleResult(List(subGoal), kont, this, goal))
         // case Some((hl@SApp(_,_,_,_), hr@FuncApp(f,args))) =>
         //   val newPre = Assertion(pre.phi, goal.pre.sigma - hl)
@@ -255,7 +255,7 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
       val temp = findTemp(goal.post.sigma)
       findTemp(goal.post.sigma) match {
         case None => Nil
-        case Some((hl1@TempVar(loc,0), hl2@FuncApp(name, lst))) =>
+        case Some((hl1@TempVar(loc,0), hl2@FuncApp(name, lst, _))) =>
           var varname = freshVar(goal.vars, loc.pp)
           val tp = LocType
 
