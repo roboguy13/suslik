@@ -1,0 +1,8 @@
+# -c 2
+
+void zip(loc x, loc y, loc z)
+  { z :-> a ** sll_c(x) ** sll_c(y) }
+  { z :-> w ** zip_withf(x, y, w) }
+{ ?? }
+
+###

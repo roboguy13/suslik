@@ -1,0 +1,9 @@
+#
+
+void sll_copy(loc x0, loc y)
+  { sll_c(x0) ** y :-> a}
+  { sll_copy(x0, y0) ** y :-> y0 }
+{ ?? }
+
+###
+

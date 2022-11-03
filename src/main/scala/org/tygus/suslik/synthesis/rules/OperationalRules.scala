@@ -159,13 +159,13 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
           val subGoal = goal.spawnChild(newPre, newPost)
           val kont: StmtProducer = PrependProducer(Func_Call(f,args, oo)) >> ExtractHelper(goal)
           List(RuleResult(List(subGoal), kont, this, goal))
-        // case Some((hl@FuncApp(_,_), hr@FuncApp(f,args))) =>
-        //   val newPre = Assertion(pre.phi, goal.pre.sigma)
-        //   val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** hl)
-        //   val subGoal = goal.spawnChild(newPre, newPost)
-        //   val kont: StmtProducer = PrependProducer(Func_Call(f,args)) >> ExtractHelper(goal)
+        case Some((hl@FuncApp(_,_,_), hr@FuncApp(f,args,o))) =>
+          val newPre = Assertion(pre.phi, goal.pre.sigma)
+          val newPost = Assertion(post.phi, (goal.post.sigma - hr) ** hl)
+          val subGoal = goal.spawnChild(newPre, newPost)
+          val kont: StmtProducer = PrependProducer(Func_Call(f,args,o)) >> ExtractHelper(goal)
 
-        //   List(RuleResult(List(subGoal), kont, this, goal))
+          List(RuleResult(List(subGoal), kont, this, goal))
         case Some((hl@TempPointsTo(l, o, v), hr@FuncApp(f,args,oo))) =>
           val pts = PointsTo(l, o, v)
           val newPre = Assertion(pre.phi, (goal.pre.sigma - hl) ** pts)

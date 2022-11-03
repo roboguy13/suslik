@@ -1,0 +1,11 @@
+#
+
+
+void max (loc x, loc ret)
+{sll_c(x0) ** x :-> x0 ** ret :-> a }
+{maximum(x0, ret0) ** x :-> x0 ** ret :-> ret0}
+{
+    ??
+}
+
+#####

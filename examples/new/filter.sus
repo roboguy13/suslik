@@ -1,0 +1,11 @@
+# -c 2 -b true
+
+
+void filter (loc y, loc ret)
+{sll_c(y) ** ret :-> a }
+{filter_base(ret0, y) ** ret :-> ret0}
+{
+    ??
+}
+
+#####

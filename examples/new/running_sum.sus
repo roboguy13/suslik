@@ -1,0 +1,11 @@
+#
+
+
+void scanr_sum (int i, loc x, loc ret)
+{x :-> x0 ** sll_c(x0) ** ret :-> a }
+{x :-> x0 ** scanr_sum(i, b, x0, ret0) ** ret :-> ret0 }
+{
+    ??
+}
+
+#####

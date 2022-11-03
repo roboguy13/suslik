@@ -1,0 +1,8 @@
+# -c 2
+
+void zip(loc x, loc y)
+  { sll_n(x) ** sll_c(y) }
+  { zip_withf_inplace(x, y) }
+{ ?? }
+
+###

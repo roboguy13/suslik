@@ -1,0 +1,9 @@
+#
+
+void sll_map(loc x)
+  { x :-> x0 ** sll_n(x0) }
+  { inplace_sll_map(x0) ** x :-> x0 }
+{ ?? }
+
+###
+

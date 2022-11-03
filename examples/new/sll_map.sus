@@ -1,0 +1,9 @@
+#
+
+void sll_map(loc x, loc y)
+  { x :-> x0 ** sll_n(x0) ** y :-> a}
+  { sll_map(x0, y0) ** x :-> x0 ** y :-> y0 }
+{ ?? }
+
+###
+

@@ -1,0 +1,9 @@
+#
+
+void cons(loc v, loc x, loc y)
+  { x :-> x0 ** sll_n(x0) ** y :-> a ** v :-> vv}
+  { cons(vv, x0, y0) ** x :-> x0 ** y :-> y0 ** v :-> vv }
+{ ?? }
+
+###
+

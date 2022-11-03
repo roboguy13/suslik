@@ -167,10 +167,10 @@ trait SepLogicUtils extends PureLogicUtils {
         case FuncApp(_, initr :+ lastr, or) => lastr == xl && ol == or
         case _ => false
       }
-      // case FuncApp(_, initl :+ lastl,) => hr match {
-      //   case FuncApp(_, initr :+ lastr) => lastr == lastl
-      //   case _ => false
-      // }
+      case FuncApp(_, initl :+ lastl, ol) => hr match {
+        case FuncApp(_, initr :+ lastr, or) => lastr == lastl && ol == or
+        case _ => false
+      }
       // case SApp(_, a::b , _, _) => hr match {
       //   case FuncApp(_, initr :+ lastr) => lastr == a
       //   case _ => false

@@ -1,0 +1,8 @@
+# -c 2
+
+void zip(loc x, loc ret)
+  { x :-> x0 ** tree_c(x0) ** ret :-> a }
+  { x :-> x0 ** left_tree(x0, ret0) ** ret :-> ret0 }
+{ ?? }
+
+###

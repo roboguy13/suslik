@@ -1,0 +1,9 @@
+#
+
+void tail(loc x, int v, loc y)
+  { x :-> x0 ** sll_n(x0) ** y :-> a}
+  { tail(x0, v, y0) ** x :-> x0 ** y :-> y0 }
+{ ?? }
+
+###
+
