@@ -1,0 +1,9 @@
+# -c 2
+
+void take_helper(loc x, loc y, loc ret)
+  { x :-> x0 ** sll_c(x0) ** y :-> y0 ** sll_c(y0) ** ret :-> a}
+  { x :-> x0 ** y :-> y0 ** take_helper(x0, y0, ret0) ** ret :-> ret0 }
+{ ?? }
+
+###
+

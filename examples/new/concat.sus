@@ -1,0 +1,11 @@
+# -c 2
+
+
+void concat (loc x, loc y, loc ret)
+{x :-> x0 ** multilist_c(x0) ** ret :-> a}
+{x :-> x0 ** concat(x0, ret)}
+{
+    ??
+}
+
+#####

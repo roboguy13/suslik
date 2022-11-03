@@ -1,0 +1,11 @@
+#
+
+
+void singleton (loc i, loc x)
+{i :-> v0 ** x :-> a}
+{singleton_list(v0, x0) **x :-> x0 ** i :-> init }
+{
+    ??
+}
+
+#####

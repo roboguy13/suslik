@@ -64,6 +64,12 @@ predicate zip_withf_inplace(loc x, loc y) {
   }
 }
 
+predicate fold_tree(int init, loc x, loc ret){
+|  x == 0 => { func tree_copy(init, ret)}
+|  not (x == 0) => {
+    [x, 3] ** x :-> v ** (x + 1) :-> xl ** (x + 2) :-> xr ** temploc t1 ** temploc t2 ** fold_sll(init, xl, t1) ** fold_sll(init, xr, t2) ** func f(x, t1, t2, ret)
+}
+}
 
 predicate fold_sll(int init, loc x, loc ret){
 |  x == 0 => { func sll_copy(init, ret)}
@@ -71,6 +77,15 @@ predicate fold_sll(int init, loc x, loc ret){
     [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** fold_sll(init, xnxt, t) ** func f(x, t, ret)
 }
 }
+
+/*
+predicate new_fold_sll(loc init, loc x, loc ret){
+|  x == 0 => { ret == init; emp}
+|  not (x == 0) => {
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** new_fold_sll(init, xnxt, t) ** func f(x, t, ret)
+}
+}
+*/
 
 predicate scanr_sum(int init, int tmp, loc x, loc ret){
 |  x == 0 => {init == tmp ; [ret, 2] **  ret :-> init ** ret + 1 :-> 0}
@@ -83,20 +98,41 @@ predicate scanr_sum(int init, int tmp, loc x, loc ret){
 predicate reverse(int init, loc x, loc ret){
 |  x == 0 => { ret :-> init}
 |  not (x == 0) => {
-    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** reverse(init, xnxt, t) ** func tail(x, t, ret)
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** reverse(init, xnxt, t) ** func tail(t, x, ret)
 }
 }
 
 predicate append(loc x1, loc x2, loc ret){
-| x1 == 0 && x2 == 0 => {ret :-> 0}
-| not (x1 == 0) && x2 == 0 => {sll_c(x1) ** func sll_copy(x1, ret)}
-| x1 == 0 && not (x2 == 0) => {sll_c(x2) ** func sll_copy(x2, ret)}
-| not (x1 == 0) && not (x2 == 0) => {v == v0 && retnxt == ret0 + 1;
-    [x1, 2] ** x1 :-> v ** x1+1 :-> x1nxt **
-    ret :-> ret0 ** [ret0, 2] ** ret0 :-> v0 **
-    append(x1nxt, x2, retnxt)
+| x1 == 0 => {sll_c(x2) ** func sll_copy(x2, ret)}
+| not (x1 == 0) => {
+    [x1, 2] ** x1 :-> v ** x1 + 1 :-> x1nxt **
+    temploc t ** append(x1nxt, x2, t) **
+    func cons(x1, t, ret)
+    
 }
 }
+
+predicate concat(loc xs, loc ret){
+| xs == 0 => {ret :-> 0}
+| not (xs == 0) => {
+    [xs, 2] ** xs :-> h ** xs + 1 :-> xsnxt ** sll_c(h) **
+    temploc t ** concat(xsnxt, t) **
+    func append(xs, t, ret)
+    
+}
+}
+
+/*
+predicate append_inplace(loc x1, loc x2){
+| x1 == 0 => {emp}
+| not (x1 == 0) => {
+    [x1, 2] ** x1 :-> v ** x1 + 1 :-> x1nxt **
+    temploc t ** append(x1nxt, x2) **
+    [ret, 2]
+    
+}
+}
+*/
 
 predicate multi_append(loc x, loc y, loc ret){
 | x == 0 && y == 0 => {ret == null ; emp }
@@ -125,7 +161,7 @@ predicate filter_base2(loc x, loc y){
 }
 
 
-predicate singleton_list(loc x, int n) {
+predicate singleton_list(int n, loc x) {
 | true => { [x, 2] ** x :-> n ** (x+1) :-> 0 }
 }
 
@@ -138,11 +174,11 @@ predicate inplace_cons(int v, loc x, loc ret) {
 | true => {[ret, 2] ** ret :-> v ** ret + 1 :-> x ** sll_c(x)}
 }
 
-/*
+
 predicate cons(int v, loc x, loc ret) {
 | true => {[ret, 2] ** ret :-> v ** func cp(x, ret) + 1 ** sll_c(x)}
 }
-*/
+
 
 predicate sll_copy(loc x, loc y) {
 | x == 0 => {y == 0; emp}
@@ -172,3 +208,50 @@ predicate inplace_sll_map(loc x) {
 |  not (x == 0)  => { [x, 2] ** (x + 1) :-> xnxt ** func f(x) ** inplace_sll_map(xnxt) }
 }
 
+predicate map_sum(loc x, loc y) {
+|  x == 0        => { y == 0 ; emp }
+|  not (x == 0)  => { [x, 2] ** x :-> h ** (x + 1) :-> xnxt ** sll_c(h) ** [y, 2] ** func sum(x, y) ** (y + 1) :-> ynxt ** map_sum(xnxt, ynxt) }
+}
+
+predicate max_map_sum(loc x, loc ret) {
+| true => {
+    temploc t ** func map_sum(x, t) ** func max(t, ret)
+}
+}
+
+predicate odd(int v, int ret){
+| v == 0 => { ret == 0; emp}
+| not (v == 0) => {v0 + 1 == v; even(v0, ret)}
+}
+
+predicate even(int v, int ret){
+| v == 0 => { ret == 1; emp}
+| not (v == 0) => {v0 + 1 == v; odd(v0, ret)}
+}
+
+
+predicate take(loc x, int n, int ret){
+| true => {
+    temploc t ** func number(n, t) ** func take_helper(x, t, ret)
+}
+}
+
+
+predicate take_helper(loc x, loc helper, int ret){
+| x == 0 => { ret == 0; sll_c(helper)}
+| not (x == 0) && helper == 0 => { ret == v;
+    [x, 2] ** x :-> v ** x + 1 :-> xnxt ** sll_c(xnxt)
+}
+| not (x == 0) && not (helper == 0) => {
+    [x, 2] ** x :-> v ** x + 1 :-> xnxt ** 
+    [helper, 2] ** helper :-> vv ** helper + 1 :-> helpernxt **
+    take_helper(xnxt, helpernxt, ret)
+}
+}
+
+predicate replicate_helper(int n, loc helper, loc ret){
+| helper == 0 => {ret == 0 ; emp}
+| not (helper == 0) => {
+    [helper, 2] ** helper :-> vv ** helper + 1 :-> helpernxt ** [ret, 2] ** ret :-> n ** ret + 1 :-> retnxt ** replicate_helper(n, helpernxt, retnxt)
+}
+}

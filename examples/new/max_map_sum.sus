@@ -1,0 +1,11 @@
+#
+
+
+void max_map_sum (loc x, loc y, loc ret)
+{x :-> x0  ** ret :-> a}
+{x :-> x0  ** max_map_sum(x0, ret)}
+{
+    ??
+}
+
+#####

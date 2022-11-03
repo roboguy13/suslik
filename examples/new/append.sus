@@ -1,0 +1,11 @@
+# -c 2
+
+
+void append (loc x, loc y, loc ret)
+{x :-> x0 ** sll_c(x0) ** y :-> y0 ** sll_c(y0) ** ret :-> a}
+{x :-> x0 ** y :-> y0 ** append(x0, y0, ret)}
+{
+    ??
+}
+
+#####

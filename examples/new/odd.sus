@@ -1,0 +1,10 @@
+#
+
+void odd(loc x, loc ret)
+{x :-> x0 ** ret :-> a}
+{x :-> x0 ** odd(x0, ret0) ** ret :-> ret0}
+{
+    ??
+}
+
+###

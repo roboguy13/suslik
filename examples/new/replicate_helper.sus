@@ -1,0 +1,9 @@
+# -c 2
+
+void replicate_helper(loc x, loc y, loc ret)
+  { x :-> v  ** y :-> y0 ** sll_c(y0) ** ret :-> a}
+  { x :-> v ** y :-> y0 ** replicate_helper(v, y0, ret0) ** ret :-> ret0 }
+{ ?? }
+
+###
+

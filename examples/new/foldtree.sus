@@ -1,0 +1,11 @@
+#
+
+
+void fold (loc i, loc x, loc ret)
+{x :-> x0 ** tree_c(x0) ** ret :-> a ** i :-> init}
+{x :-> x0 ** fold_tree(init, x0, ret) ** i :-> init }
+{
+    ??
+}
+
+#####

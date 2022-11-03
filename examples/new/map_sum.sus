@@ -1,0 +1,9 @@
+# -c 2
+
+void map_sum(loc x, loc y)
+  { x :-> x0 ** multilist_c(x0) ** y :-> a}
+  { map_sum(x0, y0) ** x :-> x0 ** y :-> y0 }
+{ ?? }
+
+###
+
