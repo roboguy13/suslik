@@ -55,8 +55,8 @@ trait SepLogicUtils extends PureLogicUtils {
         case _ => false
     }
     def TempStruc(e:Expr): Heaplet => Boolean = {
-        case FuncApp(_, init :+ e, _) => true
-        case SApp(_, init :+ e, _, _) => true
+        case FuncApp(_, init :+ e2, _) => e.pp == e2.pp
+        case SApp(_, init :+ e2, _, _) => e.pp == e2.pp
         case _ => false
     }
     // def TempAlloced(temp: Heaplet): Heaplet => Boolean = {
@@ -68,6 +68,13 @@ trait SepLogicUtils extends PureLogicUtils {
     // (for {
     //     hl <- pre.chunks.toStream if (HasTemp(hl) && (post.chunks.filter(TempAlloced(hl)).size == 0))
     //   } yield hl).headOption
+    
+    // val ret = (for{
+    //   hl1 <- post.chunks.toStream if HasTemp(hl1)
+    //   hl2 <- post.chunks.toStream if TempStruc(hl1.asInstanceOf[TempVar].name)(hl2)
+    // } yield (hl1, hl2))
+    // println(s"${ret.headOption}")
+    // ret.headOption
     (for{
       hl1 <- post.chunks.toStream if HasTemp(hl1)
       hl2 <- post.chunks.toStream if TempStruc(hl1.asInstanceOf[TempVar].name)(hl2)

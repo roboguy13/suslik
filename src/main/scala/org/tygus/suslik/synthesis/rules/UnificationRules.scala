@@ -118,25 +118,10 @@ object UnificationRules extends PureLogicUtils with SepLogicUtils with RuleUtils
         if !postPtss.exists(sameLhs(t))
       } yield (y -> x))
       )
-
-      alternatives.sortBy{ case (e1, e2) => -lcpLen(e1.pp, e2.pp) }.headOption match {
-        case None => Nil
-        case Some((y, x)) => {
-          val subst = Map(y -> x)
-          val subExpr = goal.substToFormula(subst)
-          val newPost = Assertion(post.phi && subExpr, post.sigma)
-          val newGoal = goal.spawnChild(post = newPost)
-          val kont = (x, y) match {
-            case (x:Var, y:Var) => SubstVarProducer(y, x) >> IdProducer >> ExtractHelper(goal)
-            case _ =>  IdProducer >> ExtractHelper(goal)
-          }
-          List(RuleResult(List(newGoal), kont, this, goal))
-        }
-      }
-      val resultlist = for {
-        alt <- alternatives
-        val result = alt match {
-          case (y, x) => {
+      if(!goal.env.config.temprecur){
+        alternatives.sortBy{ case (e1, e2) => -lcpLen(e1.pp, e2.pp) }.headOption match {
+          case None => Nil
+          case Some((y, x)) => {
             val subst = Map(y -> x)
             val subExpr = goal.substToFormula(subst)
             val newPost = Assertion(post.phi && subExpr, post.sigma)
@@ -145,11 +130,29 @@ object UnificationRules extends PureLogicUtils with SepLogicUtils with RuleUtils
               case (x:Var, y:Var) => SubstVarProducer(y, x) >> IdProducer >> ExtractHelper(goal)
               case _ =>  IdProducer >> ExtractHelper(goal)
             }
-            RuleResult(List(newGoal), kont, this, goal)
+            List(RuleResult(List(newGoal), kont, this, goal))
           }
         }
-      } yield result
-      nubBy[RuleResult, Assertion](resultlist, sub => sub.subgoals.head.post)
+      }
+      else{
+        val resultlist = for {
+          alt <- alternatives
+          val result = alt match {
+            case (y, x) => {
+              val subst = Map(y -> x)
+              val subExpr = goal.substToFormula(subst)
+              val newPost = Assertion(post.phi && subExpr, post.sigma)
+              val newGoal = goal.spawnChild(post = newPost)
+              val kont = (x, y) match {
+                case (x:Var, y:Var) => SubstVarProducer(y, x) >> IdProducer >> ExtractHelper(goal)
+                case _ =>  IdProducer >> ExtractHelper(goal)
+              }
+              RuleResult(List(newGoal), kont, this, goal)
+            }
+          }
+        } yield result
+        nubBy[RuleResult, Assertion](resultlist, sub => sub.subgoals.head.post)
+      }
     }
   }
 

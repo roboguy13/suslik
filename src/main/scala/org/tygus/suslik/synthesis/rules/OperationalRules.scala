@@ -252,7 +252,7 @@ object OperationalRules extends SepLogicUtils with RuleUtils {
     def apply(goal: Goal): Seq[RuleResult] = {
       val pre = goal.pre
       val post = goal.post
-      val temp = findTemp(goal.post.sigma)
+      // val temp = findTemp(goal.post.sigma)
       findTemp(goal.post.sigma) match {
         case None => Nil
         case Some((hl1@TempVar(loc,0), hl2@FuncApp(name, lst, _))) =>

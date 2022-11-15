@@ -1,4 +1,4 @@
-#
+# -g true
 
 
 void fold (loc i, loc x, loc ret)

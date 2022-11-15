@@ -32,6 +32,7 @@ object SynthesisRunner extends SynthesisRunnerUtil {
     * -x, --auxAbduction <value>     abduce auxiliary functions; default: false
     * --topLevelRecursion <value>    allow top-level recursion; default: true
     * -b, --branchAbduction <value>  abduce conditional branches; default: false
+    * -g, --tempRecur <value>        enable temp recursion; default: false
     * --maxGuardConjuncts <value>    maximum number of conjuncts in an abduced guard; default: 2
     * --phased <value>               split rules into unfolding and flat phases; default: true
     * -d, --dfs <value>              depth first search; default: false
@@ -191,6 +192,10 @@ object SynthesisRunner extends SynthesisRunnerUtil {
     opt[Boolean]('l', "log").action(cfg { b =>
       _.copy(logToFile = b)
     }).text("log results to a csv file; default: false")
+
+    opt[Boolean]('g',"tempRecur").action(cfg { b =>
+      _.copy(temprecur = b)
+    }).text("enable temp recursion; default: false")
 
     opt[String]('j', "traceToJsonFile").action(cfg { fn =>
       _.copy(traceToJsonFile = Some(new File(fn)))

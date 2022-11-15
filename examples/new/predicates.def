@@ -74,7 +74,7 @@ predicate fold_tree(int init, loc x, loc ret){
 predicate fold_sll(int init, loc x, loc ret){
 |  x == 0 => { func sll_copy(init, ret)}
 |  not (x == 0) => {
-    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** fold_sll(init, xnxt, t) ** func f(x, t, ret)
+    [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** temploc t ** func f(x, t, ret) ** fold_sll(init, xnxt, t)
 }
 }
 
@@ -254,4 +254,10 @@ predicate replicate_helper(int n, loc helper, loc ret){
 | not (helper == 0) => {
     [helper, 2] ** helper :-> vv ** helper + 1 :-> helpernxt ** [ret, 2] ** ret :-> n ** ret + 1 :-> retnxt ** replicate_helper(n, helpernxt, retnxt)
 }
+}
+
+predicate sum(loc l, int output){
+| l == null => {output == 0; emp}
+| l != null => {output == output1 + v; [l, 2] ** l :-> v ** l + 1 :-> lnxt ** sum(lnxt,
+output1)}
 }
