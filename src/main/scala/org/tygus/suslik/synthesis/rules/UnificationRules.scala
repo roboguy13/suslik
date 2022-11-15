@@ -6,6 +6,8 @@ import org.tygus.suslik.logic.Specifications._
 import org.tygus.suslik.logic._
 import org.tygus.suslik.synthesis._
 import org.tygus.suslik.synthesis.rules.Rules._
+import org.tygus.suslik.language.IntType
+import org.tygus.suslik.language.LocType
 
 /**
   * The goal of unification rules is to eliminate existentials
@@ -271,7 +273,7 @@ object UnificationRules extends PureLogicUtils with SepLogicUtils with RuleUtils
       for {
         ex <- least(exCandidates) // since all existentials must go, no point trying them in different order
         v <- toSorted(uniCandidates(ex)) ++ constants
-        if goal.getType(ex) == v.getType(goal.gamma).get
+        if (goal.getType(ex) == v.getType(goal.gamma).get || (goal.getType(ex) == IntType && v.getType(goal.gamma).get == LocType)) //for non-pure
         sigma = Map(ex -> v)
         newPost = goal.post.subst(sigma)
         newCallGoal = goal.callGoal.map(_.updateSubstitution(sigma))
