@@ -1,0 +1,11 @@
+#
+
+
+void f (loc x, loc y, loc ret)
+{x :-> x0  ** y :-> y0 ** ret :-> a}
+{x :-> x0  ** y :-> y0 ** f(x0, y0, ret)}
+{
+    ??
+}
+
+#####

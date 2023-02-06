@@ -261,3 +261,7 @@ predicate sum(loc l, int output){
 | l != null => {output == output1 + v; [l, 2] ** l :-> v ** l + 1 :-> lnxt ** sum(lnxt,
 output1)}
 }
+
+predicate f(loc x, loc y, loc ret){
+| true => {temploc tmp1 ** func f1(x, y, tmp1) ** func f2(tmp1, y, ret)}
+}

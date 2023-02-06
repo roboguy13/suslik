@@ -1,4 +1,4 @@
-# -c 2
+# -c 2 -g true
 
 
 void append (loc x, loc y, loc ret)
