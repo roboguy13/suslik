@@ -21,6 +21,9 @@ case class Iris() extends CertificationTarget {
 
     cert
   }
+  override def get_C_Program(testName: String, proc: Procedure, tree: ProofTree[SuslikProofStep], goal: Goal, env: Environment): Unit ={
+    
+  }
 
   override def generate_common_definitions_of(defFileName: String, predicates: List[IPredicate]): List[CertificateOutput] = {
     def commonPredicates(predicates: List[IPredicate]): String = {

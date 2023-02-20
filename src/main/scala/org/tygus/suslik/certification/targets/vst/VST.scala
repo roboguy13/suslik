@@ -25,6 +25,10 @@ case class VST() extends CertificationTarget {
     Translation.translate(testName, tree, proc, env)
   }
 
+  override def get_C_Program(testName: String, proc: Procedure, tree: ProofTree[SuslikProofStep], goal: Goal, env: Environment): Unit = {
+    Console.println(Translation.Cprogram(testName, tree, proc, env).body)
+  }
+
 
   def generate_common_definitions_of(base_filename: String, predicates: List[VSTPredicate]): List[CertificateOutput] = {
     List(

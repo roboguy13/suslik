@@ -224,21 +224,23 @@ trait SynthesisRunnerUtil {
           val certTarget = params.certTarget
           val targetName = certTarget.name
           val root = CertTree.root.getOrElse(throw SynthesisException("Search tree is uninitialized"))
+          Console.println("ROOT");
+          Console.println(s"${root.pp}");
           val tree = SuslikProofStep.of_certtree(root)
-          val certificate = certTarget.certify(testName, procs.head, tree, root.goal, env)
-          if (params.certDest == null) {
-            testPrintln(s"\n$targetName certificate:", Console.MAGENTA)
-            certificate.outputs.foreach(o => {
-              testPrintln(s"File ${o.filename}:\n", Console.MAGENTA)
-              testPrintln(s"${o.body}")
-            })
-          } else {
-            certificate.outputs.foreach(o => {
-              val path = Paths.get(params.certDest.getCanonicalPath, o.filename).toFile
-              new PrintWriter(path) { write(o.body); close() }
-              testPrintln(s"\n$targetName certificate exported to $path", Console.MAGENTA)
-            })
-          }
+          certTarget.get_C_Program(testName, procs.head, tree, root.goal, env)
+          // if (params.certDest == null) {
+          //   testPrintln(s"\n$targetName certificate:", Console.MAGENTA)
+          //   certificate.outputs.foreach(o => {
+          //     testPrintln(s"File ${o.filename}:\n", Console.MAGENTA)
+          //     testPrintln(s"${o.body}")
+          //   })
+          // } else {
+          //   certificate.outputs.foreach(o => {
+          //     val path = Paths.get(params.certDest.getCanonicalPath, o.filename).toFile
+          //     new PrintWriter(path) { write(o.body); close() }
+          //     testPrintln(s"\n$targetName certificate exported to $path", Console.MAGENTA)
+          //   })
+          // }
         }
     }
   }

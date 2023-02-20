@@ -12,7 +12,7 @@ import org.tygus.suslik.certification.targets.vst.translation.Translation.Transl
 import org.tygus.suslik.certification.translation.{CardConstructor, CardNull, CardOf, GenericPredicateClause, PredicateTranslation}
 import org.tygus.suslik.language.Expressions.Var
 import org.tygus.suslik.language.{BoolType, CardType, Expressions, Ident, IntSetType, IntType, LocType, SSLType}
-import org.tygus.suslik.logic.{Block, Environment, FunSpec, Gamma, Heaplet, InductiveClause, InductivePredicate, PointsTo, PredicateEnv, SApp}
+import org.tygus.suslik.logic.{Block, Environment, FunSpec, Gamma, Heaplet, InductiveClause, InductivePredicate, PointsTo, ConstPointsTo, PredicateEnv, SApp}
 import org.tygus.suslik.logic.Specifications.{Assertion, Goal}
 
 
@@ -169,6 +169,13 @@ object ProofSpecTranslation {
               case None => map.updated(name, (List(ty), None))
               case Some((points_to_acc: List[_], block_acc)) =>
                 map.updated(name, (List(ty) ++ points_to_acc, block_acc))
+            }
+            (updated_map, acc: List[CSApp])
+            case ty@ConstPointsTo(Var(name), offset, value) =>
+            val updated_map = map.get(name) match {
+              case None => map.updated(name, (List(PointsTo(Var(name), offset, value)), None))
+              case Some((points_to_acc: List[_], block_acc)) =>
+                map.updated(name, (List(PointsTo(Var(name), offset, value)) ++ points_to_acc, block_acc))
             }
             (updated_map, acc: List[CSApp])
           case ty@Block(loc@Var(name), sz) =>

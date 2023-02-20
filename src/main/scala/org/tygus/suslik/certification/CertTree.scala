@@ -62,15 +62,26 @@ object CertTree {
   def fromTrace(trace: ProofTraceCert): Node = {
     def traverse(on: OrNode): Node = {
       val ans = trace.childAnds(on)
+      val cnt = ans.count(x => {
+          x.rule.toString == "Open"
+      })
+      // val newans = if (cnt.equals(1) && ans.length.!=(1)) ans.filter(x => {x.rule.toString != "Open"}) else ans
       if (ans.isEmpty) {
         // Cached result was used; search for the same goal in previously encountered nodes
         val n = trace.cachedGoals(on)
         traverse(n)
       } else {
+        // ans.foreach(x => Console.println(s"${x.pp(1)}"))
+        // newans.foreach(x => Console.println(s"${x.pp(1)}"))
+
         // Candidate derivations exist; find and process the correct one
+        // What's new: it is possible that after one branch of Open is finished,
+        // another expansion in the worklist succeed, which results in a ghost Open
         val n = for {
           an <- ans
           childOrs = trace.childOrs(an)
+          // zytodo: more general
+          if !(an.rule.toString().equals("Open") && childOrs.length.equals(1))
         } yield {
           val node = Node(on.id, on.goal, an.kont, an.rule)
           val children = childOrs.map(traverse)
@@ -82,7 +93,28 @@ object CertTree {
         n.head
       }
     }
+    // def print_init(on: OrNode, d: Int): Unit = {
+    //   if(d == 0) return;
+    //   val ans = trace.childAnds(on)
+    //   Console.println("Before Prune")
+    //   ans.foreach(x => Console.println(s"${x.pp(1)}"))
+    //   if (ans.isEmpty) {
+    //     // Cached result was used; search for the same goal in previously encountered nodes
+    //     val n = trace.cachedGoals(on)
+    //     print_init(n, d-1)
+    //   } else {
+    //     // Candidate derivations exist; find and process the correct one
+    //     for {
+    //       an <- ans
+    //       childOrs = trace.childOrs(an)
+    //     }{
+    //       val node = Node(on.id, on.goal, an.kont, an.rule)
+    //       childOrs.map(x => print_init(x, d-1))
+    //     }
+    //   }
+    // }
     clear()
+    // trace.selfprint(trace.root,11)
     trace.pruneFailed()
     traverse(trace.root)
   }

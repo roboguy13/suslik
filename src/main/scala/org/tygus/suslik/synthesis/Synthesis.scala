@@ -164,10 +164,6 @@ class Synthesis(tactic: Tactic, implicit val log: Log, implicit val trace: Proof
     // Apply all possible rules to the current goal to get a list of alternative expansions,
     // each of which can have multiple open subgoals
     val rules = tactic.nextRules(node)
-    log.print("RULES!",Console.RED,3)
-    for(r<-rules){
-      log.print(s"${r.toString()}",Console.RED,3)
-    }
     val allExpansions = applyRules(rules)(node, stats, config, ctx)
     val expansions = tactic.filterExpansions(allExpansions)
 

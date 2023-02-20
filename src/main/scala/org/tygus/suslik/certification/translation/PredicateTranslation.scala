@@ -71,6 +71,7 @@ abstract class PredicateTranslation[Pure, Spatial, Type,
 
     predicate match {
       case InductivePredicate(name, raw_params, raw_clauses) =>
+        Console.println(s"HERE!! ${name.toString()}")
         val params: List[(String, Type)] =
           raw_params.map({ case (Var(name), sType) => (name, translatePredicateParamType(predName, sType)) })
         val context: Map[Ident, Type] = (baseContext ++ params).toMap

@@ -41,6 +41,7 @@ object StmtProducerOps {
     * then applies p2 to the result of p1 and a suffix of child solutions
     */
   case class >>(p1: StmtProducer, p2: StmtProducer) extends StmtProducer {
+    override val exceptionQualifier: String = ">>"
     val arity: Int = p1.arity + p2.arity - 1
     val fn: Kont = sols => {
       val (sols1, sols2) = sols.splitAt(p1.arity)
@@ -54,6 +55,7 @@ object StmtProducerOps {
   * Identity producer: returns the first child solution unchanged
   */
 case object IdProducer extends StmtProducer {
+  override val exceptionQualifier: String = "IdProducer"
   val arity: Int = 1
   val fn: Kont = _.head
 }
@@ -100,6 +102,7 @@ case class AppendProducer(s: Statement) extends StmtProducer {
   * Producer that sequentially composes results of two goals
   */
 case object SeqCompProducer extends StmtProducer {
+  override val exceptionQualifier: String = "SeqCompProducer"
   val arity: Int = 2
   val fn: Kont = liftToSolutions(stmts => {
     SeqComp(stmts.head, stmts.last).simplify
@@ -127,6 +130,7 @@ case class ExtractHelper(goal: Goal) extends StmtProducer {
 
 // Produces a conditional that branches on the selectors
 case class BranchProducer(pred: Option[SApp], freshVars: SubstVar, sbst: Subst, selectors: Seq[Expr]) extends StmtProducer {
+  override val exceptionQualifier: String = "BranchProducer"
   val arity: Int = selectors.length
   val fn: Kont = liftToSolutions(stmts => {
     if (stmts.length == 1) stmts.head else {
@@ -141,6 +145,7 @@ case class BranchProducer(pred: Option[SApp], freshVars: SubstVar, sbst: Subst, 
 // Joins a guarded statement and an else-branch into a conditional,
 // if goal is the right branching point (otherwise simply propagates the guarded statement)
 case class GuardedBranchProducer(goal: Goal, unknown: Unknown) extends StmtProducer {
+  override val exceptionQualifier: String = "GuardBranchProducer"
   val arity: Int = 2
   val fn: Kont = liftToSolutions(stmts => {
     stmts.head match {

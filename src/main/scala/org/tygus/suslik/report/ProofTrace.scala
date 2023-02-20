@@ -137,6 +137,27 @@ class ProofTraceCert extends ProofTrace {
   val cachedGoals: mutable.HashMap[OrNode, OrNode] = mutable.HashMap.empty
   var root: OrNode = _
 
+
+  def selfprint(curroot:OrNode, depth: Int): Unit = {
+    if(depth == 0) return;
+    Console.println(s"Trace:")
+    derivations.get(curroot) match {
+      case None => return;
+      case Some(value1) => value1.foreach(x => {
+        Console.println(s"${x._1.toString() + " " + x._2.pp()}")
+        subgoals.get(x._2) match {
+          case None => None
+          case Some(value2) => value2.foreach(y => {
+            Console.println(s"${y._1.toString() + " " + y._2.pp()}")
+            selfprint(y._2, depth-1)
+          })
+        }
+      }
+      )
+    }
+    
+    
+  }
   override def add(node: OrNode): Unit = {
     node.parent match {
       case None => root = node

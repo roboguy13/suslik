@@ -53,6 +53,10 @@ object Statements {
     override def pp: String = s"free(${v});"
   }
 
+  case class CTypeFree(tobefree: String, tobetypefree:String) extends StatementStep {
+    override def pp: String = s"typefree(${tobefree}, ${tobetypefree});"
+  }
+
   case class CLoadInt(to: String, from: String, offset: Int = 0) extends StatementStep {
     override def pp: String = s"int ${to} = READ_INT(${from}, ${offset});"
   }
@@ -72,8 +76,8 @@ object Statements {
   }
 
   /** encoding of a function call f(args) */
-  case class CCall(fun: String, args: Seq[CLangExpr]) extends StatementStep {
-    override def pp: String = s"${fun}(${args.map(_.pp_as_clang_expr).mkString(", ")});"
+  case class CCall(fun: String, args: Seq[CLangExpr], offset: Int = 0) extends StatementStep {
+    override def pp: String = if (offset == 0) s"${fun}(${args.map(_.pp_as_clang_expr).mkString(", ")});" else s"${fun}(${args.map(_.pp_as_clang_expr).mkString(", ")} + ${offset});"
   }
 
   /** Encoding of statement

@@ -5,7 +5,7 @@ import org.tygus.suslik.certification.traversal.Evaluator.DeferredsAction
 import org.tygus.suslik.certification.traversal.ProofTree
 import org.tygus.suslik.certification.traversal.Step.SourceStep
 import org.tygus.suslik.language.Expressions._
-import org.tygus.suslik.language.Statements.{Error, Guarded, Load, Skip, Solution, Store}
+import org.tygus.suslik.language.Statements.{Error, Guarded, Load, Skip, Solution, Store, Func_Call}
 import org.tygus.suslik.language.{SSLType, Statements}
 import org.tygus.suslik.logic.Preprocessor.findMatchingHeaplets
 import org.tygus.suslik.logic.Specifications.{Assertion, Goal, GoalLabel, SuspendedCallGoal}
@@ -55,6 +55,12 @@ object SuslikProofStep {
   case class Write(stmt: Store) extends SuslikProofStep {
     override def pp: String = s"Write(${sanitize(stmt.pp)});"
   }
+
+  /** Function Call */
+  case class FuncCall(stmt: Func_Call) extends SuslikProofStep {
+    override def pp: String = s"FuncCall(${sanitize(stmt.pp)});"
+  }
+
 
   /** weaken the precondition by removing unused formulae */
   case class WeakenPre(unused: PFormula) extends SuslikProofStep {
@@ -149,6 +155,11 @@ case class AbduceCall(
   /** free operation */
   case class Free(stmt: Statements.Free, size: Int) extends SuslikProofStep {
     override def pp: String = s"Free(${sanitize(stmt.pp)});"
+  }
+
+  /** tempfree operation */
+  case class TempFree(tobefree: Var, tobetypefree: Var) extends SuslikProofStep {
+    override def pp: String = s"Free(${tobefree.pp}) and TypeFree(${tobetypefree});"
   }
 
   /** malloc rule */
@@ -251,6 +262,14 @@ case class AbduceCall(
         case PrependProducer(stmt@Store(_, _, _)) >> ExtractHelper(_) =>
           node.children match {
             case ::(head, Nil) => SuslikProofStep.Write(stmt)
+            case ls => fail_with_bad_children(ls, 1)
+          }
+        case _ => fail_with_bad_proof_structure()
+      }
+      case OperationalRules.FuncCall => node.kont match {
+        case PrependProducer(stmt@Func_Call(_, _, _)) >> ExtractHelper(_) =>
+          node.children match {
+            case ::(head, Nil) => SuslikProofStep.FuncCall(stmt)
             case ls => fail_with_bad_children(ls, 1)
           }
         case _ => fail_with_bad_proof_structure()
@@ -456,7 +475,25 @@ case class AbduceCall(
           }
         case _ => fail_with_bad_proof_structure()
       }
+      case OperationalRules.FreeTemp => node.kont match {
+        case PrependProducer(Statements.Free(x)) >> PrependProducer(Statements.TypeFree(y)) >> PrependProducer(_) >> ExtractHelper(_) =>
+          node.children match {
+            case ::(head, Nil) => SuslikProofStep.TempFree(x, y)
+            case ls => fail_with_bad_children(ls, 1)
+          }
+        case _ => fail_with_bad_proof_structure()
+      }
       case OperationalRules.AllocRule => node.kont match {
+        case SubstVarProducer(from, to) >> PrependProducer(stmt@Statements.Malloc(_, _, _)) >> ExtractHelper(goal) =>
+          node.children match {
+            case ::(head, Nil) =>
+              SuslikProofStep.
+                Malloc(from, to, stmt)
+            case ls => fail_with_bad_children(ls, 1)
+          }
+        case _ => fail_with_bad_proof_structure()
+      }
+      case OperationalRules.AllocTemp => node.kont match {
         case SubstVarProducer(from, to) >> PrependProducer(stmt@Statements.Malloc(_, _, _)) >> ExtractHelper(goal) =>
           node.children match {
             case ::(head, Nil) =>
@@ -564,6 +601,7 @@ case class AbduceCall(
     @tailrec
     def forward(tree: CertTree.Node, stack: List[Item]): ProofTree[SuslikProofStep] = {
       val step = translate(tree)
+      // Console.println(s"${step.pp}")
       val label = Some(tree.goal.label)
       tree.children match {
         case Nil => backward(stack, ProofTree(step, Nil, label), tree.kont(Nil))

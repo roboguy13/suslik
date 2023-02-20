@@ -24,6 +24,8 @@ trait CertificationTarget {
   val suffix: String
   def certify(testName: String, proc: Procedure, tree: ProofTree[SuslikProofStep], goal: Goal, env: Environment): Certificate[T,P]
 
+  def get_C_Program(testName: String, proc: Procedure, tree: ProofTree[SuslikProofStep], goal: Goal, env: Environment): Unit
+
   /**
     * Generate a list of outputs for the following predicates.
     * @param base_filename - base name of common file
@@ -48,6 +50,8 @@ object CertificationTarget {
     override val suffix: String = ""
 
     override def certify(testName: String, proc: Procedure, tree: ProofTree[SuslikProofStep], goal: Goal, env: Environment): Certificate[T,P] = ???
+
+    override def get_C_Program(testName: String, proc: Procedure, tree: ProofTree[SuslikProofStep], goal: Goal, env: Environment): Unit = ???
 
     override def generate_common_definitions_of(base_filename: String, predicates: List[P]): List[CertificateOutput] = ???
   }

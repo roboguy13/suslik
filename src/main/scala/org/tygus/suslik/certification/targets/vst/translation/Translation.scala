@@ -15,9 +15,11 @@ import org.tygus.suslik.language.Expressions.Var
 import org.tygus.suslik.language.{IntType, LocType}
 import org.tygus.suslik.language.Statements.Procedure
 import org.tygus.suslik.logic.Environment
+import org.tygus.suslik.certification.ClangOutput
 
 object Translation {
 
+  var predicate_name: List[String] = List("sll_c","lseg")
   case class TranslationException(msg: String) extends Exception(msg)
 
   def fail_with(msg: String) = throw TranslationException(msg)
@@ -30,10 +32,10 @@ object Translation {
   }
 
   def translate(testName: String, base_proof: ProofTree[SuslikProofStep], proc: Procedure, env: Environment): VSTCertificate = {
-    val predicates = env.predicates.map({ case (_, predicate) => ProofSpecTranslation.translate_predicate(env)(predicate)}).toList
+    val predicates = env.predicates.filter(x => predicate_name.contains(x._1)).map({ case (_, predicate) => ProofSpecTranslation.translate_predicate(env)(predicate)}).toList
     val pred_map = predicates.map(v => (v.name,v)).toMap
     val pred_type_map = predicates.map(v => (v.name, v.params.map(_._2))).toMap
-    var f_gamma = proc.f.gamma(env)
+    // var f_gamma = proc.f.gamma(env)
     env.functions.foreach {
       case (_, spec) =>
       val gamma = spec.gamma(env)
@@ -59,5 +61,26 @@ object Translation {
     )
 
     VSTCertificate(testName, proc.f.name, procedure, proof)
+  }
+
+  def Cprogram(testName: String, base_proof: ProofTree[SuslikProofStep], proc: Procedure, env: Environment): ClangOutput = {
+    val predicates = env.predicates.filter(x => predicate_name.contains(x._1)).map({ case (_, predicate) => ProofSpecTranslation.translate_predicate(env)(predicate)}).toList
+    val pred_map = predicates.map(v => (v.name,v)).toMap
+    val pred_type_map = predicates.map(v => (v.name, v.params.map(_._2))).toMap
+    // var f_gamma = proc.f.gamma(env)
+    env.functions.foreach {
+      case (_, spec) =>
+      val gamma = spec.gamma(env)
+    }
+    val params = proc.formals.map({case (Var(name), ty) => ty match {
+      case LocType => (name, CoqPtrValType)
+      case IntType => (name, CoqIntValType)
+    }})
+    // val spec = ProofSpecTranslation.translate_conditions(env)(pred_type_map)(proc.f)
+    val helper_specs = env.functions.map {case (fname, spec) => (fname, ProofSpecTranslation.translate_conditions(env)(pred_type_map)(spec))}
+    val program_body = translate_proof(base_proof)(new VSTProgramInterpreter, VSTProgramInterpreter.empty_context)
+    val procedure = CProcedureDefinition(proc.name, params, program_body, helper_specs.values.toList)
+
+    return ClangOutput(proc.f.name+".c",proc.f.name,procedure.pp)
   }
 }

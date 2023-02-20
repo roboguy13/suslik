@@ -12,10 +12,10 @@ import org.tygus.suslik.certification.traversal.Interpreter.Result
 import org.tygus.suslik.certification.traversal.{Evaluator, Interpreter}
 import org.tygus.suslik.language.Expressions.{Expr, Subst, SubstVar, Var}
 import org.tygus.suslik.language.{IntType, LocType, SSLType}
-import org.tygus.suslik.certification.targets.vst.clang.Statements.{CCall, CElif, CFree, CIf, CLoadInt, CLoadLoc, CMalloc, CSkip, CWriteInt, CWriteLoc, StatementStep}
+import org.tygus.suslik.certification.targets.vst.clang.Statements.{CCall, CElif, CFree, CTypeFree, CIf, CLoadInt, CLoadLoc, CMalloc, CSkip, CWriteInt, CWriteLoc, StatementStep}
 import org.tygus.suslik.certification.targets.vst.translation.VSTProgramInterpreter.VSTProgramContext
 import org.tygus.suslik.certification.targets.vst.translation.VSTProofInterpreter.VSTClientContext
-import org.tygus.suslik.language.Statements.{Call, Free, Load, Malloc, Store}
+import org.tygus.suslik.language.Statements.{Call, Free, Load, Malloc, Store, Func_Call}
 import org.tygus.suslik.logic.{Block, Gamma, Heaplet, PointsTo, SApp}
 
 import scala.collection.immutable.Queue
@@ -140,9 +140,18 @@ class VSTProgramInterpreter extends Interpreter[SuslikProofStep, StatementStep, 
         val exprs = args.map(ProofSpecTranslation.translate_expression(ctx.typing_context)(_).asInstanceOf[CLangExpr])
         val op = CCall(fname, exprs)
         single_child_result_of(List(op), (Nil, no_deferreds, ctx))
+      case SuslikProofStep.FuncCall(Func_Call(name, args, offset)) =>{
+        val exprs = args.map(ProofSpecTranslation.translate_expression(ctx.typing_context)(_).asInstanceOf[CLangExpr])
+        val op = CCall(name, exprs, offset)
+        single_child_result_of(List(op), (Nil, no_deferreds, ctx))
+      }
       case SuslikProofStep.Free(Free(Var(name)), size) =>
         val op = CFree(name)
         single_child_result_of(List(op), (Nil, no_deferreds, ctx))
+      case SuslikProofStep.TempFree(Var(tobefree), Var(tobetypefree)) =>{
+        val op = CTypeFree(tobefree, tobetypefree)
+        single_child_result_of(List(op), (Nil, no_deferreds, ctx))
+      }
       case SuslikProofStep.Malloc(Var(_), Var(_), Malloc(Var(to), tpe, sz)) =>
         val new_context = ctx with_new_variable (to, translate_type(tpe))
         single_child_result_of(List(CMalloc(to, sz)), (Nil, no_deferreds, new_context))
