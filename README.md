@@ -1,4 +1,4 @@
-# Synthetic Separation Logic
+# Synthetic Separation Logic (for fun-SuSLik)
 
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://raw.githubusercontent.com/TyGuS/suslik/master/LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1482573.svg)](https://doi.org/10.5281/zenodo.1482573)
@@ -91,7 +91,7 @@ it as a standalone application (given that the runnable `scala` is in your path)
 ### Case Studies
 
 At the moment, many interesting case studies can be found in the folder
-`$PROJECT_ROOT/examples`. More examples
+`$PROJECT_ROOT/examples/new`. More examples
 and benchmarks can be found under `$PROJECT_ROOT/src/test/resources/synthesis/all-benchmarks`.
 
 Each set of case studies is in a single folder (e.g., `copy`). The
@@ -181,8 +181,7 @@ where the necessary arguments and options are
                            dump entire proof search trace to a json file; default: none
   --memo <value>           enable memoization; default: true
   --lexi <value>           use lexicographic termination metric (as opposed to total size); default: false
-  --certTarget <value>           set certification target; default: none (options: htt | vst | iris)
-  --certDest <value>             specify the directory in which to store the certificate file; default: none
+  --certTarget vst           **To generate the c code**
   --certHammerPure <value>       use hammer to solve pure lemmas instead of admitting them (HTT only); default: false
   --certSetRepr <value>          use SSReflect's perm_eq to represent set equality (HTT only); default: false
   --help                   prints this usage text

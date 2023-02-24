@@ -14,6 +14,7 @@ import org.tygus.suslik.language.Expressions.Var
 import org.tygus.suslik.language.{BoolType, CardType, Expressions, Ident, IntSetType, IntType, LocType, SSLType}
 import org.tygus.suslik.logic.{Block, Environment, FunSpec, Gamma, Heaplet, InductiveClause, InductivePredicate, PointsTo, ConstPointsTo, PredicateEnv, SApp}
 import org.tygus.suslik.logic.Specifications.{Assertion, Goal}
+import org.tygus.suslik.logic.FuncApp
 
 
 /** translates suslik proof terms to VST compatible proof terms  */
@@ -91,7 +92,6 @@ object ProofSpecTranslation {
     expr.resolveOverloading(to_ssl_context(context)) match {
       case const: Expressions.Const => const match {
         case Expressions.IntConst(value) => target match {
-          case Some(CoqPtrValType) => ProofCNullval
           case _ => ProofCIntConst(value)
         }
         case Expressions.LocConst(value) if value == 0 => ProofCNullval
@@ -185,14 +185,20 @@ object ProofSpecTranslation {
             }
             (updated_map, acc: List[CSApp])
           case SApp(pred, args, tag, card) =>
-            (map, (List(CSApp(pred, args.zip(predicate_param_map(pred)).map({ case (exp, ty) => (translate_expression((context))(exp), ty) }), translate_expression(context)(card))) ++ acc)
+            (map, 
+            // (List(CSApp(pred, args.zip(predicate_param_map(pred)).map({ case (exp, ty) => (translate_expression((context))(exp), ty) }), translate_expression(context)(card))) ++ acc)
+            acc: List[CSApp]
             )
+          case FuncApp(fname, args, offset) => 
+            (map, acc: List[CSApp])
         }
     })
 
     val apps = rev_apps.reverse
     // having built the mapping, we then translate each (k,v) pair in this
     // mapping into a VST Data at declaration
+
+    println(s"${map}")
     val blocks: List[CDataAt] = map.map({ case (var_nam, (points_to, o_block)) =>
       o_block match {
         case Some((_@Block(loc, sz))) =>

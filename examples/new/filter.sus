@@ -1,9 +1,9 @@
-# -c 2 -b true --tempRecur true
+# -c 2 -b true
 
 
 void filter (loc y, loc ret)
-{sll_c(y) ** ret :-> a }
-{filter_base(ret0, y) ** ret :-> ret0}
+{y :-> y0 ** sll_c(y0) ** ret :-> a }
+{y :-> y0 ** filter_base(ret0, y0) ** ret :-> ret0}
 {
     ??
 }

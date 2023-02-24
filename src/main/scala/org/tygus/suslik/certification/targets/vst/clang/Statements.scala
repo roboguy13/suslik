@@ -67,7 +67,7 @@ object Statements {
 
   case class CWriteInt(to: String, value: CLangExpr, offset: Int = 0) extends StatementStep {
     override def pp : String =
-      s"WRITE_INT(${to}, ${offset}, ${value.pp_as_clang_expr});"
+      s"WRITE_INT(${to}, ${offset}, ${value.pp_as_clang_expr_int});"
   }
 
   case class CWriteLoc(to: String, value: CLangExpr, offset: Int = 0) extends StatementStep {

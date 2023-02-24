@@ -1,0 +1,9 @@
+#
+
+void sll_plus1(loc x, loc y)
+  { x :-> x0 ** sll_c(x0) ** y :-> a }
+  { sll_plus1(x0, y0) ** x :-> x0 ** y :-> y0 }
+{ ?? }
+
+###
+

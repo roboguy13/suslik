@@ -1,0 +1,9 @@
+#
+
+void tree_plus1(loc x, loc y)
+  { x :-> x0 ** tree_c(x0) ** y :-> a }
+  { tree_plus1(x0, y0) ** x :-> x0 ** y :-> y0 }
+{ ?? }
+
+###
+

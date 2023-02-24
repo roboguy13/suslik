@@ -25,6 +25,21 @@ predicate tree_c(loc x) {
 }
 }
 
+predicate tree_n(loc x) {
+|  x == 0        => { emp }
+|  not (x == 0)  => {
+    [x, 3] ** x :-> v ** x + 1 :-> l ** x + 2 :-> r ** tree_n(l) ** tree_n(r)
+}
+}
+
+
+predicate tree_plus1(loc x, loc y) {
+|  x == 0        => { y == 0 ; emp}
+|  not (x == 0)  => { [x, 3] ** x :-> v ** x + 1 :-> xl ** x + 2 :-> xr **
+    [y, 3] ** func plus1(x, y) ** y + 1 :-> yl ** y + 2 :-> yr ** tree_plus1(xr, yr) ** tree_plus1(xl, yl)
+    }
+}
+
 predicate left_tree(loc x, loc y){
 |  x == 0        => { emp }
 |  not (x == 0)  => {
@@ -34,7 +49,7 @@ predicate left_tree(loc x, loc y){
 }
 
 predicate maximum(loc x, int ret) {
-| x == null => {ret == -1; emp}
+| x == null => {ret == 0; emp} //if -1, one bug of SuSLik is triggered (comparison between (void*)-1 and int)
 | not (x == null) => {
     ret == (ret0 <= v ? v : ret0);
     [x, 2] ** x :-> v ** x + 1 :-> xnxt **
@@ -176,7 +191,7 @@ predicate inplace_cons(int v, loc x, loc ret) {
 
 
 predicate cons(int v, loc x, loc ret) {
-| true => {[ret, 2] ** ret :-> v ** func cp(x, ret) + 1 ** sll_c(x)}
+| true => {[ret, 2] ** ret :-> v ** func sll_copy(x, ret) + 1 ** sll_c(x)}
 }
 
 
@@ -203,9 +218,14 @@ predicate sll_map(loc x, loc y) {
 |  not (x == 0)  => { [x, 2] ** x :-> h ** (x + 1) :-> xnxt ** [y, 2] ** func f(x, y) ** (y + 1) :-> ynxt ** sll_map(xnxt, ynxt) }
 }
 
-predicate inplace_sll_map(loc x) {
+predicate sll_plus1(loc x, loc y) {
+|  x == 0        => { y == 0 ; emp}
+|  not (x == 0)  => { [x, 2] ** x :-> v ** (x + 1) :-> xnxt ** [y, 2] ** func plus1(x, y) ** (y + 1) :-> ynxt ** sll_plus1(xnxt, ynxt) }
+}
+
+predicate inplace_sll_plus1(loc x) {
 |  x == 0        => { emp }
-|  not (x == 0)  => { [x, 2] ** (x + 1) :-> xnxt ** func f(x) ** inplace_sll_map(xnxt) }
+|  not (x == 0)  => { [x, 2] ** (x + 1) :-> xnxt ** func plus1(x) ** inplace_sll_plus1(xnxt) }
 }
 
 predicate map_sum(loc x, loc y) {
@@ -265,3 +285,4 @@ output1)}
 predicate f(loc x, loc y, loc ret){
 | true => {temploc tmp1 ** func f1(x, y, tmp1) ** func f2(tmp1, y, ret)}
 }
+

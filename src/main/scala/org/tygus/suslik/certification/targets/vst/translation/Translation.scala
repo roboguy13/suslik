@@ -32,7 +32,7 @@ object Translation {
   }
 
   def translate(testName: String, base_proof: ProofTree[SuslikProofStep], proc: Procedure, env: Environment): VSTCertificate = {
-    val predicates = env.predicates.filter(x => predicate_name.contains(x._1)).map({ case (_, predicate) => ProofSpecTranslation.translate_predicate(env)(predicate)}).toList
+    val predicates = env.predicates.map({ case (_, predicate) => ProofSpecTranslation.translate_predicate(env)(predicate)}).toList
     val pred_map = predicates.map(v => (v.name,v)).toMap
     val pred_type_map = predicates.map(v => (v.name, v.params.map(_._2))).toMap
     // var f_gamma = proc.f.gamma(env)
@@ -64,7 +64,7 @@ object Translation {
   }
 
   def Cprogram(testName: String, base_proof: ProofTree[SuslikProofStep], proc: Procedure, env: Environment): ClangOutput = {
-    val predicates = env.predicates.filter(x => predicate_name.contains(x._1)).map({ case (_, predicate) => ProofSpecTranslation.translate_predicate(env)(predicate)}).toList
+    val predicates = env.predicates.filter(x => false).map({ case (_, predicate) => ProofSpecTranslation.translate_predicate(env)(predicate)}).toList
     val pred_map = predicates.map(v => (v.name,v)).toMap
     val pred_type_map = predicates.map(v => (v.name, v.params.map(_._2))).toMap
     // var f_gamma = proc.f.gamma(env)
@@ -76,7 +76,6 @@ object Translation {
       case LocType => (name, CoqPtrValType)
       case IntType => (name, CoqIntValType)
     }})
-    // val spec = ProofSpecTranslation.translate_conditions(env)(pred_type_map)(proc.f)
     val helper_specs = env.functions.map {case (fname, spec) => (fname, ProofSpecTranslation.translate_conditions(env)(pred_type_map)(spec))}
     val program_body = translate_proof(base_proof)(new VSTProgramInterpreter, VSTProgramInterpreter.empty_context)
     val procedure = CProcedureDefinition(proc.name, params, program_body, helper_specs.values.toList)

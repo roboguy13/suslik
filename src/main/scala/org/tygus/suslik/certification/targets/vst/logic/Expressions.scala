@@ -60,6 +60,33 @@ object Expressions {
           case ProofCOpUnaryMinus => s"-(${e.pp_as_clang_expr})"
         }
     }
+    def pp_as_clang_expr_int: String = this match {
+      case ProofCVar(name, typ) => "(int)" + name
+      case ProofCBoolConst(value) => value.toString
+      case ProofCNullval => "NULL"
+      case ProofCIntConst(value) =>value.toString
+      case ProofCIfThenElse(cond : CLangExpr, left : CLangExpr, right : CLangExpr) =>
+        s"(${cond.pp_as_clang_expr_int} ? ${left.pp_as_clang_expr_int} : ${right.pp_as_clang_expr_int})"
+      case ProofCBinaryExpr(op : CLangOp, left : CLangExpr, right : CLangExpr) =>
+        op match {
+          case ProofCOpPlus =>  s"(${left.pp_as_clang_expr_int} + ${right.pp_as_clang_expr_int})"
+          case ProofCOpMinus => s"(${left.pp_as_clang_expr_int} - ${right.pp_as_clang_expr_int})"
+          case ProofCOpMultiply => s"(${left.pp_as_clang_expr_int} * ${right.pp_as_clang_expr_int})"
+          case ProofCOpZEq => s"(${left.pp_as_clang_expr_int} == ${right.pp_as_clang_expr_int})"
+          case ProofCOpIntValEq => s"(${left.pp_as_clang_expr_int} == ${right.pp_as_clang_expr_int})"
+          case ProofCOpPtrValEq => s"(${left.pp_as_clang_expr_int} == ${right.pp_as_clang_expr_int})"
+          case ProofCOpBoolEq => s"(${left.pp_as_clang_expr_int} == ${right.pp_as_clang_expr_int})"
+          case ProofCOpLeq => s"(${left.pp_as_clang_expr_int} <= ${right.pp_as_clang_expr_int})"
+          case ProofCOpLt => s"(${left.pp_as_clang_expr_int} < ${right.pp_as_clang_expr_int})"
+          case ProofCOpAnd => s"(${left.pp_as_clang_expr_int} && ${right.pp_as_clang_expr_int})"
+          case ProofCOpOr => s"(${left.pp_as_clang_expr_int} || ${right.pp_as_clang_expr_int})"
+        }
+      case ProofCUnaryExpr(op : CLangOp, e : CLangExpr) =>
+        op match {
+          case ProofCOpNot => s"!(${e.pp_as_clang_expr_int})"
+          case ProofCOpUnaryMinus => s"-(${e.pp_as_clang_expr_int})"
+        }
+    }
   }
   /** encoding of expressions in VST proof script
     * By default any boolean value will print to prop
