@@ -45,19 +45,11 @@ trait SynthesisRunnerUtil {
     LanguageUtils.resetFreshNameGenerator()
   }
 
-  def getDescInputOutput(testFilePath: String, initialParams: SynConfig = defaultConfig): (String, String, String, String, SynConfig) = {
-    val file = new File(testFilePath)
-    val format = testFilePath match {
-      case s if s.endsWith(testExtension) => dotSyn
-      case s if s.endsWith(sketchExtension) => dotSus
-    }
-    // The path is counted from the root
-    val allLines = Source.fromFile(file).getLines.toList
-    val (params, lines) =
-      if (allLines.nonEmpty && allLines.head.startsWith(paramPrefix)) {
-        (SynthesisRunner.parseParams(allLines.head.drop(paramPrefix.length).split(' '), initialParams), allLines.tail)
-      } else (initialParams, allLines)
+  // private def readStdInLines(): List[String] = {
+  //   io.Source.stdin.getLines.toList
+  // }
 
+  def getDescInputOutput(testFilePath: String, initialParams: SynConfig = defaultConfig): (String, String, String, String, SynConfig) = {
     def splitAtSeparator(lines: List[String], default: List[String] = List()): (List[String], List[String]) = {
       val i = lines.indexWhere(_.trim.contains(testSeparator))
       if (i == -1) (lines, default)
@@ -67,25 +59,18 @@ trait SynthesisRunnerUtil {
       }
     }
 
-    def parseSyn = {
-      val (testDescr, afterDescr) = splitAtSeparator(lines)
-      val fname = removeSuffix(file.getName, s".$testExtension")
-      val dirName = file.getParentFile.getName
-      val description = if (testDescr.isEmpty) "Testing synthesis" else testDescr.mkString("\n").trim
-      // The first part is the description
-      val testName = s"$dirName/$fname"
-      val desc = s"[$testName] $description"
-
-      val (spec, afterSpec) = splitAtSeparator(afterDescr)
-      val input = spec.mkString(" ").trim
-
-      val (expectedSrc, rawScript) = splitAtSeparator(afterSpec)
-      val output = expectedSrc.mkString("\n").trim
-      val script = rawScript.mkString("\n").trim.split("\n").toList.filter(_.nonEmpty).map(_.toInt)
-      (testName, desc, input, output, params.copy(inputFormat = format, script = script))
+    def getParamsLines(allLines: List[String]): (SynConfig, List[String]) = {
+        if (allLines.nonEmpty && allLines.head.startsWith(paramPrefix)) {
+          (SynthesisRunner.parseParams(allLines.head.drop(paramPrefix.length).split(' '), initialParams), allLines.tail)
+        } else (initialParams, allLines)
     }
 
-    def parseSus = {
+
+    if (initialParams.stdin) {
+      val allLines = Source.stdin.getLines.toList
+
+      val (params, lines) = getParamsLines(allLines)
+
       val hasDescr = lines.head.trim.startsWith("/*")
       val desc = if(hasDescr) lines.head.trim else ""
 
@@ -94,12 +79,53 @@ trait SynthesisRunnerUtil {
       val input = spec.mkString("\n").trim
       val testName = testFilePath
       val output = expectedSrc.mkString("\n").trim
-      (testName, desc, input, output, params.copy(inputFormat = format))
-    }
+      ("stdin", desc, input, output, params.copy(inputFormat = dotSus))
 
-    format match {
-      case `dotSyn` => parseSyn
-      case `dotSus` => parseSus
+    } else {
+      val file = new File(testFilePath)
+      val format = testFilePath match {
+        case s if s.endsWith(testExtension) => dotSyn
+        case s if s.endsWith(sketchExtension) => dotSus
+      }
+
+      // The path is counted from the root
+      val allLines = Source.fromFile(file).getLines.toList
+
+      val (params, lines) = getParamsLines(allLines)
+
+      def parseSyn = {
+        val (testDescr, afterDescr) = splitAtSeparator(lines)
+        val fname = removeSuffix(file.getName, s".$testExtension")
+        val dirName = file.getParentFile.getName
+        val description = if (testDescr.isEmpty) "Testing synthesis" else testDescr.mkString("\n").trim
+        // The first part is the description
+        val testName = s"$dirName/$fname"
+        val desc = s"[$testName] $description"
+
+        val (spec, afterSpec) = splitAtSeparator(afterDescr)
+        val input = spec.mkString(" ").trim
+
+        val (expectedSrc, rawScript) = splitAtSeparator(afterSpec)
+        val output = expectedSrc.mkString("\n").trim
+        val script = rawScript.mkString("\n").trim.split("\n").toList.filter(_.nonEmpty).map(_.toInt)
+        (testName, desc, input, output, params.copy(inputFormat = format, script = script))
+      }
+
+      def parseSus = {
+        val hasDescr = lines.head.trim.startsWith("/*")
+        val desc = if(hasDescr) lines.head.trim else ""
+
+        val (spec, expectedSrc) = splitAtSeparator(lines, List(noOutputCheck))
+
+        val input = spec.mkString("\n").trim
+        val testName = testFilePath
+        val output = expectedSrc.mkString("\n").trim
+        (testName, desc, input, output, params.copy(inputFormat = format))
+      }
+      format match {
+        case `dotSyn` => parseSyn
+        case `dotSus` => parseSus
+      }
     }
   }
 
@@ -273,32 +299,37 @@ trait SynthesisRunnerUtil {
   }
 
   def runSingleTestFromDir(dir: String, fname: String, params: SynConfig = defaultConfig) {
-    var testDir = new File(dir)
-    if (!testDir.exists()) {
-      val path = List(rootDir, dir).mkString(File.separator)
-      println(s"Trying the path $path")
-      testDir = new File(path)
+    if (params.stdin) {
+      val (testName, desc, in, out, allParams) = getDescInputOutput("stdin", params)
+      doRun("stdin", desc, in, out, allParams)
+    } else {
+      var testDir = new File(dir)
       if (!testDir.exists()) {
-        System.err.println(s"Found no directory $dir.")
-        return
+        val path = List(rootDir, dir).mkString(File.separator)
+        println(s"Trying the path $path")
+        testDir = new File(path)
+        if (!testDir.exists()) {
+          System.err.println(s"Found no directory $dir.")
+          return
+        }
       }
-    }
-    if (testDir.exists() && testDir.isDirectory) {
-      // Maybe create log file (depending on params)
-      SynStatUtil.init(params)
-      // Get definitions
-      val defs = getDefs(testDir.listFiles.filter(f => f.isFile && f.getName.endsWith(s".$defExtension")).toList)
-      // Get specs
-      val tests = testDir.listFiles.filter(f => f.isFile
-        && (f.getName.endsWith(s".$testExtension") ||
-            f.getName.endsWith(s".$sketchExtension"))).toList
-      tests.find(f => f.getName == fname) match {
-        case Some(f) =>
-          val (testName, desc, in, out, allParams) = getDescInputOutput(f.getAbsolutePath, params)
-          val fullInput = List(defs, in).mkString("\n")
-          doRun(testName, desc, fullInput, out, allParams)
-        case None =>
-          System.err.println(s"No file with the name $fname found in the directory $dir.")
+      if (testDir.exists() && testDir.isDirectory) {
+        // Maybe create log file (depending on params)
+        SynStatUtil.init(params)
+        // Get definitions
+        val defs = getDefs(testDir.listFiles.filter(f => f.isFile && f.getName.endsWith(s".$defExtension")).toList)
+        // Get specs
+        val tests = testDir.listFiles.filter(f => f.isFile
+          && (f.getName.endsWith(s".$testExtension") ||
+              f.getName.endsWith(s".$sketchExtension"))).toList
+        tests.find(f => f.getName == fname) match {
+          case Some(f) =>
+            val (testName, desc, in, out, allParams) = getDescInputOutput(f.getAbsolutePath, params)
+            val fullInput = List(defs, in).mkString("\n")
+            doRun(testName, desc, fullInput, out, allParams)
+          case None =>
+            System.err.println(s"No file with the name $fname found in the directory $dir.")
+        }
       }
     }
   }

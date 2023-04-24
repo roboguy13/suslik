@@ -51,6 +51,7 @@ object SynthesisRunner extends SynthesisRunnerUtil {
     * --certDest <value>             specify the directory in which to store the certificate file; default: none
     * --certHammerPure <value>       use hammer to solve pure lemmas instead of admitting them (HTT only); default: false
     * --certSetRepr <value>          use SSReflect's perm_eq to represent set equality (HTT only); default: false
+    * --stdin <value>                read specification from stdin; default: false
     *
     * --help                         prints the help reference
     *
@@ -69,6 +70,7 @@ object SynthesisRunner extends SynthesisRunnerUtil {
       case SynthesisException(msg) =>
         System.err.println("Synthesis failed:")
         System.err.println(msg)
+        System.exit(1)
     }
   }
 
@@ -93,6 +95,8 @@ object SynthesisRunner extends SynthesisRunnerUtil {
     val newConfig = RunConfig(SynConfig(), defaultFile)
     parser.parse(args, newConfig) match {
       case Some(RunConfig(synConfig, file)) =>
+        // System.err.println("File name " + file)
+        // System.err.println("stdin: " + synConfig.stdin)
         val dir = getParentDir(file)
         val fName = new File(file).getName
         runSingleTestFromDir(dir, fName, synConfig)
@@ -123,7 +127,7 @@ object SynthesisRunner extends SynthesisRunnerUtil {
 
     arg[String]("fileName").action { (x, c) =>
       c.copy(fileName = x)
-    }.text("a synthesis file name (the file under the specified folder, called filename.syn)")
+    }.text("a synthesis file name (the file under the specified folder, called filename.syn)").optional()
 
     opt[Int]('r', "trace").action(cfg { l =>
       _.copy(traceLevel = l)
@@ -220,6 +224,10 @@ object SynthesisRunner extends SynthesisRunnerUtil {
     opt[Boolean](name = "certSetRepr").action(cfg { b =>
       _.copy(certSetRepr = b)
     }).text("use SSReflect's perm_eq to represent set equality (HTT only); default: false")
+
+    opt[Boolean](name = "stdin").action(cfg { b =>
+      _.copy(stdin = b)
+    }).text("read specification from stdin; default: false")
 
     help("help").text("prints this usage text")
 
