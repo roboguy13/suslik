@@ -1,0 +1,23 @@
+// *** Layout predicates ***
+
+predicate ro_Sll(loc x) {
+| (x == 0) => { emp }
+| (not (x == 0)) => { [x,2] ** x :=> head ** (x+1) :=> tail ** ro_Sll(tail) }
+}
+
+
+
+// *** Function predicates ***
+
+predicate append__rw_Sll__ro_Sll__ro_Sll(loc __p_x0, loc __p_x1, loc __r_x) {
+| (__p_x0 == 0) => { func Sll__copy(__p_x1, __r_x) }
+| (not (__p_x0 == 0)) => { __p_x0 :-> x ** (__p_x0+1) :-> xs ** [__p_x0,2] ** ro_Sll(__p_x1) ** func cons__rw_Sll__Ptr_Int__rw_Sll(__p_x0, __p_x2, __r_x) ** append__rw_Sll__ro_Sll__ro_Sll(xs, __p_x1, __p_x2) ** temploc __p_x2 }
+}
+
+
+// *** Function specifications ***
+
+void append(loc x1, loc x2, loc r)
+  { ro_Sll(x1) ** ro_Sll(x2) ** r :-> initialVal }
+  { append__rw_Sll__ro_Sll__ro_Sll(x1, x2, r) }
+{ ?? }

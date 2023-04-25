@@ -51,12 +51,9 @@ object Preprocessor extends SepLogicUtils {
 
     val goal = new CompileWith().compileWith(goal1)
 
-    println(s"Compiled goal body:\n{\n${goal.body.pp}\n}")
-
     val funSpecElimAbs = new EliminateAbstractions[FunSpec, FunSpec, FunSpec](new SpecializationLists())
 
     val funs = funs0.map(f => {
-        println(s"generating for ${f.pp}")
         val (newF, generated) = funSpecElimAbs.transform(f, predMap0)
         preds ++= generated
         newF
@@ -72,7 +69,6 @@ object Preprocessor extends SepLogicUtils {
     val predMap = newPreds.map(ps => ps.name -> ps).toMap
 
     // println(s"newPreds: ${newPreds.map(_.pp)}")
-    println(s"done preprocessing for ${goal.spec.pp}")
     // println(s"preds = ${newPreds.map(_.pp)}")
     (List(goal.spec), predMap, funMap, goal.body)
   }

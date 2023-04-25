@@ -262,7 +262,6 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
 
   def goalFunctionV1: Parser[GoalContainer] = nonGoalFunction ~ opt("with" ~> "[" ~> (repsep(composedPureApp, ",") <~ "]")) ~ ("{" ~> codeWithHoles <~ "}") ^^ {
     case goal ~ withClause ~ body => {
-      println(s"========= Goal container: ${withClause} =========")
       GoalContainer(goal, body, withClause.map(new WithClause(_)))
     }
   }
@@ -279,7 +278,6 @@ class SSLParser extends StandardTokenParsers with SepLogicUtils {
       throw SynthesisException("Parsing failed: more than one goal is provided.")
     }
     val goal = goals.last
-    println(s"******* programSUS: ${goals} *********")
     Program(ps, syns, fs, goal)
   }
 

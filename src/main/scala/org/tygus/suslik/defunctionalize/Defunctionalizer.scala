@@ -117,13 +117,8 @@ case class DefunctionalizeInductive(newName: Ident, pred: InductivePredicate, fs
                     val newPredName = getNewName(predIdent).name
                     spList.insertSpatial(predBaseName, app, Seq[Heaplet](new SApp(newPredName, lambdaLifted.args, tag, card)))
 
-                    println(s"+++ ${predBaseName}: inserting ${(predBaseName, app, Seq[Heaplet](new SApp(getNewName(predIdent).name, lambdaLifted.args, tag, card)))}")
-                    println(s"*** ${predBaseName}: transforming ${lambdaLifted}")
-                    println("")
                     val (xs, newPreds) = elimAbs.transformSApp(lambdaLifted, freeVarMap, predEnv, Some(newPredName))
-                    println(s"*** newPreds = ${newPreds}")
                     generatedPreds ++= newPreds
-                    println(s"====> xs = ${xs}")
 
                     Seq(xs.copy(args = withoutPredAbstractions(xs.args.map(substPredParamsIn(_)))))
 
@@ -193,7 +188,6 @@ case class Defunctionalize[S, A <: HasAssertions[S]](fun: A, predEnv: PredicateE
 
   def getGeneratedPreds(): List[InductivePredicate] =
     {
-      println(s"generated: ${generatedPreds.result()}")
       generatedPreds.result()
     }
 
