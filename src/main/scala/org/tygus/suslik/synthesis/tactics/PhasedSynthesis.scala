@@ -36,9 +36,11 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
         lastUnfoldingRule.contains(FrameUnfolding) ||
         lastUnfoldingRule.contains(FrameUnfoldingFinal))
         unfoldingNoUnfoldPhaseRules
-      else if (lastUnfoldingRule.contains(Close))
+      else if (lastUnfoldingRule.contains(Close)){
       // Once a rule that works on post was used, only use those
-        unfoldingPostPhaseRules
+      if(!goal.env.config.temprecur) unfoldingPostPhaseRules
+      else unfoldingPostPhaseRules2
+      }
       else unfoldingPhaseRules
     } else if (goal.post.hasBlocks) {
       // Block phase: get rid of blocks
@@ -88,7 +90,15 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
   )
 
   protected def unfoldingPostPhaseRules: List[SynthesisRule] = List(
-    UnfoldingRules.AbduceCall,
+    UnfoldingRules.AbduceCall, //TODO: only  when using .. arg
+    LogicalRules.FrameUnfoldingFinal,
+    UnificationRules.HeapUnifyUnfolding,
+    UnfoldingRules.Close,
+    // OperationalRules.FuncCall,
+  )
+
+  protected def unfoldingPostPhaseRules2: List[SynthesisRule] = List(
+    UnfoldingRules.AbduceCall, //TODO: only  when using .. arg
     LogicalRules.FrameUnfoldingFinal,
     UnificationRules.HeapUnifyUnfolding,
     UnfoldingRules.Close,
