@@ -90,7 +90,6 @@ class PhasedSynthesis(config: SynConfig) extends Tactic {
   )
 
   protected def unfoldingPostPhaseRules: List[SynthesisRule] = List(
-    UnfoldingRules.AbduceCall, //TODO: only  when using .. arg
     LogicalRules.FrameUnfoldingFinal,
     UnificationRules.HeapUnifyUnfolding,
     UnfoldingRules.Close,
