@@ -197,6 +197,13 @@ object Expressions {
     def rType: SSLType = IntType
     def resType: SSLType = IntType
   }
+  object OpMod extends BinOp {
+    def level: Int = 4
+    override def pp: String = "%"
+    def lType: SSLType = IntType
+    def rType: SSLType = IntType
+    def resType: SSLType = IntType
+  }
   object OpEq extends RelOp with SymmetricOp {
     def level: Int = 3
     override def pp: String = "=="

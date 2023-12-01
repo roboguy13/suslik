@@ -67,6 +67,7 @@ object DelegatePureSynthesis {
       case Expressions.OpPlus => "+"
       case Expressions.OpMinus => "-"
       case Expressions.OpMultiply => "*"
+      case Expressions.OpMod => "%"
       case Expressions.OpEq => "="
       case Expressions.OpBoolEq | Expressions.OpSetEq => "="
       case Expressions.OpLeq => "<="

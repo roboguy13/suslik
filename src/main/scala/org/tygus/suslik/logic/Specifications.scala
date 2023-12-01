@@ -54,9 +54,11 @@ object Specifications extends SepLogicUtils {
     def ghosts(params: Set[Var]): Set[Var] = this.vars -- params
 
     def resolve(gamma: Gamma, env: Environment): Option[Gamma] = {
+    
       for {
         gamma1 <- phi.resolve(gamma)
         gamma2 <- sigma.resolve(gamma1, env)
+        // _ <- print(s"gamma2: ${gamma2}")
       } yield gamma2
     }
 
@@ -301,7 +303,7 @@ object Specifications extends SepLogicUtils {
     pre.resolve(gamma0, env) match {
       case None => throw SepLogicException(s"Resolution error in specification: ${pre.pp}")
       case Some(gamma1) => post.resolve(gamma1, env) match {
-        case None => throw SepLogicException(s"Resolution error in specification: ${post.pp}")
+        case None => throw SepLogicException(s"Resolution error in specification: ${gamma1.toString} ${post.pp}")
         case Some(gamma) => gamma
       }
     }

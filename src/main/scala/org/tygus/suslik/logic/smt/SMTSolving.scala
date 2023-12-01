@@ -340,6 +340,7 @@ object SMTSolving extends Core
         case OpPlus => l + r
         case OpMinus => l - r
         case OpMultiply => l * r
+        case OpMod => l % r
         case _ => throw SMTUnsupportedExpr(e)
       }
     }
